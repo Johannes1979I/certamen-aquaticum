@@ -550,12 +550,13 @@
       "durataPartita": 25,
       "escluso": false,
       "descrizione": "Un torneo solo con le carte italiane, in tre prove: si comincia a briscola, si passa allo scopone e si chiude a tresette. La stessa coppia gioca tutte e tre le prove e i punti si sommano: non vince chi è bravo a un gioco, vince chi se la cava con tutti e tre.",
-      "partita": "Ogni turno si gioca a una prova diversa, al massimo 25 minuti a partita. Vittoria 3 punti, pareggio 1, sconfitta 0: la classifica è unica.",
-      "formula": "La formula la decidono gli organizzatori il giorno stesso, in base a quante coppie si sono iscritte: girone all'italiana se siamo pochi, gironi con finale se siamo tanti. Le tre prove si alternano turno dopo turno.",
+      "partita": "Ogni turno di girone si gioca a una prova diversa, al massimo 25 minuti a partita. La finale si disputa a scopone. Vittoria 3 punti, pareggio 1, sconfitta 0: la classifica è unica.",
+      "formula": "La formula la decidono gli organizzatori il giorno stesso, in base a quante coppie si sono iscritte: girone all'italiana se siamo pochi, gironi con finale se siamo tanti. Le tre prove si alternano turno dopo turno e la finale si gioca a scopone.",
       "regole": [
         "Si gioca in quattro, a coppie: i compagni siedono uno di fronte all'altro.",
         "La coppia resta la stessa per tutte e tre le prove.",
-        "Ogni turno ha la sua prova: briscola, poi scopone, poi tresette.",
+        "Ogni turno di girone ha la sua prova: briscola, poi scopone, poi tresette.",
+        "La finale si disputa a scopone: è la prova che premia di più la testa.",
         "I punti delle tre prove si sommano in una classifica unica.",
         "Le regole di ogni singola prova sono qui sotto, una per gioco.",
         "In caso di parità contano, nell'ordine: lo scontro diretto, poi la differenza punti."
@@ -630,7 +631,8 @@
           ]
         }
       ],
-      "premio": "Coppa del Trittico"
+      "premio": "Coppa del Trittico",
+      "provaFinale": "scopone"
     },
     {
       "id": "burraco",
@@ -734,7 +736,7 @@
     {
       "ora": "17:25",
       "area": "adulti",
-      "titolo": "Blocco A — Il Trittico: terza prova (tresette) e finale",
+      "titolo": "Blocco A — Il Trittico: terza prova (tresette), poi finale a scopone",
       "nota": ""
     },
     {

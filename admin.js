@@ -1670,7 +1670,8 @@
     else incontri = calendarioEliminazione(coppie);
 
     /* nei tornei a piu' prove (il Trittico) ogni turno ha il suo gioco */
-    incontri = assegnaProve(incontri, V(torneoDati(idTorneo).prove, []));
+    var td = torneoDati(idTorneo);
+    incontri = assegnaProve(incontri, V(td.prove, []), V(td.provaFinale, ''));
 
     STATO.tornei[idTorneo] = STATO.tornei[idTorneo] || {};
     STATO.tornei[idTorneo].formato = formato;
@@ -1767,11 +1768,15 @@
     return out;
   }
 
-  /* Il Trittico e' un torneo solo con tre giochi dentro: a ogni turno se ne
-     gioca uno, a rotazione. Qui si scrive nel nome del turno quale prova
-     tocca, cosi' al tavolo non ci sono dubbi. Le finali giocano l'ultima. */
-  function assegnaProve(incontri, prove) {
+  /* Il Trittico e' un torneo solo con tre giochi dentro: a ogni turno di
+     girone se ne gioca uno, a rotazione. Qui si scrive nel nome del turno
+     quale prova tocca, cosi' al tavolo non ci sono dubbi.
+     Le fasi finali (semifinali, finale, finalina) giocano tutte la prova
+     scelta come "provaFinale": per il Trittico e' lo scopone. */
+  function assegnaProve(incontri, prove, idProvaFinale) {
     if (!prove.length) return incontri;
+    var finale = prove.filter(function (p) { return p.id === idProvaFinale; })[0]
+      || prove[prove.length - 1];
     var turni = [];
     incontri.forEach(function (m) {
       if (turni.indexOf(m.turno) < 0) turni.push(m.turno);
@@ -1780,7 +1785,7 @@
     var mappa = {};
     soloGironi.forEach(function (t, i) { mappa[t] = prove[i % prove.length]; });
     turni.forEach(function (t) {
-      if (!mappa[t]) mappa[t] = prove[prove.length - 1];   /* finali: l'ultima prova */
+      if (!mappa[t]) mappa[t] = finale;
     });
     incontri.forEach(function (m) {
       var p = mappa[m.turno];
@@ -2481,6 +2486,25 @@
       gr.appendChild(campoMini('Orario', t.orario, function (v) { t.orario = v; }));
       gr.appendChild(campoMini('Posti', t.postiTotali, function (v) { t.postiTotali = Number(v) || 0; }));
       gr.appendChild(campoMini('Minuti a partita', t.durataPartita, function (v) { t.durataPartita = Number(v) || 0; }));
+      /* nei tornei a più prove si sceglie con quale si gioca la finale */
+      if (V(t.prove, []).length) {
+        var d2 = crea('div', 'campo');
+        var l2 = document.createElement('label');
+        l2.textContent = 'Con quale prova si gioca la finale';
+        d2.appendChild(l2);
+        var sel = document.createElement('select');
+        sel.className = 'mini';
+        t.prove.forEach(function (pr) {
+          var op = document.createElement('option');
+          op.value = pr.id;
+          op.textContent = V(pr.emoji, '') + ' ' + V(pr.nome, '');
+          sel.appendChild(op);
+        });
+        sel.value = V(t.provaFinale, t.prove[t.prove.length - 1].id);
+        sel.addEventListener('change', function () { t.provaFinale = sel.value; });
+        d2.appendChild(sel);
+        gr.appendChild(d2);
+      }
       det.appendChild(gr);
       det.appendChild(areaMini('Descrizione', t.descrizione, function (v) { t.descrizione = v; }));
       det.appendChild(areaMini('Come si gioca la partita', t.partita, function (v) { t.partita = v; }));
