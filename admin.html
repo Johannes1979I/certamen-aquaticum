@@ -278,16 +278,19 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
       <div class="nota-box">
         <h3 style="font-size:1.06rem;margin-bottom:6px">🔐 Mancano le regole di sicurezza</h3>
         <p>Il database non lascia ancora entrare il Certamen. Si sistema una volta sola,
-          in due minuti:</p>
+          in due minuti. <b>Non si cancella niente</b>: questo blocco si aggiunge a
+          quello che c'è già, e parla solo di percorsi nuovi, quindi non può toccare
+          le regole della festa in piscina.</p>
         <ol style="margin:10px 0 0 20px;font-size:.94rem">
           <li>Apri <a href="https://console.firebase.google.com/project/residence-holiday-ef6e9/firestore/rules" target="_blank" rel="noopener">le regole di Firestore</a> (entra con il tuo account Google).</li>
-          <li>Cancella tutto quello che c'è nel riquadro e incolla il testo qui sotto.</li>
+          <li>Cerca la riga <code>match /databases/{database}/documents {</code> — è in cima, la terza o la quarta.</li>
+          <li>Clicca alla <b>fine</b> di quella riga, premi <b>Invio</b> per andare a capo e incolla il testo qui sotto.</li>
           <li>Premi <b>Pubblica</b> (o <b>Publish</b>) in alto a destra.</li>
           <li>Torna qui e ripremi «Controlla il collegamento».</li>
         </ol>
       </div>
       <div class="campo" style="margin-top:12px">
-        <label for="regoleFirestore">Regole da incollare</label>
+        <label for="regoleFirestore">Blocco da aggiungere alle regole</label>
         <textarea id="regoleFirestore" style="min-height:320px;font-family:ui-monospace,Menlo,monospace;font-size:.82rem"></textarea>
       </div>
       <button class="btn btn-chiaro btn-piccolo" id="btnCopiaRegole">📋 Copia le regole</button>

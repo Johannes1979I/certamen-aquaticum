@@ -2167,22 +2167,13 @@
      inutile per chi deve organizzare una festa. Qui si controlla una per
      una ogni strada e si dice in italiano cosa è bloccato e come si aggiusta.
   */
+  /* Da AGGIUNGERE alle regole esistenti, non da sostituire: parla solo di
+     percorsi nuovi (iscrizioni, pubblico_certamen, stato_certamen), quindi
+     non puo' toccare in nessun modo le regole della festa in piscina. */
   var REGOLE = [
-    "rules_version = '2';",
-    'service cloud.firestore {',
-    '  match /databases/{database}/documents {',
-    '',
-    '    // ---------- FESTA IN PISCINA (lasciare com\'era) ----------',
-    '    match /prenotazioni/{doc} {',
-    '      allow create: if request.resource.data.nome is string;',
-    '      allow read, update, delete: if request.auth != null;',
-    '    }',
-    '    match /pubblico/{doc} {',
-    '      allow read: if true;',
-    '      allow write: if true;',
-    '    }',
-    '',
-    '    // ---------- CERTAMEN AQUATICUM ----------',
+    '    // ===================== CERTAMEN AQUATICUM =====================',
+    '    // Blocco da aggiungere: riguarda solo percorsi nuovi e non modifica',
+    '    // in alcun modo le regole gia presenti (prenotazioni, pubblico...).',
     '',
     '    // Chiunque puo iscriversi; nomi e recapiti si leggono solo col login.',
     '    match /iscrizioni/{doc} {',
@@ -2208,8 +2199,7 @@
     '    match /stato_certamen/{doc} {',
     '      allow read, write: if request.auth != null;',
     '    }',
-    '  }',
-    '}'
+    '    // =================== fine Certamen Aquaticum ==================='
   ].join('\n');
 
   function permessiNegati(e) {
