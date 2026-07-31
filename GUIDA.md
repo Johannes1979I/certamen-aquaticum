@@ -106,6 +106,25 @@ Per cambiare brano incolla l'indirizzo del video nuovo. Se svuoti il campo, il
 sito apre la ricerca del titolo: è la rete di sicurezza nel caso un video venga
 rimosso.
 
+## I numeri che si aggiornano da soli
+
+| Cosa | Ogni quanto |
+|---|---|
+| Contatore iscritti (home, giochi, carte, iscrizione) | 15 secondi |
+| Classifiche e tabellone | 15 secondi |
+| Registro delle iscrizioni nell'admin | 1 minuto |
+
+Quando un numero cambia **lampeggia in verde** e compare l'avviso, così se ne
+accorge anche chi stava guardando altro.
+
+⚠️ **Con la pagina in secondo piano il conteggio si ferma**, apposta, per non
+consumare la batteria: appena torni sulla scheda si aggiorna subito. Se stai
+provando il sito con la pagina aperta in un'altra scheda, è normale non vedere
+il numero salire finché non ci torni sopra.
+
+Nell'admin il registro **non si aggiorna mentre stai scrivendo** in un campo:
+altrimenti ti cancellerebbe quello che stai battendo.
+
 ## Gli avvisi su Telegram
 
 A ogni iscrizione arriva un messaggio con nome, sezione, recapito e i totali

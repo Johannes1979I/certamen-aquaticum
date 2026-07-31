@@ -149,12 +149,18 @@
     });
   }
 
+  /* Ogni quindici secondi, non ogni minuto: con l'iscrizione aperta la gente
+     guarda il contatore salire, e un minuto di attesa non sembra «in tempo
+     reale». Solo con la pagina davanti agli occhi: in secondo piano si sta
+     fermi e non si consuma la batteria. */
+  var OGNI = 15000;
+
   function avviaContatori(alCambio) {
     if (typeof alCambio === 'function') rinfreschi.push(alCambio);
     leggiContatori();
     if (ascoltiAvviati) return;
     ascoltiAvviati = true;
-    setInterval(function () { if (!document.hidden) leggiContatori(); }, 60000);
+    setInterval(function () { if (!document.hidden) leggiContatori(); }, OGNI);
     document.addEventListener('visibilitychange', function () { if (!document.hidden) leggiContatori(); });
     window.addEventListener('focus', leggiContatori);
   }
@@ -162,12 +168,29 @@
   /* Disegna un riquadro contatore: iscritti, posti, rimanenti.
      Il riquadro deve avere dentro gli elementi con questi id:
        <id>Num  <id>Eti  <id>Barra  */
+  var ultimiValori = {};
+
   function mostraContatore(prefisso, iscritti, posti) {
     var n = Math.max(0, Number(iscritti) || 0);
     var tot = Math.max(0, Number(posti) || 0);
     var num = $(prefisso + 'Num'), eti = $(prefisso + 'Eti'), barra = $(prefisso + 'Barra');
     var box = $(prefisso + 'Box');
-    if (num) num.textContent = String(n);
+
+    /* se il numero è cambiato lo si fa notare: chi sta guardando la pagina
+       vede il conteggio salire, invece di trovarselo cambiato per magia */
+    var prima = ultimiValori[prefisso];
+    var cambiato = (prima !== undefined && prima !== n);
+    ultimiValori[prefisso] = n;
+
+    if (num) {
+      num.textContent = String(n);
+      if (cambiato) {
+        num.classList.remove('salito');
+        void num.offsetWidth;              /* riavvia l'animazione */
+        num.classList.add('salito');
+        if (n > prima) toast('🎉 Un nuovo iscritto! Adesso sono ' + n + '.', 5000);
+      }
+    }
     if (eti) {
       eti.textContent = tot
         ? (n >= tot ? 'posti esauriti — puoi metterti in lista d\'attesa'

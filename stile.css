@@ -173,6 +173,17 @@ section{ padding:clamp(40px,6vw,72px) 0; }
   width:0; transition:width .5s ease;
 }
 .contatore.pieno .grosso{ color:#c1121f; }
+/* il numero che sale: un lampo verde e un balzo, così chi sta guardando
+   la pagina si accorge che è arrivata un'iscrizione nuova */
+.salito{ animation:salito 1.1s ease; }
+@keyframes salito{
+  0%{ transform:scale(1); color:inherit; }
+  25%{ transform:scale(1.35); color:#0f7a4a; }
+  60%{ transform:scale(1); color:#0f7a4a; }
+  100%{ transform:scale(1); color:inherit; }
+}
+@media(prefers-reduced-motion:reduce){ .salito{ animation:none; } }
+
 .vivo{
   display:inline-flex; align-items:center; gap:6px; font-size:.78rem; font-weight:bold;
   color:#0f7a4a; text-transform:uppercase; letter-spacing:.05em;
