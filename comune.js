@@ -267,38 +267,54 @@
     var c = V(dati().condivisione, {});
     return V(c.urlSito, location.href.split('#')[0].replace(/[^\/]*$/, ''));
   }
+  /* Niente emoji nel messaggio da condividere: su parecchi telefoni e sui
+     WhatsApp da computer arrivano come quadratini, e l'invito sembra scritto
+     male. Bastano le maiuscole, gli a capo e il puntino elenco (•), che si
+     vede su qualsiasi dispositivo. */
   function messaggioInvito() {
     var d = dati();
     var t = V(d.tema, {}), ev = V(d.evento, {}), res = V(d.residence, {});
     var aree = V(d.aree, {}), rag = V(aree.ragazzi, {}), adu = V(aree.adulti, {});
     var q = V(d.quota, {});
     var r = [];
-    r.push('🏊 ' + V(t.titolo, 'Certamen Aquaticum') + ' — ' + V(t.sottotitolo, ''));
+
+    r.push(String(V(t.titolo, 'Certamen Aquaticum')).toUpperCase());
+    if (t.sottotitolo) r.push(t.sottotitolo);
     r.push('');
-    r.push('📅 ' + dataIt(ev.data, false) + ', dalle ' + V(ev.orario, '') + ' alle ' + V(ev.orarioFine, ''));
-    r.push('📍 ' + V(ev.luogo, '') + (res.localita ? ' — ' + res.localita : ''));
+
+    var giorno = dataIt(ev.data, false);
+    r.push(giorno.charAt(0).toUpperCase() + giorno.slice(1) +
+      ', dalle ' + V(ev.orario, '') + ' alle ' + V(ev.orarioFine, ''));
+    r.push(V(ev.luogo, '') + (res.localita ? ' — ' + res.localita : ''));
     r.push('');
-    r.push('🤽 ' + V(rag.nome, 'Giochi in acqua') + ' per i ragazzi (' + V(rag.eta, '') + ')');
-    r.push('🃏 ' + V(adu.nome, 'Tornei di carte') + ' per gli adulti: ' +
+
+    r.push('• ' + V(rag.nome, 'Giochi in acqua') + ' per i ' +
+      V(rag.etichetta, 'ragazzi') + (rag.eta ? ' ' + rag.eta : ''));
+    r.push('• ' + V(adu.nome, 'Tornei di carte') + ' per gli ' +
+      V(adu.etichetta, 'adulti') + ': ' +
       torneiAttivi().map(function (x) { return x.nome; }).join(', '));
     r.push('');
+
     r.push(q.attiva === true
-      ? ('🎟️ Iscrizioni con quota di ' + eur(q.importo) + ' a persona' +
+      ? ('Iscrizioni con quota di ' + eur(q.importo) + ' a persona' +
         (ev.chiusuraIscrizioni ? ', entro ' + dataIt(ev.chiusuraIscrizioni) : ''))
-      : ('🎟️ Iscrizioni gratuite' + (ev.chiusuraIscrizioni ? ' entro ' + dataIt(ev.chiusuraIscrizioni) : '')));
+      : ('Iscrizioni gratuite' + (ev.chiusuraIscrizioni ? ' entro ' + dataIt(ev.chiusuraIscrizioni) : '')));
     r.push(urlSito());
     return r.join('\n');
   }
-  function linkWhatsApp() {
+  /* Si può passare un testo proprio: nell'area organizzatori il messaggio è
+     modificabile, e i pulsanti devono mandare quello che si legge nel riquadro. */
+  function linkWhatsApp(testoScelto) {
     var c = V(dati().condivisione, {});
     if (c.linkGruppoWhatsApp) return String(c.linkGruppoWhatsApp);
-    return 'https://wa.me/?text=' + encodeURIComponent(messaggioInvito());
+    return 'https://wa.me/?text=' + encodeURIComponent(V(testoScelto, messaggioInvito()));
   }
-  function linkTelegram() {
+  function linkTelegram(testoScelto) {
     var c = V(dati().condivisione, {});
     if (c.linkGruppoTelegram) return String(c.linkGruppoTelegram);
     /* Telegram vuole il link separato dal testo, altrimenti lo ripete */
-    var testoSenzaLink = messaggioInvito().replace(urlSito(), '').replace(/\n+$/, '');
+    var testoSenzaLink = V(testoScelto, messaggioInvito())
+      .split(urlSito()).join('').replace(/\n+$/, '');
     return 'https://t.me/share/url?url=' + encodeURIComponent(urlSito()) +
       '&text=' + encodeURIComponent(testoSenzaLink);
   }

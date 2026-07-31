@@ -187,10 +187,16 @@
     $('btnProvaTg').addEventListener('click', provaTelegram);
     $('btnChiId').addEventListener('click', chiId);
 
-    /* invito da far girare */
+    /* invito da far girare: i pulsanti mandano esattamente quello che si legge
+       nel riquadro, anche se lo modifico a mano */
     $('msgInvito').value = CA.messaggioInvito();
-    $('admWa').href = CA.linkWhatsApp();
-    $('admTg').href = CA.linkTelegram();
+    function aggiornaLinkInvito() {
+      var t = $('msgInvito').value;
+      $('admWa').href = CA.linkWhatsApp(t);
+      $('admTg').href = CA.linkTelegram(t);
+    }
+    aggiornaLinkInvito();
+    $('msgInvito').addEventListener('input', aggiornaLinkInvito);
     $('btnCopiaMsg').addEventListener('click', function () {
       var t = $('msgInvito');
       t.select();
