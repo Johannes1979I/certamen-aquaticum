@@ -348,6 +348,7 @@ function cartaTorneo(x, numero){
   dentro.appendChild(h);
 
   var eti = crea('div', 'etichette');
+  if(V(x.prove, []).length) eti.appendChild(crea('span', 'eti gialla', '🎴 ' + x.prove.length + ' prove in un torneo solo'));
   if(x.blocco) eti.appendChild(crea('span', 'eti', '🕓 blocco ' + x.blocco + (x.orario ? ' · ' + x.orario : '')));
   eti.appendChild(crea('span', 'eti verde', x.coppiaObbligatoria ? '👥 solo a coppie' : '👥 a coppie (o da solo)'));
   if(x.giocatoriTavolo) eti.appendChild(crea('span', 'eti grigia', '🪑 ' + x.giocatoriTavolo + ' al tavolo'));
@@ -369,6 +370,40 @@ function cartaTorneo(x, numero){
   }
 
   if((x.regole || []).length) dentro.appendChild(blocco('📋 Come si gioca', x.regole));
+
+  /* i tornei composti (il Trittico) hanno le loro prove, ognuna con le sue
+     regole: si aprono una per una, come i giochi dei ragazzi */
+  V(x.prove, []).forEach(function(pr, i){
+    var d = document.createElement('details');
+    d.className = 'blocco';
+    var s = document.createElement('summary');
+    s.textContent = (i+1) + 'ª prova: ' + V(pr.emoji,'') + ' ' + V(pr.nome,'');
+    d.appendChild(s);
+    if(pr.descrizione) d.appendChild(crea('p', 'desc', pr.descrizione));
+    if(pr.partita){
+      var pp = crea('p', null, '⏱️ ' + pr.partita);
+      pp.style.cssText = 'font-size:.9rem;color:var(--muted);margin:6px 0';
+      d.appendChild(pp);
+    }
+    if(V(pr.regole, []).length){
+      var h = crea('div', null, 'Regole');
+      h.style.cssText = 'font-weight:bold;font-size:.9rem;margin-top:8px';
+      d.appendChild(h);
+      var ul = document.createElement('ul');
+      pr.regole.forEach(function(r){ ul.appendChild(crea('li', null, r)); });
+      d.appendChild(ul);
+    }
+    if(V(pr.varianti, []).length){
+      var h2 = crea('div', null, 'Varianti');
+      h2.style.cssText = 'font-weight:bold;font-size:.9rem;margin-top:8px';
+      d.appendChild(h2);
+      var ul2 = document.createElement('ul');
+      pr.varianti.forEach(function(r){ ul2.appendChild(crea('li', null, r)); });
+      d.appendChild(ul2);
+    }
+    dentro.appendChild(d);
+  });
+
   if((x.varianti || []).length) dentro.appendChild(blocco('✨ Varianti', x.varianti));
 
   if(x.premio){

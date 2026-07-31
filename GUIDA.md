@@ -53,14 +53,22 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
    e spunta chi arriva.
 2. **Squadre** — scheda `🚩 Squadre`: la procedura guidata ti dice quante
    squadre conviene fare, poi scegli:
-   - **automatico bilanciato**: distribuisce le età a serpentina, sparpaglia
-     chi nuota poco e tiene insieme gli amici che si sono richiesti a vicenda;
+   - **automatico bilanciato**: tiene conto di tutte e tre le cose chieste
+     all'iscrizione — la **preferenza** («vorrei stare con…»), l'**età** e la
+     **capacità in acqua**. Prima mette insieme chi si è scelto (chi si è
+     scelto a vicenda ha la precedenza, e riconosce anche i nomi scritti a
+     metà, tipo «Sofia» per «Sofia Greco»), poi distribuisce le età a
+     serpentina e sparpaglia chi nuota poco. Alla fine ti dice quante
+     preferenze ha rispettato e quali no, con il motivo;
    - **a mano**: trascini i nomi, o li tocchi e poi tocchi la squadra.
    Il 🧢 accanto a un nome lo nomina capitano. Nome e grido si scrivono nei
    due campi in cima a ogni colonna.
 3. **Tornei** — scheda `🃏 Tornei`: prima `Forma le coppie` (usa i compagni
    dichiarati, poi abbina i rimasti mettendo insieme un esperto e un
    principiante), poi scegli la formula e `Genera il tabellone`.
+   Nel **Trittico** ogni turno gioca una prova diversa — briscola, scopone,
+   tresette — e il nome del turno lo dice: la coppia resta la stessa e i punti
+   delle tre prove si sommano in una classifica unica.
    La formula la consiglia il sito in base a quante coppie ci sono:
    - 2 coppie → sfida diretta al meglio delle tre
    - 3–6 coppie → girone all'italiana
@@ -69,8 +77,12 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
 4. **Punteggi** — scheda `🏅 Punteggi`: per i ragazzi scegli chi è arrivato
    primo, secondo, terzo…; per le carte scrivi i punti delle partite.
    Si salva tutto da solo nel database.
-5. **Pubblica** — scheda `📣 Pubblica` → `Pubblica adesso`: le classifiche
-   compaiono nella pagina pubblica. Rifallo ogni volta che vuoi aggiornarle.
+5. **Pubblica** — non devi fare niente: con l'interruttore
+   **«Aggiorna la bacheca da sola»** acceso (lo è di serie), ogni punteggio che
+   registri finisce in bacheca entro pochi secondi, e chi guarda le classifiche
+   dal telefono le vede cambiare da sole ogni quindici secondi, con un lampo
+   verde quando arrivano dati nuovi. Il pulsante `Pubblica adesso` serve solo
+   se hai spento l'automatismo o vuoi forzare l'aggiornamento.
 
 ## Scegliere i giochi e metterli in ordine
 

@@ -160,6 +160,12 @@
 
     /* pubblicazione */
     $('btnPubblicaClass').addEventListener('click', pubblicaClassifiche);
+    var auto = $('autoPubblica');
+    auto.checked = CA.memLeggi('ca_autopubblica') !== '0';
+    auto.addEventListener('change', function () {
+      CA.memScrivi('ca_autopubblica', auto.checked ? '1' : '0');
+      if (auto.checked) { aggiornaBachecaSePuoi(); CA.toast('🔄 La bacheca si aggiornerà da sola.', 5000); }
+    });
     $('btnPubblicaContenuti').addEventListener('click', pubblicaContenuti);
     $('btnScarica').addEventListener('click', scaricaContenuti);
     $('btnSalvaGh').addEventListener('click', salvaGh);
@@ -382,6 +388,9 @@
       .then(function () {
         testo('statoCloud', '✅ salvato nel database');
         if (conAvviso) CA.toast('💾 Salvato nel database.', 4000);
+        /* la bacheca pubblica segue da sola: chi guarda le classifiche dal
+           telefono vede il punteggio nuovo senza che io prema niente */
+        aggiornaBachecaSePuoi();
       })
       .catch(function (e) {
         salvataggioInSospeso = true;
@@ -973,7 +982,8 @@
 
     if (criterio === 'auto') {
       distribuisciBilanciato(rag, STATO.squadre);
-      CA.toast('🎲 Squadre generate e bilanciate per età.', 5000);
+      CA.toast('🎲 Squadre generate: età bilanciate, chi nuota poco sparpagliato, ' +
+        ESITO_PREFERENZE.fatte.length + ' preferenze rispettate.', 7000);
     } else {
       CA.toast('Squadre vuote create: ora trascina i nomi.', 5000);
     }
@@ -981,73 +991,190 @@
     disegnaSquadre();
   }
 
-  /* Distribuzione a serpentina: si ordina per età (dal più grande al più
-     piccolo) e si assegna 1-2-3-4, poi 4-3-2-1, e così via. Le età medie
-     restano quasi identiche. Poi si sparpagliano quelli che nuotano poco e
-     si tenta qualche scambio per avvicinare ancora le medie. */
+  /* ============ FORMAZIONE DELLE SQUADRE: I TRE CRITERI ================
+     Si tiene conto di tutte e tre le cose chieste all'iscrizione:
+       1. la PREFERENZA — «vorrei stare in squadra con...»: chi si è scelto
+          resta insieme, e chi si è scelto a vicenda ha la precedenza;
+       2. l'ETÀ — distribuita a serpentina, così le medie restano vicine;
+       3. la CAPACITÀ IN ACQUA — chi nuota poco viene sparpagliato, mai tutti
+          nella stessa squadra.
+     L'ordine conta: prima si formano i gruppetti di amici, poi si spalmano
+     come fossero singoli giocatori. Un gruppo non può superare la metà di una
+     squadra, altrimenti una comitiva sbilancerebbe tutto.                  */
+  var ESITO_PREFERENZE = { fatte: [], saltate: [] };
+  var LEGATI = {};          /* chi non va separato dai riequilibri */
+
   function distribuisciBilanciato(persone, squadre) {
     var n = squadre.length;
     squadre.forEach(function (s) { s.componenti = []; });
 
-    /* prima i gruppi di amici che si sono richiesti a vicenda restano uniti */
-    var coppie = amiciReciproci(persone);
-    var usati = {};
-    var blocchi = [];
-    coppie.forEach(function (c) {
-      if (usati[c[0]._id] || usati[c[1]._id]) return;
-      usati[c[0]._id] = usati[c[1]._id] = true;
-      blocchi.push({ persone: [c[0], c[1]], eta: (etaDi(c[0]) + etaDi(c[1])) / 2 });
+    var perSquadra = Math.ceil(persone.length / n);
+    var maxGruppo = Math.max(2, Math.floor(perSquadra / 2) + 1);
+    var blocchi = gruppiDiPreferenza(persone, maxGruppo);
+
+    /* i gruppi più numerosi si piazzano per primi: sono i più difficili */
+    blocchi.sort(function (a, b) {
+      if (b.persone.length !== a.persone.length) return b.persone.length - a.persone.length;
+      return b.eta - a.eta;
     });
-    persone.forEach(function (p) {
-      if (usati[p._id]) return;
-      blocchi.push({ persone: [p], eta: etaDi(p) });
+    var grossi = blocchi.filter(function (b) { return b.persone.length > 1; });
+    var singoli = blocchi.filter(function (b) { return b.persone.length === 1; })
+      .sort(function (a, b) { return b.eta - a.eta; });
+
+    /* i gruppi vanno dove c'è più posto, per non gonfiare una squadra sola */
+    grossi.forEach(function (b) {
+      var meno = 0;
+      for (var k = 1; k < n; k++) {
+        if (squadre[k].componenti.length < squadre[meno].componenti.length) meno = k;
+      }
+      b.persone.forEach(function (p) { squadre[meno].componenti.push(p._id); });
     });
 
-    blocchi.sort(function (a, b) { return b.eta - a.eta; });
-
+    /* i singoli a serpentina sull'età: 1-2-3-4, poi 4-3-2-1 */
     var giro = 0, i = 0;
-    while (i < blocchi.length) {
+    while (i < singoli.length) {
       var ordine = [];
-      for (var k = 0; k < n; k++) ordine.push(k);
+      for (var k2 = 0; k2 < n; k2++) ordine.push(k2);
       if (giro % 2 === 1) ordine.reverse();
-      for (var j = 0; j < n && i < blocchi.length; j++) {
-        blocchi[i].persone.forEach(function (p) { squadre[ordine[j]].componenti.push(p._id); });
+      /* si salta chi è già pieno per colpa di un gruppo */
+      ordine = ordine.filter(function (idx) { return squadre[idx].componenti.length < perSquadra; });
+      if (!ordine.length) { ordine = [0]; for (var k3 = 1; k3 < n; k3++) ordine.push(k3); }
+      for (var j = 0; j < ordine.length && i < singoli.length; j++) {
+        squadre[ordine[j]].componenti.push(singoli[i].persone[0]._id);
         i++;
       }
       giro++;
     }
 
+    pareggiaDimensioni(squadre);
     sparpagliaDeboli(squadre);
     affinaEta(squadre);
-    squadre.forEach(function (s) {
-      if (!s.capitano && s.componenti.length) {
-        /* capitano: il più grande della squadra */
-        var mig = null;
-        s.componenti.forEach(function (id) {
-          var p = perId(id);
-          if (p && (!mig || etaDi(p) > etaDi(mig))) mig = p;
-        });
-        if (mig) s.capitano = mig._id;
+    scegliCapitani(squadre);
+  }
+
+  /* I gruppi di amici entrano tutti insieme e possono gonfiare una squadra.
+     Qui si rimette a posto il numero, spostando chi non è legato a nessuno
+     dalla squadra più affollata a quella più vuota. */
+  function pareggiaDimensioni(squadre) {
+    for (var giro = 0; giro < 40; giro++) {
+      var max = 0, min = 0;
+      for (var i = 1; i < squadre.length; i++) {
+        if (squadre[i].componenti.length > squadre[max].componenti.length) max = i;
+        if (squadre[i].componenti.length < squadre[min].componenti.length) min = i;
       }
+      if (squadre[max].componenti.length - squadre[min].componenti.length <= 1) break;
+      var liberi = squadre[max].componenti.filter(function (id) { return !LEGATI[id]; });
+      if (!liberi.length) break;          /* solo gruppi legati: non si tocca */
+      /* si sposta quello la cui età serve di più alla squadra che lo riceve */
+      var mediaMin = mediaEta(squadre[min]);
+      liberi.sort(function (a, b) {
+        return Math.abs(etaDi(perId(a)) - mediaMin) - Math.abs(etaDi(perId(b)) - mediaMin);
+      });
+      var chi = liberi[0];
+      squadre[max].componenti = squadre[max].componenti.filter(function (x) { return x !== chi; });
+      if (squadre[max].capitano === chi) squadre[max].capitano = '';
+      squadre[min].componenti.push(chi);
+    }
+  }
+
+  /* capitano: il più grande fra quelli che nuotano bene */
+  function scegliCapitani(squadre) {
+    squadre.forEach(function (s) {
+      if (s.capitano || !s.componenti.length) return;
+      var mig = null;
+      s.componenti.forEach(function (id) {
+        var p = perId(id);
+        if (!p) return;
+        if (!mig) { mig = p; return; }
+        var meglio = (!nuotaPoco(p) && nuotaPoco(mig)) ||
+          (nuotaPoco(p) === nuotaPoco(mig) && etaDi(p) > etaDi(mig));
+        if (meglio) mig = p;
+      });
+      if (mig) s.capitano = mig._id;
     });
   }
 
   function etaDi(p) { return Number(p && p.eta) || 13; }
   function nuotaPoco(p) { return p && p.nuoto === 'poco'; }
 
-  function amiciReciproci(persone) {
-    var out = [];
-    var perNome = {};
-    persone.forEach(function (p) { perNome[normalizza(p.nome)] = p; });
+  /* Trova la persona nominata nella preferenza. All'iscrizione si scrive
+     quello che viene: «Sofia», «Sofia Greco», «sofia greco». Si prova prima
+     il nome intero, poi il solo nome di battesimo se non è ambiguo. */
+  function trovaPersona(nome, persone) {
+    var cercato = normalizza(nome);
+    if (!cercato) return null;
+    var esatto = persone.filter(function (p) { return normalizza(p.nome) === cercato; });
+    if (esatto.length === 1) return esatto[0];
+    var soloNome = persone.filter(function (p) {
+      return normalizza(p.nome).split(' ')[0] === cercato.split(' ')[0];
+    });
+    if (soloNome.length === 1) return soloNome[0];
+    var contiene = persone.filter(function (p) { return normalizza(p.nome).indexOf(cercato) >= 0; });
+    if (contiene.length === 1) return contiene[0];
+    return null;
+  }
+
+  /* Mette insieme chi si è scelto, senza far crescere troppo i gruppi. */
+  function gruppiDiPreferenza(persone, maxGruppo) {
+    var padre = {}, quanti = {};
+    persone.forEach(function (p) { padre[p._id] = p._id; quanti[p._id] = 1; });
+    function radice(x) {
+      while (padre[x] !== x) { padre[x] = padre[padre[x]]; x = padre[x]; }
+      return x;
+    }
+
+    /* tutti i desideri espressi, i reciproci per primi */
+    var desideri = [];
     persone.forEach(function (p) {
       if (!p.amico) return;
-      var altro = perNome[normalizza(p.amico)];
-      if (!altro || altro._id === p._id) return;
-      if (normalizza(V(altro.amico, '')) !== normalizza(p.nome)) return;   /* deve essere reciproco */
-      if (out.some(function (c) { return c[0]._id === altro._id || c[1]._id === altro._id; })) return;
-      out.push([p, altro]);
+      var altro = trovaPersona(p.amico, persone);
+      if (!altro || altro._id === p._id) {
+        desideri.push({ a: p, testo: p.amico, reciproco: false, sconosciuto: true });
+        return;
+      }
+      var reciproco = normalizza(V(altro.amico, '')) &&
+        (trovaPersona(altro.amico, persone) || {})._id === p._id;
+      desideri.push({ a: p, b: altro, testo: altro.nome, reciproco: !!reciproco });
     });
-    return out;
+    desideri.sort(function (x, y) { return (y.reciproco ? 1 : 0) - (x.reciproco ? 1 : 0); });
+
+    ESITO_PREFERENZE = { fatte: [], saltate: [] };
+    desideri.forEach(function (d) {
+      if (d.sconosciuto) {
+        ESITO_PREFERENZE.saltate.push(d.a.nome + ' → «' + d.testo + '»: non l\'ho trovato fra gli iscritti');
+        return;
+      }
+      var ra = radice(d.a._id), rb = radice(d.b._id);
+      if (ra === rb) { ESITO_PREFERENZE.fatte.push(d.a.nome + ' con ' + d.b.nome); return; }
+      if (quanti[ra] + quanti[rb] > maxGruppo) {
+        ESITO_PREFERENZE.saltate.push(d.a.nome + ' con ' + d.b.nome +
+          ': sarebbe diventato un gruppo di ' + (quanti[ra] + quanti[rb]) + ', troppo per una squadra sola');
+        return;
+      }
+      padre[rb] = ra;
+      quanti[ra] += quanti[rb];
+      ESITO_PREFERENZE.fatte.push(d.a.nome + ' con ' + d.b.nome + (d.reciproco ? ' (scelta reciproca)' : ''));
+    });
+
+    /* dai legami ai gruppetti veri e propri */
+    var gruppi = {};
+    persone.forEach(function (p) {
+      var r = radice(p._id);
+      (gruppi[r] = gruppi[r] || []).push(p);
+    });
+    /* chi è legato a qualcun altro non va più spostato dai riequilibri:
+       altrimenti la preferenza appena soddisfatta verrebbe disfatta subito */
+    LEGATI = {};
+    Object.keys(gruppi).forEach(function (k) {
+      if (gruppi[k].length > 1) gruppi[k].forEach(function (p) { LEGATI[p._id] = true; });
+    });
+
+    return Object.keys(gruppi).map(function (k) {
+      var g = gruppi[k];
+      var somma = 0;
+      g.forEach(function (p) { somma += etaDi(p); });
+      return { persone: g, eta: somma / g.length };
+    });
   }
   function normalizza(s) {
     return String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
@@ -1065,8 +1192,9 @@
         if (conta[i] < conta[min]) min = i;
       }
       if (conta[max] - conta[min] <= 1) break;
-      var debole = squadre[max].componenti.filter(function (id) { return nuotaPoco(perId(id)); })[0];
-      var forte = squadre[min].componenti.filter(function (id) { return !nuotaPoco(perId(id)); })[0];
+      /* non si tocca chi è legato a un amico: la preferenza viene prima */
+      var debole = squadre[max].componenti.filter(function (id) { return nuotaPoco(perId(id)) && !LEGATI[id]; })[0];
+      var forte = squadre[min].componenti.filter(function (id) { return !nuotaPoco(perId(id)) && !LEGATI[id]; })[0];
       if (!debole || !forte) break;
       scambia(squadre[max], squadre[min], debole, forte);
       conta[max]--; conta[min]++;
@@ -1102,7 +1230,9 @@
       }
       var migliore = null;
       squadre[alta].componenti.forEach(function (ia) {
+        if (LEGATI[ia]) return;                       /* è con un amico: fermo lì */
         squadre[bassa].componenti.forEach(function (ib) {
+          if (LEGATI[ib]) return;
           var ea = etaDi(perId(ia)), eb = etaDi(perId(ib));
           if (ea <= eb) return;
           if (nuotaPoco(perId(ia)) !== nuotaPoco(perId(ib))) return;
@@ -1256,11 +1386,60 @@
     var scarto = Math.max.apply(null, medie) - Math.min.apply(null, medie);
     var dim = STATO.squadre.map(function (s) { return s.componenti.length; });
     var diffDim = Math.max.apply(null, dim) - Math.min.apply(null, dim);
+    var deboli = STATO.squadre.map(function (s) {
+      return s.componenti.filter(function (id) { return nuotaPoco(perId(id)); }).length;
+    });
+
     box.style.display = '';
-    box.textContent = '⚖️ Età medie da ' + Math.min.apply(null, medie).toFixed(1) + ' a ' +
-      Math.max.apply(null, medie).toFixed(1) + ' anni (scarto ' + scarto.toFixed(1) + ') · ' +
-      'componenti da ' + Math.min.apply(null, dim) + ' a ' + Math.max.apply(null, dim) + '. ' +
-      (scarto <= 1 && diffDim <= 1 ? 'Squadre equilibrate. 👍' : 'Si può fare di meglio: prova a rigenerare o sposta qualcuno.');
+    box.textContent = '';
+
+    function riga(t) {
+      var d = crea('div', null, t);
+      d.style.marginBottom = '4px';
+      box.appendChild(d);
+      return d;
+    }
+    riga('⚖️ Età medie da ' + Math.min.apply(null, medie).toFixed(1) + ' a ' +
+      Math.max.apply(null, medie).toFixed(1) + ' anni (scarto ' + scarto.toFixed(1) + ')');
+    riga('👥 Componenti da ' + Math.min.apply(null, dim) + ' a ' + Math.max.apply(null, dim) +
+      ' · chi nuota poco: ' + deboli.join(', ') + ' per squadra');
+
+    /* come sono andate le preferenze espresse all'iscrizione */
+    var fatte = ESITO_PREFERENZE.fatte, saltate = ESITO_PREFERENZE.saltate;
+    if (fatte.length || saltate.length) {
+      var r = riga('🤝 Preferenze: ' + fatte.length + ' rispettate' +
+        (saltate.length ? ', ' + saltate.length + ' no' : ''));
+      r.style.fontWeight = 'bold';
+      if (fatte.length) {
+        var d1 = document.createElement('details');
+        var s1 = document.createElement('summary');
+        s1.style.cssText = 'cursor:pointer;font-size:.88rem';
+        s1.textContent = 'Chi è insieme come voleva';
+        d1.appendChild(s1);
+        var u1 = document.createElement('ul');
+        u1.style.margin = '6px 0 0 18px';
+        fatte.forEach(function (x) { u1.appendChild(crea('li', null, x)); });
+        d1.appendChild(u1);
+        box.appendChild(d1);
+      }
+      if (saltate.length) {
+        var d2 = document.createElement('details');
+        var s2 = document.createElement('summary');
+        s2.style.cssText = 'cursor:pointer;font-size:.88rem';
+        s2.textContent = 'Preferenze che non sono riuscito a rispettare';
+        d2.appendChild(s2);
+        var u2 = document.createElement('ul');
+        u2.style.margin = '6px 0 0 18px';
+        saltate.forEach(function (x) { u2.appendChild(crea('li', null, x)); });
+        d2.appendChild(u2);
+        box.appendChild(d2);
+      }
+    }
+
+    var esito = riga(scarto <= 1 && diffDim <= 1
+      ? '👍 Squadre equilibrate.'
+      : '💡 Si può fare di meglio: prova a rigenerare o sposta qualcuno a mano.');
+    esito.style.marginTop = '6px';
   }
 
   /* ============================ TORNEI DI CARTE ======================== */
@@ -1490,6 +1669,9 @@
     else if (formato === 'gironi') incontri = calendarioGironi(coppie);
     else incontri = calendarioEliminazione(coppie);
 
+    /* nei tornei a piu' prove (il Trittico) ogni turno ha il suo gioco */
+    incontri = assegnaProve(incontri, V(torneoDati(idTorneo).prove, []));
+
     STATO.tornei[idTorneo] = STATO.tornei[idTorneo] || {};
     STATO.tornei[idTorneo].formato = formato;
     STATO.tornei[idTorneo].incontri = incontri;
@@ -1583,6 +1765,31 @@
       if (turno > 8) break;
     }
     return out;
+  }
+
+  /* Il Trittico e' un torneo solo con tre giochi dentro: a ogni turno se ne
+     gioca uno, a rotazione. Qui si scrive nel nome del turno quale prova
+     tocca, cosi' al tavolo non ci sono dubbi. Le finali giocano l'ultima. */
+  function assegnaProve(incontri, prove) {
+    if (!prove.length) return incontri;
+    var turni = [];
+    incontri.forEach(function (m) {
+      if (turni.indexOf(m.turno) < 0) turni.push(m.turno);
+    });
+    var soloGironi = turni.filter(function (t) { return !/final/i.test(t); });
+    var mappa = {};
+    soloGironi.forEach(function (t, i) { mappa[t] = prove[i % prove.length]; });
+    turni.forEach(function (t) {
+      if (!mappa[t]) mappa[t] = prove[prove.length - 1];   /* finali: l'ultima prova */
+    });
+    incontri.forEach(function (m) {
+      var p = mappa[m.turno];
+      if (p) {
+        m.prova = p.id;
+        m.turno = m.turno + ' — ' + V(p.emoji, '') + ' ' + V(p.nome, '');
+      }
+    });
+    return incontri;
   }
 
   function nomeCoppia(id, coppie) {
@@ -1957,13 +2164,38 @@
         });
       }
     });
+    /* la classifica combinata serve solo se nel gruppo ci sono più tornei:
+       col Trittico il torneo è già uno solo e sarebbe una copia inutile */
+    var quantiItaliana = torneiAttivi().filter(function (t) { return t.gruppo === 'italiana'; }).length;
     out.carte = {
       tornei: tornei,
-      generale: Object.keys(generale).map(function (k) { return { coppia: k, punti: generale[k] }; })
-        .sort(function (a, b) { return b.punti - a.punti; }),
+      generale: quantiItaliana > 1
+        ? Object.keys(generale).map(function (k) { return { coppia: k, punti: generale[k] }; })
+          .sort(function (a, b) { return b.punti - a.punti; })
+        : [],
       titoli: STATO.titoli.filter(function (t) { return t.area === 'adulti'; })
     };
     return out;
+  }
+
+  /* ---- bacheca pubblica aggiornata da sola ----
+     Si accoda per qualche secondo: se sto inserendo tre punteggi di fila,
+     la bacheca si aggiorna una volta sola alla fine, non tre.            */
+  var timerBacheca = null;
+  function aggiornaBachecaSePuoi() {
+    var s = $('autoPubblica');
+    if (!s || !s.checked || !SESS) return;
+    if (timerBacheca) clearTimeout(timerBacheca);
+    timerBacheca = setTimeout(function () {
+      token().then(function (t) { return FB.scriviClassifica(t, costruisciPubblico()); })
+        .then(function (ok) {
+          if (!ok) return;
+          var d = new Date();
+          testo('statoPubblicazione', '🔄 Bacheca aggiornata da sola alle ' +
+            due(d.getHours()) + ':' + due(d.getMinutes()) + '.');
+        })
+        .catch(function () { /* riprova al prossimo salvataggio */ });
+    }, 2500);
   }
 
   function pubblicaClassifiche() {

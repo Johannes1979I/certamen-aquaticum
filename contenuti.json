@@ -46,19 +46,19 @@
       "nome": "Tornei di carte",
       "titoloLungo": "Tornei di carte degli adulti",
       "emoji": "🃏",
-      "sottotitolo": "Scopone, briscola, tresette e burraco all'ombra, a bordo piscina",
+      "sottotitolo": "Il Trittico e il Burraco, all'ombra a bordo piscina",
       "eta": "dai 18 anni",
       "postiTotali": 64,
       "minimo": 8,
       "colore": "#0b7fd4",
-      "descrizione": "Quattro tornei a coppie ai tavoli sotto gli ombrelloni. Ci si iscrive da soli o già in coppia: chi arriva solo viene abbinato dagli organizzatori. I tornei si giocano in due blocchi, così chi vuole può partecipare a due tornei diversi.",
+      "descrizione": "Due tornei a coppie ai tavoli sotto gli ombrelloni: il Trittico con le carte italiane (briscola, scopone e tresette in un torneo solo) e il Burraco. Ci si iscrive da soli o già in coppia: chi arriva solo viene abbinato dagli organizzatori.",
       "punteggio": {
         "vittoria": 3,
         "pareggio": 1,
         "sconfitta": 0,
         "nota": "In caso di parità in classifica contano, nell'ordine: lo scontro diretto, poi la differenza punti realizzati."
       },
-      "avvisoTornei": "I tornei del blocco A si giocano in contemporanea, e così quelli del blocco B: puoi iscriverti al massimo a un torneo per blocco.",
+      "avvisoTornei": "Il Trittico si gioca nel blocco A e il Burraco nel blocco B: chi vuole può fare tutti e due.",
       "sezioni": "Le carte hanno due iscrizioni separate: i giochi all'italiana e il burraco."
     }
   },
@@ -536,97 +536,101 @@
   ],
   "tornei": [
     {
-      "id": "briscola",
-      "nome": "Briscola",
+      "id": "trittico",
+      "nome": "Il Trittico",
       "emoji": "🂡",
       "illustrazione": "briscola",
+      "gruppo": "italiana",
       "blocco": "A",
       "orario": "16:15",
       "formazione": "coppia",
-      "coppiaObbligatoria": false,
+      "coppiaObbligatoria": true,
       "giocatoriTavolo": 4,
-      "postiTotali": 16,
-      "durataPartita": 20,
-      "descrizione": "La più veloce e la più popolare: quaranta carte, un seme di briscola e la complicità con il compagno. Si gioca in quattro, a coppie incrociate, e si può giocare anche senza conoscere bene il compagno.",
-      "formula": "La formula la decidono gli organizzatori il giorno stesso, in base a quante coppie si sono iscritte: girone all'italiana se siamo pochi, gironi con finale se siamo tanti, tabellone a eliminazione se siamo tantissimi. Ogni partita dura al massimo 20 minuti e si gioca al meglio delle tre smazzate.",
+      "postiTotali": 24,
+      "durataPartita": 25,
+      "escluso": false,
+      "descrizione": "Un torneo solo con le carte italiane, in tre prove: si comincia a briscola, si passa allo scopone e si chiude a tresette. La stessa coppia gioca tutte e tre le prove e i punti si sommano: non vince chi è bravo a un gioco, vince chi se la cava con tutti e tre.",
+      "partita": "Ogni turno si gioca a una prova diversa, al massimo 25 minuti a partita. Vittoria 3 punti, pareggio 1, sconfitta 0: la classifica è unica.",
+      "formula": "La formula la decidono gli organizzatori il giorno stesso, in base a quante coppie si sono iscritte: girone all'italiana se siamo pochi, gironi con finale se siamo tanti. Le tre prove si alternano turno dopo turno.",
       "regole": [
         "Si gioca in quattro, a coppie: i compagni siedono uno di fronte all'altro.",
-        "Mazzo da 40 carte, si scopre la briscola all'inizio della mano.",
-        "Ordine delle carte: asso, tre, re, cavallo, fante, poi 7, 6, 5, 4, 2.",
-        "Vince la mano chi ha la carta più alta del seme di uscita, o la briscola più alta.",
-        "Vince la smazzata la coppia che supera i 60 punti; a 60 pari la smazzata è patta.",
-        "Vietato ogni segno convenuto con il compagno: qui si gioca per divertirsi."
+        "La coppia resta la stessa per tutte e tre le prove.",
+        "Ogni turno ha la sua prova: briscola, poi scopone, poi tresette.",
+        "I punti delle tre prove si sommano in una classifica unica.",
+        "Le regole di ogni singola prova sono qui sotto, una per gioco.",
+        "In caso di parità contano, nell'ordine: lo scontro diretto, poi la differenza punti."
       ],
       "varianti": [
-        "Briscola chiamata in cinque, se al tavolo ci si ritrova in numero dispari.",
-        "Briscola scoperta: si gioca a carte scoperte, tutta strategia e niente fortuna.",
-        "Briscola a perdere: vince la coppia che fa meno punti."
+        "Trittico corto: due prove sole invece di tre, se il tempo stringe.",
+        "Trittico a scelta: ogni coppia scarta la prova che le piace meno e ne gioca due.",
+        "Trittico a staffetta: si cambia gioco a metà partita, senza cambiare tavolo."
       ],
-      "premio": "Coppa Briscola",
-      "partita": "Ogni partita dura al massimo 20 minuti e si gioca al meglio delle tre smazzate.",
-      "gruppo": "italiana"
-    },
-    {
-      "id": "scopone",
-      "nome": "Scopone scientifico",
-      "emoji": "🂱",
-      "illustrazione": "scopone",
-      "blocco": "A",
-      "orario": "16:15",
-      "formazione": "coppia",
-      "coppiaObbligatoria": true,
-      "giocatoriTavolo": 4,
-      "postiTotali": 16,
-      "durataPartita": 30,
-      "descrizione": "Il torneo dei veterani: dieci carte a testa, niente mazzo da pescare, solo memoria e testa. Si gioca rigorosamente a coppie e il compagno va scelto bene.",
-      "formula": "La formula la decidono gli organizzatori il giorno stesso, in base a quante coppie si sono iscritte: girone all'italiana se siamo pochi, gironi con finale se siamo tanti, tabellone a eliminazione se siamo tantissimi. Ogni partita si gioca a 11 punti, con un tetto di 30 minuti: se scade il tempo vince chi è avanti.",
-      "regole": [
-        "Quattro giocatori, due coppie: i compagni siedono uno di fronte all'altro.",
-        "Tutte e 40 le carte vengono distribuite: 10 a testa, 4 scoperte sul tavolo.",
-        "Si prende con la carta uguale o con la somma esatta delle carte in tavola.",
-        "Punti: carte (chi ne ha più di 20), denari (chi ha più ori), settebello, primiera.",
-        "Ogni scopa vale un punto: si fa scopa quando si prende tutto quello che c'è in tavola.",
-        "Le ultime carte rimaste in tavola vanno a chi ha preso per ultimo, ma non è scopa."
+      "prove": [
+        {
+          "id": "briscola",
+          "nome": "Briscola",
+          "emoji": "🂡",
+          "illustrazione": "briscola",
+          "descrizione": "La più veloce e la più popolare: quaranta carte, un seme di briscola e la complicità con il compagno. Si gioca in quattro, a coppie incrociate, e si può giocare anche senza conoscere bene il compagno.",
+          "partita": "Ogni partita dura al massimo 20 minuti e si gioca al meglio delle tre smazzate.",
+          "regole": [
+            "Si gioca in quattro, a coppie: i compagni siedono uno di fronte all'altro.",
+            "Mazzo da 40 carte, si scopre la briscola all'inizio della mano.",
+            "Ordine delle carte: asso, tre, re, cavallo, fante, poi 7, 6, 5, 4, 2.",
+            "Vince la mano chi ha la carta più alta del seme di uscita, o la briscola più alta.",
+            "Vince la smazzata la coppia che supera i 60 punti; a 60 pari la smazzata è patta.",
+            "Vietato ogni segno convenuto con il compagno: qui si gioca per divertirsi."
+          ],
+          "varianti": [
+            "Briscola chiamata in cinque, se al tavolo ci si ritrova in numero dispari.",
+            "Briscola scoperta: si gioca a carte scoperte, tutta strategia e niente fortuna.",
+            "Briscola a perdere: vince la coppia che fa meno punti."
+          ]
+        },
+        {
+          "id": "scopone",
+          "nome": "Scopone scientifico",
+          "emoji": "🂱",
+          "illustrazione": "scopone",
+          "descrizione": "Il torneo dei veterani: dieci carte a testa, niente mazzo da pescare, solo memoria e testa. Si gioca rigorosamente a coppie e il compagno va scelto bene.",
+          "partita": "Ogni partita si gioca a 11 punti, con un tetto di 30 minuti: se scade il tempo vince chi è avanti.",
+          "regole": [
+            "Quattro giocatori, due coppie: i compagni siedono uno di fronte all'altro.",
+            "Tutte e 40 le carte vengono distribuite: 10 a testa, 4 scoperte sul tavolo.",
+            "Si prende con la carta uguale o con la somma esatta delle carte in tavola.",
+            "Punti: carte (chi ne ha più di 20), denari (chi ha più ori), settebello, primiera.",
+            "Ogni scopa vale un punto: si fa scopa quando si prende tutto quello che c'è in tavola.",
+            "Le ultime carte rimaste in tavola vanno a chi ha preso per ultimo, ma non è scopa."
+          ],
+          "varianti": [
+            "Scopone a 21 punti per la finale, se resta tempo.",
+            "Scopa normale a coppie, più semplice per chi non ha mai giocato a scopone.",
+            "Scopone con l'asso piglia tutto, per una versione più mossa."
+          ]
+        },
+        {
+          "id": "tresette",
+          "nome": "Tresette",
+          "emoji": "🂲",
+          "illustrazione": "tresette",
+          "descrizione": "Il gioco del silenzio e delle parole giuste: si può parlare solo con le frasi ammesse, e il resto lo deve capire il compagno. Elegante, lento e spietato.",
+          "partita": "Ogni partita si gioca a 21 punti, con un tetto di 25 minuti: se scade il tempo vince chi è avanti.",
+          "regole": [
+            "Quattro giocatori, due coppie: i compagni siedono uno di fronte all'altro.",
+            "Mazzo da 40 carte, 10 a testa. Si deve sempre rispondere al seme di uscita.",
+            "Valore delle carte: asso 1 punto, due, tre, re, cavallo e fante un terzo di punto ciascuno.",
+            "L'ultima presa vale 1 punto.",
+            "Ordine di forza: tre, due, asso, re, cavallo, fante, 7, 6, 5, 4.",
+            "Si può parlare solo con le frasi ammesse: busso, striscio, volo. Nient'altro."
+          ],
+          "varianti": [
+            "Tresette a non prendere: vince la coppia che fa meno punti.",
+            "Tresette con l'accuso di napoletana e buon gioco, per chi lo gioca così da sempre.",
+            "Tresette in due, se qualcuno resta senza compagno."
+          ]
+        }
       ],
-      "varianti": [
-        "Scopone a 21 punti per la finale, se resta tempo.",
-        "Scopa normale a coppie, più semplice per chi non ha mai giocato a scopone.",
-        "Scopone con l'asso piglia tutto, per una versione più mossa."
-      ],
-      "premio": "Coppa Scopone",
-      "partita": "Ogni partita si gioca a 11 punti, con un tetto di 30 minuti: se scade il tempo vince chi è avanti.",
-      "gruppo": "italiana"
-    },
-    {
-      "id": "tresette",
-      "nome": "Tresette",
-      "emoji": "🂲",
-      "illustrazione": "tresette",
-      "blocco": "B",
-      "orario": "17:35",
-      "formazione": "coppia",
-      "coppiaObbligatoria": true,
-      "giocatoriTavolo": 4,
-      "postiTotali": 16,
-      "durataPartita": 25,
-      "descrizione": "Il gioco del silenzio e delle parole giuste: si può parlare solo con le frasi ammesse, e il resto lo deve capire il compagno. Elegante, lento e spietato.",
-      "formula": "La formula la decidono gli organizzatori il giorno stesso, in base a quante coppie si sono iscritte: girone all'italiana se siamo pochi, gironi con finale se siamo tanti, tabellone a eliminazione se siamo tantissimi. Ogni partita si gioca a 21 punti, con un tetto di 25 minuti: se scade il tempo vince chi è avanti.",
-      "regole": [
-        "Quattro giocatori, due coppie: i compagni siedono uno di fronte all'altro.",
-        "Mazzo da 40 carte, 10 a testa. Si deve sempre rispondere al seme di uscita.",
-        "Valore delle carte: asso 1 punto, due, tre, re, cavallo e fante un terzo di punto ciascuno.",
-        "L'ultima presa vale 1 punto.",
-        "Ordine di forza: tre, due, asso, re, cavallo, fante, 7, 6, 5, 4.",
-        "Si può parlare solo con le frasi ammesse: busso, striscio, volo. Nient'altro."
-      ],
-      "varianti": [
-        "Tresette a non prendere: vince la coppia che fa meno punti.",
-        "Tresette con l'accuso di napoletana e buon gioco, per chi lo gioca così da sempre.",
-        "Tresette in due, se qualcuno resta senza compagno."
-      ],
-      "premio": "Coppa Tresette",
-      "partita": "Ogni partita si gioca a 21 punti, con un tetto di 25 minuti: se scade il tempo vince chi è avanti.",
-      "gruppo": "italiana"
+      "premio": "Coppa del Trittico"
     },
     {
       "id": "burraco",
@@ -688,7 +692,7 @@
     {
       "ora": "16:15",
       "area": "adulti",
-      "titolo": "Blocco A — Briscola e Scopone: primo turno",
+      "titolo": "Blocco A — Il Trittico: prima prova (briscola)",
       "nota": ""
     },
     {
@@ -706,7 +710,7 @@
     {
       "ora": "16:50",
       "area": "adulti",
-      "titolo": "Blocco A — secondo turno",
+      "titolo": "Blocco A — Il Trittico: seconda prova (scopone)",
       "nota": ""
     },
     {
@@ -730,7 +734,7 @@
     {
       "ora": "17:25",
       "area": "adulti",
-      "titolo": "Blocco A — finali di Briscola e Scopone",
+      "titolo": "Blocco A — Il Trittico: terza prova (tresette) e finale",
       "nota": ""
     },
     {
@@ -742,7 +746,7 @@
     {
       "ora": "17:35",
       "area": "adulti",
-      "titolo": "Blocco B — Tresette e Burraco: primo turno",
+      "titolo": "Blocco B — Burraco: primo turno",
       "nota": ""
     },
     {
@@ -772,7 +776,7 @@
     {
       "ora": "18:35",
       "area": "adulti",
-      "titolo": "Blocco B — finali di Tresette e Burraco",
+      "titolo": "Blocco B — finale del Burraco",
       "nota": ""
     },
     {
@@ -819,18 +823,8 @@
       "area": "ragazzi"
     },
     {
-      "nome": "Coppa Briscola",
+      "nome": "Coppa del Trittico",
       "emoji": "🂡",
-      "area": "adulti"
-    },
-    {
-      "nome": "Coppa Scopone",
-      "emoji": "🂱",
-      "area": "adulti"
-    },
-    {
-      "nome": "Coppa Tresette",
-      "emoji": "🂲",
       "area": "adulti"
     },
     {
@@ -948,21 +942,19 @@
   "gruppiCarte": [
     {
       "id": "italiana",
-      "nome": "Torneo dei giochi all'italiana",
-      "nomeBreve": "Giochi all'italiana",
+      "nome": "Il Trittico",
+      "nomeBreve": "Il Trittico",
       "emoji": "🂡",
       "illustrazione": "briscola",
       "colore": "#1f8a5b",
       "tornei": [
-        "briscola",
-        "scopone",
-        "tresette"
+        "trittico"
       ],
-      "postiTotali": 48,
-      "sottotitolo": "Scopone, briscola e tresette: le carte di sempre, con il mazzo da 40",
-      "descrizione": "Un'unica iscrizione per i tre tornei con le carte italiane. Scegli a quali vuoi partecipare: puoi farne anche più di uno, purché siano in blocchi orari diversi. Oltre alla coppa di ogni torneo c'è la classifica generale dei giochi all'italiana, che somma i punti dei tre.",
-      "premio": "Coppa dei giochi all'italiana",
-      "nota": "I tre tornei hanno ognuno la sua coppa, ma i punti si sommano anche in una classifica unica."
+      "postiTotali": 24,
+      "sottotitolo": "Un torneo, tre prove: briscola, scopone e tresette",
+      "descrizione": "Le carte italiane in un torneo solo. La coppia gioca tutte e tre le prove — briscola, scopone e tresette — e i punti si sommano in una classifica unica. Ci si iscrive a coppie: se non hai il compagno, te ne troviamo uno.",
+      "premio": "Coppa del Trittico",
+      "nota": "Le tre prove si giocano una dopo l'altra nel blocco A, senza cambiare compagno."
     },
     {
       "id": "burraco",

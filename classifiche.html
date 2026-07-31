@@ -125,19 +125,30 @@ CA.carica().then(function(d){
   CA.disegnaPiede('piede');
   collegaLinguette();
   disegnaPremi();
+  /* Aggiornamento dal vivo: durante il pomeriggio i punteggi cambiano in
+     continuazione, quindi si ricontrolla ogni 15 secondi. Solo con la pagina
+     davanti agli occhi: in secondo piano si sta fermi e non si consuma. */
   carica();
-  setInterval(function(){ if(!document.hidden) carica(); }, 60000);
+  setInterval(function(){ if(!document.hidden) carica(); }, 15000);
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) carica(); });
   window.addEventListener('focus', carica);
 }).catch(function(e){ CA.toast('Non riesco a leggere i contenuti: ' + e.message, 9000); });
 
 $('btnRicarica').addEventListener('click', function(){ carica(true); });
 
+var ULTIMO = '';
 function carica(conAvviso){
   if(!window.FB || !FB.attivo()){ disegnaTutto(); return; }
   FB.leggiClassifica().then(function(c){
+    /* se non è cambiato niente non ridisegno: altrimenti ogni quindici
+       secondi la pagina sfarfalla sotto gli occhi di chi la sta leggendo */
+    var impronta = JSON.stringify(c);
+    if(impronta === ULTIMO && !conAvviso) return;
+    var eraGiaPieno = !!ULTIMO;
+    ULTIMO = impronta;
     CL = c;
     disegnaTutto();
+    if(eraGiaPieno) segnalaNovita();
     if(conAvviso) CA.toast(c ? '✅ Classifiche aggiornate.' : 'Le classifiche non sono ancora state pubblicate.', 4000);
   }).catch(function(){
     disegnaTutto();
@@ -154,6 +165,22 @@ function disegnaTutto(){
   disegnaCarte();
 }
 function due(n){ return (n < 10 ? '0' : '') + n; }
+
+/* un lampo verde quando arrivano punteggi nuovi, così chi sta guardando
+   la pagina si accorge che è cambiato qualcosa */
+function segnalaNovita(){
+  var el = $('aggiornato');
+  if(!el) return;
+  el.style.transition = 'none';
+  el.style.background = 'rgba(34,197,94,.25)';
+  el.style.borderRadius = '999px';
+  el.style.padding = '5px 14px';
+  setTimeout(function(){
+    el.style.transition = 'background .9s ease';
+    el.style.background = 'transparent';
+  }, 60);
+  CA.toast('🔄 Punteggi aggiornati adesso.', 3500);
+}
 
 /* ------------------------------- ragazzi -------------------------------- */
 function disegnaRagazzi(){
