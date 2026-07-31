@@ -185,7 +185,7 @@ CA.carica().then(function(d){
 function disegna(){
   var t = V(DATI.tema, {});
   var area = V(V(DATI.aree, {}).adulti, {});
-  var tornei = V(DATI.tornei, []);
+  var tornei = CA.torneiAttivi();
 
   testo('marchioNome', V(t.titolo, 'Certamen Aquaticum'));
   testo('heroTitolo', V(area.titoloLungo, V(area.nome, 'Tornei di carte')));

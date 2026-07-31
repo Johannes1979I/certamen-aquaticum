@@ -141,6 +141,45 @@ body{ background:#eef4fa; }
 .mini{ font-size:.86rem; }
 input.mini, select.mini{ min-height:42px; padding:9px 11px; }
 
+/* ---- elenco riordinabile (giochi e tornei) ---- */
+.voce-ord{
+  border:1px solid var(--linea); border-left:6px solid var(--c2); border-radius:14px;
+  padding:12px 14px; margin-bottom:10px; background:#fff;
+}
+.voce-ord.riserva{ border-left-color:var(--c3); background:#fffdf5; }
+.voce-ord.escluso{ border-left-color:#b9c3cb; background:#f4f6f8; opacity:.72; }
+.voce-ord.trascino{ opacity:.4; }
+.voce-ord.bersaglio{ box-shadow:0 -3px 0 0 var(--c1) inset, 0 0 0 2px var(--c1); }
+.testa-ord{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.maniglia{
+  cursor:grab; font-size:1.25rem; color:var(--muted); line-height:1;
+  padding:6px 4px; user-select:none; touch-action:none;
+}
+.maniglia:active{ cursor:grabbing; }
+.testa-ord .num-ord{
+  background:var(--ink); color:#fff; border-radius:999px; min-width:30px; height:30px;
+  display:grid; place-items:center; font-size:.84rem; font-weight:bold; padding:0 8px;
+}
+.testa-ord .nome-ord{ font-weight:bold; flex:1; min-width:120px; }
+.frecce{ display:flex; gap:5px; }
+.frecce button{
+  border:none; background:rgba(10,37,64,.08); border-radius:9px; width:40px; height:40px;
+  font-size:1rem; cursor:pointer; color:var(--ink);
+}
+.frecce button:disabled{ opacity:.3; cursor:not-allowed; }
+.stati{ display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+.stati button{
+  border:2px solid var(--linea); background:#fff; color:var(--muted); border-radius:999px;
+  padding:8px 14px; font:inherit; font-size:.85rem; font-weight:bold; cursor:pointer; min-height:40px;
+}
+.stati button.presa[data-s="programma"]{ border-color:#22c55e; background:rgba(34,197,94,.14); color:#0f7a4a; }
+.stati button.presa[data-s="riserva"]{ border-color:var(--c3); background:rgba(255,194,51,.2); color:#7a5300; }
+.stati button.presa[data-s="escluso"]{ border-color:#b9c3cb; background:rgba(10,37,64,.08); color:var(--muted); }
+.conteggi-ord{
+  display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; font-size:.88rem; color:var(--muted);
+}
+.conteggi-ord b{ color:var(--ink); }
+
 /* ---- foglio di stampa ---- */
 .foglio{
   display:none; position:fixed; inset:0; background:rgba(10,37,64,.75); z-index:100;
@@ -347,19 +386,53 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
     <p class="aiuto" id="statoPubblicazione" style="margin-top:12px"></p>
   </div>
 
+  <div class="card">
+    <h2>📣 Invita la gente</h2>
+    <p class="aiuto">Il messaggio è già scritto: copialo, oppure apri direttamente WhatsApp o Telegram.
+      Per allegare anche la locandina, scaricala come immagine dal pulsante qui sotto e mettila nel messaggio.</p>
+    <div class="campo">
+      <label for="msgInvito">Messaggio pronto</label>
+      <textarea id="msgInvito" style="min-height:200px"></textarea>
+    </div>
+    <div class="azioni" style="justify-content:flex-start">
+      <button class="btn btn-chiaro btn-piccolo" id="btnCopiaMsg">📋 Copia il messaggio</button>
+      <a class="btn btn-p btn-piccolo" id="admWa" target="_blank" rel="noopener">💬 WhatsApp</a>
+      <a class="btn btn-p btn-piccolo" id="admTg" target="_blank" rel="noopener">✈️ Telegram</a>
+      <a class="btn btn-chiaro btn-piccolo" href="locandina.html" target="_blank">🖼️ Locandina (stampa o immagine)</a>
+    </div>
+  </div>
+
   <div class="card" id="sec-github">
     <h2>🌐 Pubblica i contenuti del sito</h2>
     <p class="aiuto">Serve solo quando cambi testi, giochi, orari o foto nella scheda «Contenuti». Le iscrizioni e i punteggi non passano da qui: quelli stanno nel database.</p>
-    <details>
-      <summary style="cursor:pointer;font-weight:bold;padding:6px 0">Collegamento a GitHub</summary>
+    <details id="dettagliGh">
+      <summary style="cursor:pointer;font-weight:bold;padding:6px 0">🔑 Collegamento a GitHub (serve una volta sola)</summary>
+      <div class="nota-box" style="margin:12px 0">
+        <b>Come si prende il token, in tre passi:</b>
+        <ol style="margin:8px 0 0 20px;font-size:.92rem">
+          <li>Apri <a href="https://github.com/settings/tokens/new?scopes=repo&amp;description=Certamen%20Aquaticum" target="_blank" rel="noopener">questa pagina di GitHub</a> (sei già dentro come Johannes1979I).</li>
+          <li>In fondo premi <b>Generate token</b>: la spunta su <b>repo</b> è già messa.</li>
+          <li>Copia la sigla che compare (comincia con <code>ghp_</code>) e incollala qui sotto.</li>
+        </ol>
+        <p style="margin-top:8px;font-size:.9rem">Il token resta solo in questo browser: non finisce nel sito e non lo vede nessun altro. Se scade, rifai gli stessi tre passi.</p>
+      </div>
       <div class="griglia2" style="margin-top:12px">
         <div class="campo"><label for="gh_owner">Utente</label><input type="text" id="gh_owner" value="Johannes1979I" class="mini" /></div>
         <div class="campo"><label for="gh_repo">Repository</label><input type="text" id="gh_repo" value="certamen-aquaticum" class="mini" /></div>
         <div class="campo"><label for="gh_branch">Ramo</label><input type="text" id="gh_branch" value="main" class="mini" /></div>
-        <div class="campo"><label for="gh_token">Token</label><input type="password" id="gh_token" class="mini" /></div>
+        <div class="campo"><label for="gh_token">Token</label><input type="password" id="gh_token" class="mini" placeholder="ghp_…" /></div>
       </div>
       <button class="btn btn-chiaro btn-piccolo" id="btnSalvaGh">Salva in questo browser</button>
     </details>
+
+    <div class="nota-box" id="avvisoBozza" style="display:none;margin-top:14px">
+      <b>📝 Hai modifiche non ancora pubblicate</b>
+      <p id="testoBozza" style="margin-top:5px"></p>
+      <div class="azioni" style="justify-content:flex-start;margin-top:10px">
+        <button class="btn btn-p btn-piccolo" id="btnRiprendiBozza">Riprendi le mie modifiche</button>
+        <button class="btn btn-chiaro btn-piccolo" id="btnButtaBozza">Buttale via</button>
+      </div>
+    </div>
     <div class="azioni" style="justify-content:flex-start;margin-top:14px">
       <button class="btn btn-p" id="btnPubblicaContenuti">🌐 Pubblica contenuti.json</button>
       <button class="btn btn-chiaro btn-piccolo" id="btnScarica">⬇️ Scarica contenuti.json</button>
@@ -409,7 +482,10 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
 
   <div class="card">
     <h2>🎵 Musica dei giochi</h2>
-    <p class="aiuto">Ogni gioco dei ragazzi ha la sua canzone. Se lasci vuoto il collegamento, il sito apre la ricerca su YouTube del titolo: funziona sempre. Se vuoi un video preciso, incolla qui il suo indirizzo.</p>
+    <p class="aiuto">Ogni gioco dei ragazzi ha la sua canzone, con il collegamento
+      <b>diretto al video</b>. Se vuoi cambiare brano incolla l'indirizzo del video nuovo
+      (quello che copi dalla barra del browser su YouTube). Se svuoti il campo, il sito
+      apre la ricerca del titolo: è la rete di sicurezza, nel caso un video sparisca.</p>
     <label class="spunta" for="c_musicaAttiva" style="margin-bottom:14px">
       <input type="checkbox" id="c_musicaAttiva" />
       <span>Mostra la canzone accanto a ogni gioco</span>
@@ -419,12 +495,20 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
 
   <div class="card">
     <h2>🎯 Giochi in acqua</h2>
-    <p class="aiuto">Titolo, orario, durata e testi di ogni gioco. Le regole e le varianti si scrivono una per riga.</p>
+    <p class="aiuto">Decidi tu quali giochi si fanno e in che ordine. Trascina la maniglia ⠿
+      per spostare un gioco, oppure usa le frecce ▲▼ se sei da telefono.
+      <b>In programma</b> = si gioca · <b>Di riserva</b> = solo se avanza tempo ·
+      <b>Escluso</b> = sparisce dal sito.</p>
+    <div class="conteggi-ord" id="conteggiGiochi"></div>
     <div id="editGiochi"></div>
+    <p class="aiuto" style="margin-top:12px">La durata totale dei giochi in programma è
+      <b id="durataTotale">—</b>: confrontala con le ore dell'evento.</p>
   </div>
 
   <div class="card">
     <h2>🃏 Tornei di carte</h2>
+    <p class="aiuto">Stessa cosa per i tornei: ordine, quali si fanno e quali no.</p>
+    <div class="conteggi-ord" id="conteggiTornei"></div>
     <div id="editTornei"></div>
   </div>
 

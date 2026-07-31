@@ -98,6 +98,21 @@
   </div>
 </section>
 
+<!-- ============================= CONDIVIDI =============================== -->
+<section id="condividi" style="padding-top:10px">
+  <div class="wrap">
+    <div class="nota-box info" style="text-align:center">
+      <h3 style="font-size:1.12rem;margin-bottom:6px">📣 Passa parola</h3>
+      <p style="margin-bottom:16px">Manda l'invito nel gruppo del residence: il messaggio è già pronto, con la data e il link per iscriversi.</p>
+      <div class="azioni">
+        <a class="btn btn-p" id="condWa" target="_blank" rel="noopener">💬 Manda su WhatsApp</a>
+        <a class="btn btn-p" id="condTg" target="_blank" rel="noopener">✈️ Manda su Telegram</a>
+        <a class="btn btn-chiaro" href="locandina.html">🖼️ Locandina da stampare o allegare</a>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ============================== LA PISCINA ============================= -->
 <section id="anteprimaFoto" style="background:#fff;border-top:1px solid var(--linea);padding-top:36px;padding-bottom:44px">
   <div class="wrap">
@@ -174,6 +189,8 @@ function disegna(){
 
   disegnaTessere();
   disegnaFotoBrevi();
+  $('condWa').href = CA.linkWhatsApp();
+  $('condTg').href = CA.linkTelegram();
 }
 
 /* i contatori veri, che si aggiornano da soli */
@@ -191,8 +208,8 @@ function disegnaTessere(){
   var el = $('tessere');
   el.textContent = '';
   var aree = V(DATI.aree, {}), rag = V(aree.ragazzi, {}), adu = V(aree.adulti, {});
-  var giochi = V(DATI.giochi, []).length;
-  var tornei = V(DATI.tornei, []).length;
+  var giochi = CA.giochiAttivi().length;
+  var tornei = CA.torneiAttivi().length;
 
   var voci = [
     { id:'tesRag', ico:'🤽', tit:V(rag.nome,'Giochi in acqua'), col:CA.colore(rag.colore,'#14c4b4'),

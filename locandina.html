@@ -32,7 +32,12 @@ body{
 .foto{
   height:104mm; position:relative; overflow:hidden; background:#cfe6f5;
 }
-.foto .img{ position:absolute; inset:0; background-size:cover; background-position:center 55%; }
+/* La foto è un <img> vero e non uno sfondo CSS: gli sfondi molti browser
+   non li stampano, le immagini sì. */
+.foto .img{
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; object-position:center 55%;
+}
 .foto .velo{
   position:absolute; inset:0;
   background:linear-gradient(165deg, rgba(6,50,92,.72) 0%, rgba(11,127,212,.5) 55%, rgba(255,255,255,0) 100%);
@@ -85,7 +90,20 @@ h1{ font-size:17mm; line-height:1; margin-top:auto; text-shadow:0 2mm 8mm rgba(0
   @page{ size:A4 portrait; margin:0; }
   body{ background:#fff; padding:0; display:block; }
   .barra-alta{ display:none !important; }
-  .a4{ box-shadow:none; width:210mm; height:297mm; }
+  /* niente rimpicciolimento in stampa: sullo schermo stretto la pagina viene
+     scalata con transform, ma sul foglio deve restare A4 piena */
+  .a4{
+    box-shadow:none; width:210mm; height:297mm;
+    transform:none !important; margin:0 !important;
+  }
+}
+/* I colori e le sfumature vanno stampati davvero: senza questo il foglio esce
+   bianco, con i soli testi. Vale per Safari, Chrome e Firefox. */
+html, body, .a4, .foto, .foto .velo, .occhiello, .mondo, .mondo.rag, .mondo.adu,
+.quando div, .nota, .qr-box canvas{
+  -webkit-print-color-adjust:exact !important;
+  print-color-adjust:exact !important;
+  color-adjust:exact !important;
 }
 @media(max-width:230mm){
   .a4{ transform-origin:top center; }
@@ -96,13 +114,18 @@ h1{ font-size:17mm; line-height:1; margin-top:auto; text-shadow:0 2mm 8mm rgba(0
 
 <div class="barra-alta">
   <button onclick="window.print()">🖨️ Stampa la locandina</button>
-  <a class="chiaro" href="admin.html">← Torna all'area organizzatori</a>
-  <a class="chiaro" href="index.html">Vedi il sito</a>
+  <button id="btnPng">⬇️ Scarica come immagine</button>
+  <a class="chiaro" id="btnWa" target="_blank" rel="noopener">💬 WhatsApp</a>
+  <a class="chiaro" id="btnTg" target="_blank" rel="noopener">✈️ Telegram</a>
+  <a class="chiaro" href="admin.html">← Area organizzatori</a>
 </div>
+<p style="max-width:210mm;text-align:center;color:#33566b;font-size:.92rem;margin:-6px 0 2px">
+  Per mandarla nei gruppi: scarica l'immagine, poi premi WhatsApp o Telegram e allegala al messaggio già pronto.
+</p>
 
 <div class="a4" id="foglio">
   <div class="foto">
-    <div class="img" id="foto"></div>
+    <img class="img" id="foto" alt="La piscina del Residence Holiday" />
     <div class="velo"></div>
     <div class="sopra">
       <span class="occhiello" id="occhiello">Ferragosto 2026</span>
@@ -173,9 +196,9 @@ CA.carica().then(function(d){
   testo('qLuogo', V(ev.luogo, ''));
 
   testo('mRagTitolo', V(rag.nome, 'Giochi in acqua'));
-  testo('mRagTesto', V(d.giochi, []).length + ' giochi a squadre con palloni e materassini. ' + V(rag.eta, ''));
+  testo('mRagTesto', CA.giochiAttivi().length + ' giochi a squadre con palloni e materassini. ' + V(rag.eta, ''));
   testo('mAduTitolo', V(adu.nome, 'Tornei di carte'));
-  testo('mAduTesto', V(d.tornei, []).map(function(x){ return x.nome; }).join(', ') + '. Si gioca a coppie.');
+  testo('mAduTesto', CA.torneiAttivi().map(function(x){ return x.nome; }).join(', ') + '. Si gioca a coppie.');
 
   testo('istruzioni', V(loc.istruzioniQr, ''));
   var q = V(d.quota, {});
@@ -186,8 +209,8 @@ CA.carica().then(function(d){
   var foto = V(loc.foto, V(d.fotoHero, (V(d.foto, [])[0] || '')));
   if(foto){
     var el = $('foto');
-    el.style.backgroundImage = 'url("' + encodeURI(foto) + '")';
-    if(loc.fotoPos) el.style.backgroundPosition = loc.fotoPos;
+    el.src = foto;
+    if(loc.fotoPos) el.style.objectPosition = loc.fotoPos;
   }
 
   var url = V(cond.urlSito, 'https://johannes1979i.github.io/certamen-aquaticum/');
@@ -196,10 +219,230 @@ CA.carica().then(function(d){
   }catch(e){
     $('qr').style.display = 'none';
   }
+  $('btnWa').href = CA.linkWhatsApp();
+  $('btnTg').href = CA.linkTelegram();
+  $('btnPng').addEventListener('click', scaricaPng);
   adattaAllaFinestra();
 }).catch(function(e){
   alert('Non riesco a leggere contenuti.json: ' + e.message);
 });
+
+/* =========================================================================
+   La locandina come immagine PNG, da allegare ai messaggi.
+   La disegno su una tela con le stesse proporzioni di un A4 (1240x1754 punti,
+   cioè 150 punti per pollice): così si può mandare su WhatsApp e Telegram,
+   che le immagini le mostrano e i PDF no.
+   ========================================================================= */
+var LARG = 1240, ALT = 1754, K = LARG / 210;   /* K = punti per millimetro */
+
+function png(){
+  var d = CA.dati();
+  var t = V(d.tema, {}), ev = V(d.evento, {}), res = V(d.residence, {});
+  var loc = V(d.locandina, {}), con = V(d.contatti, {}), q = V(d.quota, {});
+  var aree = V(d.aree, {}), rag = V(aree.ragazzi, {}), adu = V(aree.adulti, {});
+
+  var c = document.createElement('canvas');
+  c.width = LARG; c.height = ALT;
+  var x = c.getContext('2d');
+  x.fillStyle = '#ffffff';
+  x.fillRect(0, 0, LARG, ALT);
+
+  var altFoto = Math.round(104 * K);
+
+  /* --- la foto in alto, ritagliata come fa object-fit: cover ---
+     Il ritaglio va limitato alla sua fascia, altrimenti la foto deborda
+     sul testo che sta sotto. */
+  var img = $('foto');
+  x.save();
+  x.beginPath();
+  x.rect(0, 0, LARG, altFoto);
+  x.clip();
+  if(img && img.complete && img.naturalWidth){
+    var scala = Math.max(LARG / img.naturalWidth, altFoto / img.naturalHeight);
+    var w = img.naturalWidth * scala, h = img.naturalHeight * scala;
+    x.drawImage(img, (LARG - w) / 2, (altFoto - h) * 0.55, w, h);
+  }else{
+    x.fillStyle = '#cfe6f5';
+    x.fillRect(0, 0, LARG, altFoto);
+  }
+  x.restore();
+
+  /* --- il velo azzurro sopra la foto --- */
+  var velo = x.createLinearGradient(0, 0, LARG * 0.35, altFoto);
+  velo.addColorStop(0, 'rgba(6,50,92,.78)');
+  velo.addColorStop(0.55, 'rgba(11,127,212,.55)');
+  velo.addColorStop(1, 'rgba(11,127,212,.05)');
+  x.fillStyle = velo;
+  x.fillRect(0, 0, LARG, altFoto);
+
+  var marg = Math.round(14 * K);
+
+  /* --- targhetta gialla --- */
+  var occhiello = String(V(t.occhiello, 'Ferragosto')).toUpperCase();
+  x.font = 'bold 30px "Trebuchet MS", sans-serif';
+  var wOcc = x.measureText(occhiello).width + 56;
+  pillola(x, marg, Math.round(12 * K), wOcc, 60, '#ffc233');
+  x.fillStyle = '#4a2c00';
+  x.textBaseline = 'middle';
+  x.fillText(occhiello, marg + 28, Math.round(12 * K) + 31);
+
+  /* --- titolo e sottotitolo --- */
+  x.fillStyle = '#ffffff';
+  x.textBaseline = 'alphabetic';
+  x.font = 'bold 100px "Trebuchet MS", sans-serif';
+  var titolo = V(loc.titolo, V(t.titolo, ''));
+  var righeTit = spezza(x, titolo, LARG - marg * 2);
+  var yTit = altFoto - Math.round(20 * K) - (righeTit.length - 1) * 104;
+  righeTit.forEach(function(r, i){ x.fillText(r, marg, yTit + i * 104); });
+  x.font = '36px "Trebuchet MS", sans-serif';
+  x.fillStyle = 'rgba(255,255,255,.95)';
+  x.fillText(V(loc.sottotitolo, V(t.sottotitolo, '')), marg, altFoto - Math.round(7 * K));
+
+  /* --- il claim --- */
+  var y = altFoto + 74;
+  x.fillStyle = CA.colore(t.colorePrimario, '#0b7fd4');
+  x.font = 'bold 46px "Trebuchet MS", sans-serif';
+  x.textAlign = 'center';
+  var righeClaim = spezza(x, V(loc.claim, ''), LARG - marg * 2);
+  righeClaim.forEach(function(r, i){ x.fillText(r, LARG / 2, y + i * 56); });
+  y += (righeClaim.length - 1) * 56 + 60;
+
+  /* --- quando, orario, dove --- */
+  x.textAlign = 'center';
+  var voci = [[CA.dataIt(ev.data, false), 'quando'],
+              [V(ev.orario,'') + ' – ' + V(ev.orarioFine,''), 'orario'],
+              [V(ev.luogo, ''), 'dove']];
+  var wBox = Math.round((LARG - marg * 2 - 40) / 3);
+  var hBox = 136;
+  voci.forEach(function(v, i){
+    var bx = marg + i * (wBox + 20);
+    riquadro(x, bx, y, wBox, hBox, 28, '#f2f8fd', 'rgba(10,37,64,.14)');
+    x.fillStyle = '#0a2540';
+    x.font = 'bold 32px "Trebuchet MS", sans-serif';
+    var righe = spezza(x, v[0], wBox - 30).slice(0, 2);
+    var partenza = y + (righe.length > 1 ? 48 : 62);
+    righe.forEach(function(r, k){ x.fillText(r, bx + wBox / 2, partenza + k * 38); });
+    x.fillStyle = '#5a7583';
+    x.font = '24px "Trebuchet MS", sans-serif';
+    x.fillText(v[1], bx + wBox / 2, y + hBox - 22);
+  });
+  y += hBox + 54;
+
+  /* --- i due mondi --- */
+  var wCard = Math.round((LARG - marg * 2 - 30) / 2), hCard = 250;
+  cartaMondo(x, marg, y, wCard, hCard, '#14c4b4', '#0b7fd4', '🤽',
+    V(rag.nome, 'Giochi in acqua'),
+    CA.giochiAttivi().length + ' giochi a squadre con palloni e materassini. ' + V(rag.eta, ''));
+  cartaMondo(x, marg + wCard + 30, y, wCard, hCard, '#0b7fd4', '#1f8a5b', '🃏',
+    V(adu.nome, 'Tornei di carte'),
+    CA.torneiAttivi().map(function(v){ return v.nome; }).join(', ') + '. Si gioca a coppie.');
+  y += hCard + 62;
+
+  /* --- QR e istruzioni --- */
+  var lato = 300;
+  var tela = document.createElement('canvas');
+  try{
+    QR.draw(tela, CA.urlSito(), { size: lato, margin: 2, ecc: 'M', dark: '#0a2540', light: '#ffffff' });
+    x.drawImage(tela, marg, y, lato, lato);
+    x.strokeStyle = '#0a2540'; x.lineWidth = 6;
+    x.strokeRect(marg, y, lato, lato);
+  }catch(e){}
+
+  x.textAlign = 'left';
+  var tx = marg + lato + 44;
+  var tw = LARG - tx - marg;
+  x.fillStyle = '#0a2540';
+  x.font = 'bold 40px "Trebuchet MS", sans-serif';
+  x.fillText(q.attiva === true ? 'Iscriviti online' : 'Iscriviti online, è gratis', tx, y + 44);
+  x.fillStyle = '#33566b';
+  x.font = '30px "Trebuchet MS", sans-serif';
+  var yy = y + 96;
+  spezza(x, V(loc.istruzioniQr, ''), tw).forEach(function(r){ x.fillText(r, tx, yy); yy += 40; });
+
+  var nota = V(loc.nota, '') + (q.attiva === true ? (' · quota ' + CA.eur(q.importo) + ' a persona') : '');
+  if(nota){
+    x.font = 'bold 28px "Trebuchet MS", sans-serif';
+    var righeNota = spezza(x, nota, tw - 40);
+    var hNota = righeNota.length * 38 + 26;
+    riquadro(x, tx, yy + 6, tw, hNota, 14, '#ffc233', null);
+    x.fillStyle = '#4a2c00';
+    righeNota.forEach(function(r, i){ x.fillText(r, tx + 20, yy + 44 + i * 38); });
+  }
+  y += lato + Math.round(8 * K);
+
+  /* --- piedino --- */
+  x.strokeStyle = 'rgba(10,37,64,.18)'; x.lineWidth = 2;
+  x.beginPath(); x.moveTo(marg, ALT - 90); x.lineTo(LARG - marg, ALT - 90); x.stroke();
+  x.fillStyle = '#5a7583';
+  x.font = '26px "Trebuchet MS", sans-serif';
+  x.fillText(V(res.nome, '') + (res.localita ? ' — ' + res.localita : ''), marg, ALT - 48);
+  if(con.telefono){
+    x.textAlign = 'right';
+    x.fillText('Informazioni: ' + con.telefono, LARG - marg, ALT - 48);
+  }
+  return c;
+}
+
+/* --- attrezzi da disegno --- */
+function spezza(ctx, testoDaSpezzare, larghezza){
+  var parole = String(testoDaSpezzare || '').split(/\s+/).filter(Boolean);
+  var righe = [], riga = '';
+  parole.forEach(function(p){
+    var prova = riga ? (riga + ' ' + p) : p;
+    if(ctx.measureText(prova).width > larghezza && riga){ righe.push(riga); riga = p; }
+    else { riga = prova; }
+  });
+  if(riga) righe.push(riga);
+  return righe.length ? righe : [''];
+}
+function angoli(ctx, bx, by, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(bx + r, by);
+  ctx.arcTo(bx + w, by, bx + w, by + h, r);
+  ctx.arcTo(bx + w, by + h, bx, by + h, r);
+  ctx.arcTo(bx, by + h, bx, by, r);
+  ctx.arcTo(bx, by, bx + w, by, r);
+  ctx.closePath();
+}
+function riquadro(ctx, bx, by, w, h, r, riempi, bordo){
+  angoli(ctx, bx, by, w, h, r);
+  if(riempi){ ctx.fillStyle = riempi; ctx.fill(); }
+  if(bordo){ ctx.strokeStyle = bordo; ctx.lineWidth = 2; ctx.stroke(); }
+}
+function pillola(ctx, bx, by, w, h, colore){
+  riquadro(ctx, bx, by, w, h, h / 2, colore, null);
+}
+function cartaMondo(ctx, bx, by, w, h, c1, c2, emoji, titolo, testo){
+  var g = ctx.createLinearGradient(bx, by, bx + w, by + h);
+  g.addColorStop(0, c1); g.addColorStop(1, c2);
+  angoli(ctx, bx, by, w, h, 34);
+  ctx.fillStyle = g; ctx.fill();
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '54px "Apple Color Emoji", "Trebuchet MS", sans-serif';
+  ctx.fillText(emoji, bx + 30, by + 74);
+  ctx.font = 'bold 38px "Trebuchet MS", sans-serif';
+  ctx.fillText(titolo, bx + 30, by + 132);
+  ctx.font = '26px "Trebuchet MS", sans-serif';
+  var yy = by + 176;
+  spezza(ctx, testo, w - 60).slice(0, 3).forEach(function(r){ ctx.fillText(r, bx + 30, yy); yy += 34; });
+  ctx.textAlign = 'center';
+}
+
+function scaricaPng(){
+  try{
+    var c = png();
+    c.toBlob(function(b){
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(b);
+      a.download = 'locandina-certamen-aquaticum.png';
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    }, 'image/png');
+  }catch(e){
+    alert('Non sono riuscito a creare l\'immagine: ' + e.message);
+  }
+}
 
 /* su schermi stretti la pagina A4 si rimpicciolisce, ma in stampa resta A4 */
 function adattaAllaFinestra(){

@@ -100,7 +100,7 @@
         "titolo": "Boom, Boom, Boom, Boom!!",
         "artista": "Vengaboys",
         "perche": "Ritmo veloce e stop improvvisi: perfetta per far girare la palla.",
-        "url": "",
+        "url": "https://www.youtube.com/watch?v=llyiQ4I-mcQ",
         "ricerca": "Boom, Boom, Boom, Boom!! Vengaboys"
       }
     },
@@ -133,7 +133,7 @@
         "titolo": "Surfin' USA",
         "artista": "The Beach Boys",
         "perche": "Il classico da tavola da surf, per chi pagaia sul materassino.",
-        "url": "",
+        "url": "https://www.youtube.com/watch?v=enlOHxQ0tb4",
         "ricerca": "Surfin' USA The Beach Boys"
       }
     },
@@ -166,7 +166,7 @@
         "titolo": "Waka Waka (This Time for Africa)",
         "artista": "Shakira",
         "perche": "L'inno dello sport: si parte a tempo di palla.",
-        "url": "",
+        "url": "https://www.youtube.com/watch?v=pRpeEdMmmQ0",
         "ricerca": "Waka Waka (This Time for Africa) Shakira"
       }
     },
@@ -198,7 +198,7 @@
         "titolo": "Count on Me",
         "artista": "Bruno Mars",
         "perche": "Parla di contare sugli amici: e qui il compagno lo porti tu.",
-        "url": "",
+        "url": "https://www.youtube.com/watch?v=6k8cpUkKK4c",
         "ricerca": "Count on Me Bruno Mars"
       }
     },
@@ -230,7 +230,7 @@
         "titolo": "Yellow Submarine",
         "artista": "The Beatles",
         "perche": "Una ciurma sola su una barchetta gialla: il traghetto in musica.",
-        "url": "",
+        "url": "https://www.youtube.com/watch?v=m2uTFF_3MaA",
         "ricerca": "Yellow Submarine The Beatles"
       }
     },
@@ -263,7 +263,7 @@
         "titolo": "We Will Rock You",
         "artista": "Queen",
         "perche": "Il battito di mani lo fanno le squadre a bordo vasca.",
-        "url": "",
+        "url": "https://www.youtube.com/watch?v=-tJYN-eG1zk",
         "ricerca": "We Will Rock You Queen"
       }
     },
@@ -295,7 +295,7 @@
         "titolo": "Conga",
         "artista": "Gloria Estefan",
         "perche": "La canzone delle file che non si spezzano mai.",
-        "url": "",
+        "url": "https://www.youtube.com/watch?v=54ItEmCnP80",
         "ricerca": "Conga Gloria Estefan"
       }
     },
@@ -328,7 +328,7 @@
         "titolo": "Seven Nation Army",
         "artista": "The White Stripes",
         "perche": "Il coro da stadio: parte da solo appena si segna.",
-        "url": "",
+        "url": "https://www.youtube.com/watch?v=0J2QdDbelmY",
         "ricerca": "Seven Nation Army The White Stripes"
       }
     },
@@ -360,7 +360,7 @@
         "titolo": "Happy",
         "artista": "Pharrell Williams",
         "perche": "Un minuto di passaggi vuole un minuto di buonumore.",
-        "url": "",
+        "url": "https://www.youtube.com/watch?v=ZbZSe6N_BXs",
         "ricerca": "Happy Pharrell Williams"
       }
     },
@@ -392,7 +392,7 @@
         "titolo": "The Final Countdown",
         "artista": "Europe",
         "perche": "Tensione pura mentre l'animatore chiama i comandi.",
-        "url": "",
+        "url": "https://www.youtube.com/watch?v=9jK-NcRmVcw",
         "ricerca": "The Final Countdown Europe"
       }
     },
@@ -424,7 +424,7 @@
         "titolo": "Eye of the Tiger",
         "artista": "Survivor",
         "perche": "Per spingere il pallone col naso serve grinta.",
-        "url": "",
+        "url": "https://www.youtube.com/watch?v=btPJPFnesV4",
         "ricerca": "Eye of the Tiger Survivor"
       }
     },
@@ -456,7 +456,7 @@
         "titolo": "Wipe Out",
         "artista": "The Surfaris",
         "perche": "La batteria delle cadute: come quando si scivola giu.",
-        "url": "",
+        "url": "https://www.youtube.com/watch?v=dBURLdhmmZ8",
         "ricerca": "Wipe Out The Surfaris"
       }
     },
@@ -490,7 +490,7 @@
         "titolo": "Thunderstruck",
         "artista": "AC/DC",
         "perche": "Il duello uno contro uno merita una sigla da arena.",
-        "url": "",
+        "url": "https://www.youtube.com/watch?v=v2AC41dglnM",
         "ricerca": "Thunderstruck AC/DC"
       }
     },
@@ -525,7 +525,7 @@
         "titolo": "Don't Stop Me Now",
         "artista": "Queen",
         "perche": "Il gran finale a tutta velocita, senza fermarsi piu.",
-        "url": "",
+        "url": "https://www.youtube.com/watch?v=HgzGwKwLmgM",
         "ricerca": "Don't Stop Me Now Queen"
       }
     }
@@ -903,7 +903,7 @@
     "nota": "Le classifiche vengono aggiornate durante il pomeriggio dagli organizzatori."
   },
   "musicaAttiva": true,
-  "musicaNota": "Ogni gioco ha la sua canzone. Il collegamento apre YouTube: se l'organizzatore non ha incollato un video preciso, si apre la ricerca del brano.",
+  "musicaNota": "Ogni gioco ha la sua canzone, con il collegamento diretto al video su YouTube. Se un giorno un video sparisce, basta svuotare il campo nell'area organizzatori: il sito torna ad aprire la ricerca del titolo.",
   "formatiTorneo": {
     "nota": "Quante coppie si presentano non si sa fino all'ultimo, e la formula giusta cambia a seconda del numero. Per questo la si sceglie il giorno stesso: qui sotto i criteri che seguono gli organizzatori, e il tabellone compare in tempo reale nella pagina delle classifiche appena viene generato.",
     "regole": [

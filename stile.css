@@ -454,4 +454,13 @@ main{ flex:1; }
   html,body{ background:#fff !important; }
   .barra, .onde, .azioni, .piede, .no-stampa{ display:none !important; }
   .gioco, .scatola, .pass{ break-inside:avoid; page-break-inside:avoid; box-shadow:none !important; }
+  /* i browser di serie non stampano gli sfondi: senza questo il pass esce
+     bianco, senza la fascia colorata e senza l'avviso giallo */
+  .pass, .pass .testata, .pass .esibire, .pass .testata .cod,
+  .riep h4, .eti, .targhetta, table.tab th, table.tab tr[class^="podio"] td,
+  .nota-box, .avviso-invio, .musica-chip, .gioco .disegno{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+    color-adjust:exact !important;
+  }
 }

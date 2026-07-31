@@ -173,7 +173,7 @@ CA.carica().then(function(d){
 function disegna(){
   var t = V(DATI.tema, {}), ev = V(DATI.evento, {});
   var area = V(V(DATI.aree, {}).ragazzi, {});
-  var giochi = V(DATI.giochi, []);
+  var giochi = CA.giochiAttivi();
 
   testo('marchioNome', V(t.titolo, 'Certamen Aquaticum'));
   testo('heroTitolo', V(area.titoloLungo, V(area.nome, 'Giochi in acqua')));
@@ -221,7 +221,7 @@ function disegnaPunti(p){
 function disegnaGiochi(){
   var el = $('giochi');
   el.textContent = '';
-  var tutti = V(DATI.giochi, []);
+  var tutti = CA.giochiAttivi();
   var lista = tutti.filter(function(g){
     if(FILTRO === 'tutti') return true;
     if(FILTRO === 'programma') return !g.riserva;

@@ -260,6 +260,60 @@
     }
   }
 
+  /* ---------------------- il messaggio da far girare --------------------- */
+  /* Il testo dell'invito, pronto da incollare nei gruppi. Lo usano i pulsanti
+     WhatsApp e Telegram e il riquadro «Condividi» dell'area organizzatori. */
+  function urlSito() {
+    var c = V(dati().condivisione, {});
+    return V(c.urlSito, location.href.split('#')[0].replace(/[^\/]*$/, ''));
+  }
+  function messaggioInvito() {
+    var d = dati();
+    var t = V(d.tema, {}), ev = V(d.evento, {}), res = V(d.residence, {});
+    var aree = V(d.aree, {}), rag = V(aree.ragazzi, {}), adu = V(aree.adulti, {});
+    var q = V(d.quota, {});
+    var r = [];
+    r.push('🏊 ' + V(t.titolo, 'Certamen Aquaticum') + ' — ' + V(t.sottotitolo, ''));
+    r.push('');
+    r.push('📅 ' + dataIt(ev.data, false) + ', dalle ' + V(ev.orario, '') + ' alle ' + V(ev.orarioFine, ''));
+    r.push('📍 ' + V(ev.luogo, '') + (res.localita ? ' — ' + res.localita : ''));
+    r.push('');
+    r.push('🤽 ' + V(rag.nome, 'Giochi in acqua') + ' per i ragazzi (' + V(rag.eta, '') + ')');
+    r.push('🃏 ' + V(adu.nome, 'Tornei di carte') + ' per gli adulti: ' +
+      torneiAttivi().map(function (x) { return x.nome; }).join(', '));
+    r.push('');
+    r.push(q.attiva === true
+      ? ('🎟️ Iscrizioni con quota di ' + eur(q.importo) + ' a persona' +
+        (ev.chiusuraIscrizioni ? ', entro ' + dataIt(ev.chiusuraIscrizioni) : ''))
+      : ('🎟️ Iscrizioni gratuite' + (ev.chiusuraIscrizioni ? ' entro ' + dataIt(ev.chiusuraIscrizioni) : '')));
+    r.push(urlSito());
+    return r.join('\n');
+  }
+  function linkWhatsApp() {
+    var c = V(dati().condivisione, {});
+    if (c.linkGruppoWhatsApp) return String(c.linkGruppoWhatsApp);
+    return 'https://wa.me/?text=' + encodeURIComponent(messaggioInvito());
+  }
+  function linkTelegram() {
+    var c = V(dati().condivisione, {});
+    if (c.linkGruppoTelegram) return String(c.linkGruppoTelegram);
+    /* Telegram vuole il link separato dal testo, altrimenti lo ripete */
+    var testoSenzaLink = messaggioInvito().replace(urlSito(), '').replace(/\n+$/, '');
+    return 'https://t.me/share/url?url=' + encodeURIComponent(urlSito()) +
+      '&text=' + encodeURIComponent(testoSenzaLink);
+  }
+
+  /* -------------------- giochi e tornei che si fanno --------------------- */
+  /* Nell'area organizzatori si può escludere un gioco o un torneo: da quel
+     momento non deve comparire da nessuna parte nel sito. Tutte le pagine
+     pubbliche passano da qui, così basta una riga sola per farlo sparire. */
+  function giochiAttivi() {
+    return V(dati().giochi, []).filter(function (g) { return !g.escluso; });
+  }
+  function torneiAttivi() {
+    return V(dati().tornei, []).filter(function (t) { return !t.escluso; });
+  }
+
   /* ------------------------- la musica dei giochi ------------------------ */
   /* Ogni gioco dei ragazzi ha la sua canzone. Se l'organizzatore ha incollato
      il collegamento di un video preciso si usa quello; altrimenti si apre la
@@ -301,6 +355,9 @@
     disegnaPiede: disegnaPiede, toast: toast, segnaPagina: segnaPagina,
     memLeggi: memLeggi, memScrivi: memScrivi, memCancella: memCancella,
     iscrizioniChiuse: iscrizioniChiuse,
-    linkMusica: linkMusica, titoloMusica: titoloMusica
+    linkMusica: linkMusica, titoloMusica: titoloMusica,
+    giochiAttivi: giochiAttivi, torneiAttivi: torneiAttivi,
+    urlSito: urlSito, messaggioInvito: messaggioInvito,
+    linkWhatsApp: linkWhatsApp, linkTelegram: linkTelegram
   };
 })();

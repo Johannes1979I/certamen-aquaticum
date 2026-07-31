@@ -62,6 +62,7 @@
       CARICATO = true;
       riempiContenuti();
       collega();
+      controllaBozza();
       var s = sessLeggi();
       if (s) { SESS = s; dopoLogin(); } else { mostraLogin(); }
       disegnaTutto();
@@ -146,6 +147,34 @@
     $('btnVaiPubblica').addEventListener('click', function () {
       document.querySelector('[data-vista="pubblica"]').click();
     });
+    $('btnRiprendiBozza').addEventListener('click', riprendiBozza);
+    $('btnButtaBozza').addEventListener('click', function () {
+      if (!confirm('Butto via le modifiche non pubblicate?')) return;
+      buttaBozza();
+      CA.toast('Bozza eliminata.', 4000);
+    });
+    /* ogni modifica ai contenuti finisce subito nella bozza */
+    $('v-contenuti').addEventListener('change', salvaBozzaFraPoco);
+
+    /* invito da far girare */
+    $('msgInvito').value = CA.messaggioInvito();
+    $('admWa').href = CA.linkWhatsApp();
+    $('admTg').href = CA.linkTelegram();
+    $('btnCopiaMsg').addEventListener('click', function () {
+      var t = $('msgInvito');
+      t.select();
+      t.setSelectionRange(0, 99999);
+      var fatto = false;
+      try { fatto = document.execCommand('copy'); } catch (e) { }
+      if (!fatto && navigator.clipboard) {
+        navigator.clipboard.writeText(t.value).then(function () {
+          CA.toast('📋 Messaggio copiato.', 4000);
+        });
+        return;
+      }
+      CA.toast(fatto ? '📋 Messaggio copiato: incollalo nel gruppo.' : '⚠️ Copialo a mano dal riquadro.', 5000);
+    });
+
     caricaGh();
 
     /* stampe */
@@ -361,7 +390,7 @@
     if (!SESS) voci.push('Collegati al database per vedere le iscrizioni.');
     if (rag.length && !STATO.squadre.length) voci.push('Forma le squadre dei ragazzi (scheda 🚩 Squadre).');
     var senzaTab = [];
-    V(DATI.tornei, []).forEach(function (t) {
+    torneiAttivi().forEach(function (t) {
       var quanti = iscrittiTorneo(t.id).length;
       if (quanti >= 4 && !(STATO.tornei[t.id] && (STATO.tornei[t.id].incontri || []).length)) senzaTab.push(t.nome);
     });
@@ -1039,6 +1068,15 @@
       return V(p.tornei, []).some(function (t) { return t.id === idTorneo; });
     });
   }
+  /* i giochi e i tornei che si fanno davvero: quelli esclusi dall'organizzatore
+     spariscono da punteggi, tabelloni, classifiche e stampe */
+  function giochiAttivi() {
+    return V(DATI.giochi, []).filter(function (g) { return !g.escluso; });
+  }
+  function torneiAttivi() {
+    return V(DATI.tornei, []).filter(function (t) { return !t.escluso; });
+  }
+
   function torneoDati(id) {
     return V(DATI.tornei, []).filter(function (t) { return t.id === id; })[0] || {};
   }
@@ -1046,8 +1084,10 @@
   function disegnaTornei() {
     var sc = $('scegliTorneo');
     sc.textContent = '';
-    var tornei = V(DATI.tornei, []);
-    if (!TORNEO_APERTO && tornei.length) TORNEO_APERTO = tornei[0].id;
+    var tornei = torneiAttivi();
+    if (tornei.length && !tornei.some(function (t) { return t.id === TORNEO_APERTO; })) {
+      TORNEO_APERTO = tornei[0].id;
+    }
     tornei.forEach(function (t) {
       var n = iscrittiTorneo(t.id).length;
       var b = crea('button', 'btn btn-piccolo ' + (t.id === TORNEO_APERTO ? 'btn-p' : 'btn-chiaro'),
@@ -1483,8 +1523,9 @@
     });
     el.appendChild(cc);
 
-    /* una scheda per gioco */
+    /* una scheda per gioco (saltando quelli esclusi dal programma) */
     V(DATI.giochi, []).forEach(function (g) {
+      if (g.escluso) return;
       if (g.tipo === 'riscaldamento') return;
       if (g.tipo === 'individuale') return;
       var c = crea('div', 'gioco-punti');
@@ -1552,7 +1593,7 @@
     var el = $('puntiCarte');
     el.textContent = '';
     var qualcosa = false;
-    V(DATI.tornei, []).forEach(function (t) {
+    torneiAttivi().forEach(function (t) {
       var st = STATO.tornei[t.id] || {};
       var inc = V(st.incontri, []);
       if (!inc.length) return;
@@ -1636,7 +1677,7 @@
       gare: [],
       titoli: STATO.titoli.filter(function (t) { return t.area === 'ragazzi'; })
     };
-    V(DATI.giochi, []).forEach(function (g) {
+    giochiAttivi().forEach(function (g) {
       var r = V(STATO.risultati[g.id], []).filter(Boolean);
       if (!r.length) return;
       out.ragazzi.gare.push({
@@ -1650,7 +1691,7 @@
 
     /* carte */
     var tornei = [], generale = {};
-    V(DATI.tornei, []).forEach(function (t) {
+    torneiAttivi().forEach(function (t) {
       var st = STATO.tornei[t.id] || {};
       if (!V(st.coppie, []).length) return;
       var cl = classificaTorneo(t.id);
@@ -1736,7 +1777,7 @@
   function disegnaEditMusica() {
     var el = $('editMusica');
     el.textContent = '';
-    V(DATI.giochi, []).forEach(function (g) {
+    V(DATI.giochi, []).filter(function (g) { return !g.escluso; }).forEach(function (g) {
       g.musica = g.musica || { titolo: '', artista: '', url: '', ricerca: '' };
       var d = crea('div', 'voce-edit');
       var h = crea('div');
@@ -1783,56 +1824,202 @@
     return d;
   }
 
-  function disegnaEditGiochi() {
-    var el = $('editGiochi');
-    el.textContent = '';
-    V(DATI.giochi, []).forEach(function (g) {
-      var d = document.createElement('details');
-      d.className = 'voce-edit';
-      var s = document.createElement('summary');
-      s.textContent = V(g.emoji, '🎯') + ' ' + g.nome;
-      d.appendChild(s);
-      var gr = crea('div', 'griglia3');
-      gr.appendChild(campoMini('Nome', g.nome, function (v) { g.nome = v; }));
-      gr.appendChild(campoMini('Orario', g.orario, function (v) { g.orario = v; }));
-      gr.appendChild(campoMini('Durata (minuti)', g.durata, function (v) { g.durata = Number(v) || 0; }));
-      d.appendChild(gr);
-      var sp = crea('label', 'spunta');
-      var ck = document.createElement('input');
-      ck.type = 'checkbox'; ck.checked = !!g.riserva;
-      ck.addEventListener('change', function () { g.riserva = ck.checked; });
-      sp.appendChild(ck);
-      sp.appendChild(crea('span', null, 'Di riserva (non entra nel programma)'));
-      d.appendChild(sp);
-      d.appendChild(areaMini('Descrizione', g.descrizione, function (v) { g.descrizione = v; }));
-      d.appendChild(areaMini('Regole (una per riga)', V(g.regole, []).join('\n'), function (v) { g.regole = righe(v); }));
-      d.appendChild(areaMini('Varianti (una per riga)', V(g.varianti, []).join('\n'), function (v) { g.varianti = righe(v); }));
-      el.appendChild(d);
+  /* ============ elenchi riordinabili: quali giochi e in che ordine ========
+     Si sposta trascinando la maniglia ⠿, ma anche con le frecce ▲▼: dal
+     telefono il trascinamento è scomodo e a bordo piscina si lavora col dito.
+     Ogni voce ha tre stati: in programma, di riserva, escluso dal sito.     */
+  var TRASCINO = null;      /* indice della voce che sto spostando */
+
+  function statoVoce(v) {
+    if (v.escluso) return 'escluso';
+    return v.riserva ? 'riserva' : 'programma';
+  }
+  function impostaStato(v, s) {
+    v.escluso = (s === 'escluso');
+    v.riserva = (s === 'riserva');
+  }
+
+  /* costruisce un elenco riordinabile; "dettagli" riempie la parte apribile */
+  function elencoOrdinabile(contenitore, elenco, dettagli, ridisegna) {
+    contenitore.textContent = '';
+
+    elenco.forEach(function (v, i) {
+      var box = crea('div', 'voce-ord ' + statoVoce(v));
+      box.draggable = true;
+
+      /* --- riga della testa: maniglia, numero, nome, frecce --- */
+      var testa = crea('div', 'testa-ord');
+      var man = crea('span', 'maniglia', '⠿');
+      man.title = 'Trascina per spostare';
+      testa.appendChild(man);
+      testa.appendChild(crea('span', 'num-ord', v.escluso ? '—' : String(numeroInProgramma(elenco, i))));
+      testa.appendChild(crea('span', 'nome-ord', V(v.emoji, '🎯') + ' ' + V(v.nome, '')));
+
+      var frecce = crea('div', 'frecce');
+      var su = crea('button', null, '▲');
+      su.title = 'Sposta più in alto';
+      su.disabled = (i === 0);
+      su.addEventListener('click', function () { sposta(elenco, i, i - 1, ridisegna); });
+      var giu = crea('button', null, '▼');
+      giu.title = 'Sposta più in basso';
+      giu.disabled = (i === elenco.length - 1);
+      giu.addEventListener('click', function () { sposta(elenco, i, i + 1, ridisegna); });
+      frecce.appendChild(su); frecce.appendChild(giu);
+      testa.appendChild(frecce);
+      box.appendChild(testa);
+
+      /* --- i tre stati --- */
+      var stati = crea('div', 'stati');
+      [['programma', '✅ In programma'], ['riserva', '🔄 Di riserva'], ['escluso', '🚫 Escluso']]
+        .forEach(function (s) {
+          var b = crea('button', statoVoce(v) === s[0] ? 'presa' : '', s[1]);
+          b.setAttribute('data-s', s[0]);
+          b.addEventListener('click', function () {
+            impostaStato(v, s[0]);
+            ridisegna();
+            salvaBozzaFraPoco();
+          });
+          stati.appendChild(b);
+        });
+      box.appendChild(stati);
+
+      /* --- i campi da modificare --- */
+      var det = document.createElement('details');
+      det.style.marginTop = '10px';
+      var sum = document.createElement('summary');
+      sum.style.cssText = 'cursor:pointer;font-size:.9rem;color:var(--muted);padding:6px 0';
+      sum.textContent = 'Modifica testi, orario e regole';
+      det.appendChild(sum);
+      dettagli(det, v);
+      box.appendChild(det);
+
+      /* --- trascinamento --- */
+      box.addEventListener('dragstart', function (e) {
+        TRASCINO = i;
+        box.classList.add('trascino');
+        try { e.dataTransfer.setData('text/plain', String(i)); } catch (err) { }
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      box.addEventListener('dragend', function () {
+        TRASCINO = null;
+        box.classList.remove('trascino');
+      });
+      box.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        box.classList.add('bersaglio');
+      });
+      box.addEventListener('dragleave', function () { box.classList.remove('bersaglio'); });
+      box.addEventListener('drop', function (e) {
+        e.preventDefault();
+        box.classList.remove('bersaglio');
+        var da = TRASCINO;
+        if (da === null || da === undefined) {
+          da = Number(e.dataTransfer.getData('text/plain'));
+        }
+        if (isFinite(da) && da !== i) sposta(elenco, da, i, ridisegna);
+      });
+
+      contenitore.appendChild(box);
     });
   }
 
-  function disegnaEditTornei() {
-    var el = $('editTornei');
-    el.textContent = '';
-    V(DATI.tornei, []).forEach(function (t) {
-      var d = document.createElement('details');
-      d.className = 'voce-edit';
-      var s = document.createElement('summary');
-      s.textContent = V(t.emoji, '🃏') + ' ' + t.nome;
-      d.appendChild(s);
+  /* numero d'ordine contando solo le voci non escluse */
+  function numeroInProgramma(elenco, indice) {
+    var n = 0;
+    for (var i = 0; i <= indice; i++) if (!elenco[i].escluso) n++;
+    return n;
+  }
+
+  function sposta(elenco, da, a, ridisegna) {
+    if (da === a || da < 0 || a < 0 || da >= elenco.length || a >= elenco.length) return;
+    var v = elenco.splice(da, 1)[0];
+    elenco.splice(a, 0, v);
+    ridisegna();
+    salvaBozzaFraPoco();
+  }
+
+  function disegnaEditGiochi() {
+    var lista = V(DATI.giochi, []);
+    elencoOrdinabile($('editGiochi'), lista, function (det, g) {
       var gr = crea('div', 'griglia3');
-      gr.appendChild(campoMini('Nome', t.nome, function (v) { t.nome = v; }));
-      gr.appendChild(campoMini('Blocco (A o B)', t.blocco, function (v) { t.blocco = v.toUpperCase(); }));
+      gr.appendChild(campoMini('Nome', g.nome, function (v) { g.nome = v; disegnaEditGiochi(); }));
+      gr.appendChild(campoMini('Orario', g.orario, function (v) { g.orario = v; }));
+      gr.appendChild(campoMini('Durata (minuti)', g.durata, function (v) {
+        g.durata = Number(v) || 0; contaGiochi();
+      }));
+      gr.appendChild(campoMini('Chi partecipa', g.partecipanti, function (v) { g.partecipanti = v; }));
+      det.appendChild(gr);
+      det.appendChild(areaMini('Descrizione', g.descrizione, function (v) { g.descrizione = v; }));
+      det.appendChild(areaMini('Regole (una per riga)', V(g.regole, []).join('\n'), function (v) { g.regole = righe(v); }));
+      det.appendChild(areaMini('Varianti (una per riga)', V(g.varianti, []).join('\n'), function (v) { g.varianti = righe(v); }));
+    }, disegnaEditGiochi);
+    contaGiochi();
+    disegnaEditMusica();
+  }
+
+  function contaGiochi() {
+    var lista = V(DATI.giochi, []);
+    var inProg = lista.filter(function (g) { return !g.riserva && !g.escluso; });
+    var ris = lista.filter(function (g) { return g.riserva && !g.escluso; });
+    var esc = lista.filter(function (g) { return g.escluso; });
+    var el = $('conteggiGiochi');
+    if (el) {
+      el.textContent = '';
+      el.appendChild(etichettaConteggio('✅ in programma', inProg.length));
+      el.appendChild(etichettaConteggio('🔄 di riserva', ris.length));
+      el.appendChild(etichettaConteggio('🚫 esclusi', esc.length));
+    }
+    var min = 0;
+    inProg.forEach(function (g) { min += Number(g.durata) || 0; });
+    var ore = Math.floor(min / 60), resto = min % 60;
+    var ev = V(DATI.evento, {});
+    var finestra = minutiFra(V(ev.orario, ''), V(ev.orarioFine, ''));
+    var t = $('durataTotale');
+    if (t) {
+      t.textContent = (ore ? ore + 'h ' : '') + resto + ' min' +
+        (finestra ? (min > finestra
+          ? ' — più delle ' + Math.round(finestra / 60) + ' ore dell\'evento: sposta qualche gioco «di riserva»'
+          : ' — ci sta nelle ' + Math.round(finestra / 60) + ' ore dell\'evento') : '');
+      t.style.color = (finestra && min > finestra) ? '#a30f1a' : '';
+    }
+  }
+  function etichettaConteggio(testoEti, n) {
+    var s = crea('span');
+    s.appendChild(crea('b', null, String(n)));
+    s.appendChild(document.createTextNode(' ' + testoEti));
+    return s;
+  }
+  function minutiFra(a, b) {
+    var pa = String(a).split(':'), pb = String(b).split(':');
+    if (pa.length < 2 || pb.length < 2) return 0;
+    var m = (Number(pb[0]) * 60 + Number(pb[1])) - (Number(pa[0]) * 60 + Number(pa[1]));
+    return isFinite(m) && m > 0 ? m : 0;
+  }
+
+  function disegnaEditTornei() {
+    var lista = V(DATI.tornei, []);
+    elencoOrdinabile($('editTornei'), lista, function (det, t) {
+      var gr = crea('div', 'griglia3');
+      gr.appendChild(campoMini('Nome', t.nome, function (v) { t.nome = v; disegnaEditTornei(); }));
+      gr.appendChild(campoMini('Blocco (A o B)', t.blocco, function (v) { t.blocco = String(v).toUpperCase(); }));
       gr.appendChild(campoMini('Orario', t.orario, function (v) { t.orario = v; }));
       gr.appendChild(campoMini('Posti', t.postiTotali, function (v) { t.postiTotali = Number(v) || 0; }));
       gr.appendChild(campoMini('Minuti a partita', t.durataPartita, function (v) { t.durataPartita = Number(v) || 0; }));
-      d.appendChild(gr);
-      d.appendChild(areaMini('Descrizione', t.descrizione, function (v) { t.descrizione = v; }));
-      d.appendChild(areaMini('Come si gioca la partita', t.partita, function (v) { t.partita = v; }));
-      d.appendChild(areaMini('Regole (una per riga)', V(t.regole, []).join('\n'), function (v) { t.regole = righe(v); }));
-      d.appendChild(areaMini('Varianti (una per riga)', V(t.varianti, []).join('\n'), function (v) { t.varianti = righe(v); }));
-      el.appendChild(d);
-    });
+      det.appendChild(gr);
+      det.appendChild(areaMini('Descrizione', t.descrizione, function (v) { t.descrizione = v; }));
+      det.appendChild(areaMini('Come si gioca la partita', t.partita, function (v) { t.partita = v; }));
+      det.appendChild(areaMini('Regole (una per riga)', V(t.regole, []).join('\n'), function (v) { t.regole = righe(v); }));
+      det.appendChild(areaMini('Varianti (una per riga)', V(t.varianti, []).join('\n'), function (v) { t.varianti = righe(v); }));
+    }, disegnaEditTornei);
+
+    var lista2 = V(DATI.tornei, []);
+    var el = $('conteggiTornei');
+    if (el) {
+      el.textContent = '';
+      el.appendChild(etichettaConteggio('✅ si giocano', lista2.filter(function (t) { return !t.escluso; }).length));
+      el.appendChild(etichettaConteggio('🚫 esclusi', lista2.filter(function (t) { return t.escluso; }).length));
+    }
   }
 
   function righe(v) {
@@ -1885,6 +2072,71 @@
     scaricaFile('contenuti.json', JSON.stringify(raccogli(), null, 2), 'application/json');
   }
 
+  /* ===================== BOZZA DELLE MODIFICHE =========================
+     Quello che scrivo nella scheda «Contenuti» resta solo in questa pagina
+     finché non lo pubblico. Se chiudo il browser, se manca il token o se
+     ricarico per sbaglio, senza questa rete perderei tutto: qui la bozza
+     viene salvata da sola e alla riapertura mi viene offerta indietro.    */
+  var CHIAVE_BOZZA = 'ca_contenuti_bozza';
+  var timerBozza = null;
+
+  function salvaBozzaFraPoco() {
+    if (!CARICATO) return;
+    if (timerBozza) clearTimeout(timerBozza);
+    timerBozza = setTimeout(salvaBozza, 800);
+  }
+  function salvaBozza() {
+    if (!CARICATO) return;
+    try {
+      var d = raccogli();
+      CA.memScrivi(CHIAVE_BOZZA, JSON.stringify({ quando: new Date().toISOString(), dati: d }));
+      var a = $('avvisoBozza');
+      if (a && a.style.display === 'none') mostraAvvisoBozza(true);
+    } catch (e) { /* se qualcosa va storto la bozza si salta, non blocco il lavoro */ }
+  }
+  function leggiBozza() {
+    try {
+      var b = JSON.parse(CA.memLeggi(CHIAVE_BOZZA) || 'null');
+      return (b && b.dati) ? b : null;
+    } catch (e) { return null; }
+  }
+  function buttaBozza() {
+    CA.memCancella(CHIAVE_BOZZA);
+    var a = $('avvisoBozza');
+    if (a) a.style.display = 'none';
+  }
+  function mostraAvvisoBozza(appenaSalvata) {
+    var b = leggiBozza();
+    var a = $('avvisoBozza');
+    if (!a || !b) return;
+    var q = new Date(b.quando);
+    a.style.display = '';
+    testo('testoBozza', appenaSalvata
+      ? 'Le tue modifiche sono al sicuro in questo browser. Diventano visibili sul sito solo quando premi «Pubblica contenuti.json».'
+      : ('Ci sono modifiche salvate il ' + q.getDate() + '/' + (q.getMonth() + 1) + ' alle ' +
+        due(q.getHours()) + ':' + due(q.getMinutes()) + ' che non sono mai state pubblicate.'));
+    var rip = $('btnRiprendiBozza');
+    if (rip) rip.style.display = appenaSalvata ? 'none' : '';
+  }
+
+  function riprendiBozza() {
+    var b = leggiBozza();
+    if (!b) return;
+    DATI = b.dati;
+    riempiContenuti();
+    CA.toast('📝 Modifiche riprese. Ora premi «Pubblica contenuti.json».', 7000);
+    mostraAvvisoBozza(true);
+  }
+
+  /* c'è una bozza diversa da quello che è online? */
+  function controllaBozza() {
+    var b = leggiBozza();
+    if (!b) return;
+    var uguale = JSON.stringify(b.dati) === JSON.stringify(DATI);
+    if (uguale) { buttaBozza(); return; }
+    mostraAvvisoBozza(false);
+  }
+
   /* ---- GitHub ---- */
   function gh() {
     var s = {};
@@ -1917,10 +2169,23 @@
     return btoa(bin);
   }
 
+  /* Se manca il token non basta dirlo: apro la sezione giusta, ci porto
+     l'utente e metto il cursore nel campo. Le sue modifiche intanto restano
+     salvate come bozza, così non si perde niente. */
+  function chiediGh() {
+    var det = $('dettagliGh');
+    if (det) det.open = true;
+    var card = $('sec-github');
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(function () { try { $('gh_token').focus(); } catch (e) { } }, 500);
+    CA.toast('🔑 Manca il token di GitHub: seguendo i tre passi qui sopra ci vuole un minuto. Le tue modifiche sono salvate, non le perdi.', 12000);
+  }
+
   function ghPut(path, contenutoB64, messaggio) {
     var s = gh();
     if (!s.owner || !s.repo || !s.token) {
-      return Promise.reject(new Error('Manca il token di GitHub: incollalo qui sopra, nella sezione «Collegamento a GitHub».'));
+      chiediGh();
+      return Promise.reject(new Error('Manca il token di GitHub: incollalo nella sezione «Collegamento a GitHub» qui sopra.'));
     }
     var api = 'https://api.github.com/repos/' + s.owner + '/' + s.repo + '/contents/' + path;
     /* niente intestazione Cache-Control: GitHub non la accetta nel CORS e la
@@ -1971,6 +2236,7 @@
     ghPut('contenuti.json', b64(JSON.stringify(d, null, 2)), 'Aggiorna contenuti Certamen Aquaticum')
       .then(function () {
         DATI = d;
+        buttaBozza();      /* pubblicato: la bozza non serve più */
         CA.toast('✅ Pubblicato! Il sito si aggiorna fra 30-60 secondi. Ricordati di premere ⌘⇧R.', 9000);
       })
       .catch(function (e) { CA.toast('⚠️ ' + e.message, 10000); });
@@ -2043,7 +2309,7 @@
     if (quale === 'tabelloni') {
       var b2 = crea('div');
       var trovato = false;
-      V(DATI.tornei, []).forEach(function (t) {
+      torneiAttivi().forEach(function (t) {
         var st = STATO.tornei[t.id] || {};
         if (!V(st.incontri, []).length) return;
         trovato = true;
@@ -2071,7 +2337,7 @@
           var cap = sq ? perId(sq.capitano) : null;
           return [i + 1, r.nome, cap ? cap.nome : '', r.punti];
         })));
-      V(DATI.tornei, []).forEach(function (t) {
+      torneiAttivi().forEach(function (t) {
         var cl = classificaTorneo(t.id);
         if (!cl.length) return;
         var h = crea('h2', null, t.nome);
