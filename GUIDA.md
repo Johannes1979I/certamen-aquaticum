@@ -72,12 +72,44 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
 5. **Pubblica** — scheda `📣 Pubblica` → `Pubblica adesso`: le classifiche
    compaiono nella pagina pubblica. Rifallo ogni volta che vuoi aggiornarle.
 
+## Scegliere i giochi e metterli in ordine
+
+In `⚙️ Contenuti → 🎯 Giochi in acqua` (e lo stesso per i tornei) ogni voce si
+può **spostare** trascinando la maniglia ⠿ oppure con le frecce ▲▼ — dal
+telefono usa le frecce, il trascinamento col dito è scomodo. Ogni voce ha tre
+stati:
+
+- **✅ In programma** — si gioca, e compare nell'elenco del sito;
+- **🔄 Di riserva** — resta sul sito ma segnata come «se avanza tempo»;
+- **🚫 Escluso** — sparisce da tutto: sito, punteggi, classifiche e stampe.
+
+Sotto l'elenco c'è la **somma delle durate** dei giochi in programma,
+confrontata con le ore dell'evento: se diventa rossa, hai messo troppa roba.
+
 ## La musica dei giochi
 
-Ogni gioco dei ragazzi ha la sua canzone, modificabile in
-`⚙️ Contenuti → 🎵 Musica dei giochi`. Se il campo del collegamento è vuoto il
-sito apre la **ricerca su YouTube** del titolo: funziona sempre e non scade.
-Se preferisci un video preciso, incolla il suo indirizzo.
+Ogni gioco dei ragazzi ha la sua canzone con il **collegamento diretto al
+video** su YouTube, modificabile in `⚙️ Contenuti → 🎵 Musica dei giochi`.
+Per cambiare brano incolla l'indirizzo del video nuovo. Se svuoti il campo, il
+sito apre la ricerca del titolo: è la rete di sicurezza nel caso un video venga
+rimosso.
+
+## Far girare la voce
+
+In `📣 Pubblica → Invita la gente` trovi il **messaggio già pronto** con data,
+giochi e link per iscriversi: puoi copiarlo o aprire direttamente WhatsApp o
+Telegram. Gli stessi pulsanti stanno anche in fondo alla home del sito.
+
+Per allegare la **locandina** apri `locandina.html` e premi
+**⬇️ Scarica come immagine**: viene fuori un PNG in formato A4, che WhatsApp e
+Telegram mostrano subito nel messaggio (i PDF no).
+
+## Se le modifiche non si pubblicano
+
+Per mandare online i contenuti serve un **token di GitHub**, una volta sola.
+L'area admin ti apre la sezione giusta e ti spiega i tre passi. Nel frattempo
+**non perdi niente**: ogni modifica viene salvata come bozza in questo browser,
+e alla riapertura l'admin ti chiede se vuoi riprenderla.
 
 ## Regole di sicurezza di Firestore
 
