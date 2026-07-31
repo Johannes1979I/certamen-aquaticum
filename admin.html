@@ -386,6 +386,41 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
     <p class="aiuto" id="statoPubblicazione" style="margin-top:12px"></p>
   </div>
 
+  <div class="card" id="sec-telegram">
+    <h2>🤖 Avvisi su Telegram</h2>
+    <p class="aiuto">A ogni iscrizione arriva un messaggio con nome, sezione, recapito
+      e i totali aggiornati. È lo stesso bot della festa in piscina: i messaggi del
+      Certamen cominciano con <b>🏊 CERTAMEN AQUATICUM</b>, così non si confondono.</p>
+    <div class="griglia2">
+      <div class="campo">
+        <label for="tg_token">Token del bot</label>
+        <input type="password" id="tg_token" class="mini" placeholder="123456:AAE…" />
+        <div class="aiuto">Te lo dà <b>@BotFather</b> su Telegram.</div>
+      </div>
+      <div class="campo">
+        <label for="tg_chat">Chat a cui scrivere</label>
+        <input type="text" id="tg_chat" class="mini" placeholder="1992022292" />
+        <div class="aiuto">Il tuo id personale, oppure quello di un gruppo (comincia con <code>-100</code>).</div>
+      </div>
+    </div>
+    <div class="azioni" style="justify-content:flex-start">
+      <button class="btn btn-p" id="btnProvaTg">✈️ Manda un messaggio di prova</button>
+      <button class="btn btn-chiaro btn-piccolo" id="btnChiId">🔎 Qual è il mio id?</button>
+    </div>
+    <p class="aiuto" id="statoTg" style="margin-top:10px"></p>
+    <details style="margin-top:10px">
+      <summary style="cursor:pointer;font-weight:bold;padding:6px 0">Voglio un bot solo per il Certamen</summary>
+      <ol style="margin:10px 0 0 20px;font-size:.92rem">
+        <li>Su Telegram cerca <b>@BotFather</b> e scrivigli <code>/newbot</code>.</li>
+        <li>Dai un nome (per esempio <i>Certamen Aquaticum</i>) e un nome utente che finisca per <code>bot</code>.</li>
+        <li>Ti risponde con un token: incollalo qui sopra nel campo «Token del bot».</li>
+        <li>Apri una chat col bot nuovo e mandagli un messaggio qualsiasi, altrimenti non può scriverti per primo.</li>
+        <li>Premi «Manda un messaggio di prova», poi <b>Pubblica contenuti.json</b> per attivarlo sul sito.</li>
+      </ol>
+      <p style="margin-top:8px;font-size:.9rem">Per farli arrivare in un <b>gruppo</b>: aggiungi il bot al gruppo, scrivi un messaggio, poi premi «Qual è il mio id?» e scegli l'id del gruppo.</p>
+    </details>
+  </div>
+
   <div class="card">
     <h2>📣 Invita la gente</h2>
     <p class="aiuto">Il messaggio è già scritto: copialo, oppure apri direttamente WhatsApp o Telegram.

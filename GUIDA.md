@@ -94,6 +94,34 @@ Per cambiare brano incolla l'indirizzo del video nuovo. Se svuoti il campo, il
 sito apre la ricerca del titolo: è la rete di sicurezza nel caso un video venga
 rimosso.
 
+## Gli avvisi su Telegram
+
+A ogni iscrizione arriva un messaggio con nome, sezione, recapito e i totali
+aggiornati. Usa lo stesso bot della festa, **@holiday_prenotazioni_feste_bot**:
+i messaggi del Certamen cominciano con `🏊 CERTAMEN AQUATICUM`, così non si
+confondono con le prenotazioni della festa.
+
+In `📣 Pubblica → 🤖 Avvisi su Telegram` trovi il token, l'id della chat e il
+pulsante **Manda un messaggio di prova**: premilo ogni tanto prima dell'evento,
+per essere sicuro che funzioni.
+
+**Se vuoi un bot dedicato al Certamen** (per esempio per farlo scrivere nel
+gruppo del residence invece che a te):
+
+1. Su Telegram cerca **@BotFather** e scrivigli `/newbot`
+2. Dai un nome e un nome utente che finisca per `bot`
+3. Copia il token che ti risponde e incollalo nel campo «Token del bot»
+4. Apri la chat col bot nuovo e mandagli un messaggio qualsiasi: senza,
+   Telegram non gli permette di scriverti per primo
+5. Premi **Qual è il mio id?** per farti dire dove deve scrivere, poi
+   **Manda un messaggio di prova**
+6. Alla fine premi **Pubblica contenuti.json**, altrimenti resta valido il
+   vecchio bot
+
+Per gli avvisi in un **gruppo**: aggiungi il bot al gruppo, scrivici dentro un
+messaggio, poi premi «Qual è il mio id?» e scegli l'id del gruppo (comincia
+con `-100`).
+
 ## Far girare la voce
 
 In `📣 Pubblica → Invita la gente` trovi il **messaggio già pronto** con data,

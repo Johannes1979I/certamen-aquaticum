@@ -153,8 +153,14 @@
       buttaBozza();
       CA.toast('Bozza eliminata.', 4000);
     });
-    /* ogni modifica ai contenuti finisce subito nella bozza */
+    /* ogni modifica ai contenuti finisce subito nella bozza. Anche il token
+       e la chat di Telegram sono contenuti, benché stiano in un'altra scheda. */
     $('v-contenuti').addEventListener('change', salvaBozzaFraPoco);
+    $('sec-telegram').addEventListener('change', salvaBozzaFraPoco);
+
+    /* avvisi su Telegram */
+    $('btnProvaTg').addEventListener('click', provaTelegram);
+    $('btnChiId').addEventListener('click', chiId);
 
     /* invito da far girare */
     $('msgInvito').value = CA.messaggioInvito();
@@ -1762,6 +1768,9 @@
     $('c_quotaEtichetta').value = V(q.etichetta, '');
     $('c_quotaSpiega').value = V(q.spiegazione, '');
     $('c_musicaAttiva').checked = (DATI.musicaAttiva !== false);
+    var n = V(DATI.notifiche, {});
+    $('tg_token').value = V(n.telegramBotToken, '');
+    $('tg_chat').value = V(n.telegramChatId, '');
     $('c_sicurezza').value = V(DATI.sicurezza, []).join('\n');
     $('c_regolamento').value = V(DATI.regolamento, []).join('\n');
     $('c_foto').value = V(DATI.foto, []).join('\n');
@@ -2055,6 +2064,9 @@
     d.quota.etichetta = $('c_quotaEtichetta').value.trim();
     d.quota.spiegazione = $('c_quotaSpiega').value.trim();
     d.musicaAttiva = $('c_musicaAttiva').checked;
+    d.notifiche = d.notifiche || {};
+    d.notifiche.telegramBotToken = $('tg_token').value.trim();
+    d.notifiche.telegramChatId = $('tg_chat').value.trim();
     d.sicurezza = righe($('c_sicurezza').value);
     d.regolamento = righe($('c_regolamento').value);
     d.foto = righe($('c_foto').value);
@@ -2070,6 +2082,70 @@
 
   function scaricaContenuti() {
     scaricaFile('contenuti.json', JSON.stringify(raccogli(), null, 2), 'application/json');
+  }
+
+  /* ======================= AVVISI SU TELEGRAM ==========================
+     A ogni iscrizione parte un messaggio al bot. Qui si controlla che
+     funzioni davvero, senza aspettare la prima iscrizione vera.          */
+  function provaTelegram() {
+    var token = $('tg_token').value.trim();
+    var chat = $('tg_chat').value.trim();
+    if (!token || !chat) {
+      testo('statoTg', '⚠️ Servono sia il token del bot sia l\'id della chat.');
+      return;
+    }
+    var b = $('btnProvaTg');
+    b.disabled = true;
+    testo('statoTg', '⏳ Invio in corso…');
+    var msg = '✅ Prova riuscita!\n\nQui arriveranno le iscrizioni al ' +
+      V(V(DATI.tema, {}).titolo, 'Certamen Aquaticum') + '.\n' +
+      'Ogni messaggio riporta nome, sezione, recapito e i totali aggiornati.';
+    fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chat, text: msg })
+    }).then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j && j.ok) {
+          testo('statoTg', '✅ Messaggio inviato: controlla Telegram. Se hai cambiato token o id, ricordati di premere «Pubblica contenuti.json» per attivarli sul sito.');
+          salvaBozzaFraPoco();
+        } else {
+          testo('statoTg', '⚠️ Telegram risponde: ' + ((j && j.description) || 'errore') +
+            '. Controlla token e id, e che tu abbia già scritto almeno una volta al bot.');
+        }
+      })
+      .catch(function (e) { testo('statoTg', '⚠️ Non riesco a contattare Telegram: ' + e.message); })
+      .then(function () { b.disabled = false; });
+  }
+
+  /* Legge gli ultimi messaggi ricevuti dal bot e ne ricava gli id delle chat:
+     è il modo più semplice per sapere dove deve scrivere. */
+  function chiId() {
+    var token = $('tg_token').value.trim();
+    if (!token) { testo('statoTg', '⚠️ Prima incolla il token del bot.'); return; }
+    testo('statoTg', '⏳ Guardo chi ha scritto al bot…');
+    fetch('https://api.telegram.org/bot' + token + '/getUpdates?limit=20')
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || !j.ok) {
+          testo('statoTg', '⚠️ Telegram risponde: ' + ((j && j.description) || 'errore'));
+          return;
+        }
+        var visti = {};
+        (j.result || []).forEach(function (u) {
+          var c = (u.message && u.message.chat) || (u.channel_post && u.channel_post.chat);
+          if (!c) return;
+          visti[c.id] = (c.title || ((c.first_name || '') + ' ' + (c.last_name || '')).trim() || c.username || 'chat') +
+            ' (' + c.type + ')';
+        });
+        var chiavi = Object.keys(visti);
+        if (!chiavi.length) {
+          testo('statoTg', 'Nessun messaggio recente. Apri Telegram, scrivi qualcosa al bot (o nel gruppo dove lo hai aggiunto) e riprova.');
+          return;
+        }
+        testo('statoTg', 'Chat trovate: ' + chiavi.map(function (k) { return visti[k] + ' → ' + k; }).join(' · ') +
+          '. Copia l\'id giusto nel campo qui sopra.');
+      })
+      .catch(function (e) { testo('statoTg', '⚠️ ' + e.message); });
   }
 
   /* ===================== BOZZA DELLE MODIFICHE =========================
