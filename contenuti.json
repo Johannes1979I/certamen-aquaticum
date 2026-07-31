@@ -178,7 +178,7 @@
       "tipo": "squadre",
       "durata": 15,
       "orario": "16:55",
-      "riserva": false,
+      "riserva": true,
       "formazione": "a squadre",
       "partecipanti": "Tre alla volta: uno trasportato, due che spingono",
       "descrizione": "Un ragazzo si sistema sopra il materassino e due compagni lo trasportano fino al punto stabilito e ritorno. Al turno successivo cambia il ragazzo trasportato, così passano tutti.",
@@ -200,7 +200,8 @@
         "perche": "Parla di contare sugli amici: e qui il compagno lo porti tu.",
         "url": "https://www.youtube.com/watch?v=6k8cpUkKK4c",
         "ricerca": "Count on Me Bruno Mars"
-      }
+      },
+      "escluso": false
     },
     {
       "id": "traghetto",
@@ -394,7 +395,8 @@
         "perche": "Tensione pura mentre l'animatore chiama i comandi.",
         "url": "https://www.youtube.com/watch?v=9jK-NcRmVcw",
         "ricerca": "The Final Countdown Europe"
-      }
+      },
+      "escluso": false
     },
     {
       "id": "nuoto-pallone",
@@ -468,7 +470,7 @@
       "tipo": "individuale",
       "durata": 20,
       "orario": "",
-      "riserva": true,
+      "riserva": false,
       "formazione": "torneo 1 contro 1",
       "partecipanti": "Sfide uno contro uno a eliminazione diretta",
       "descrizione": "Il duello del pomeriggio. Due ragazzi salgono insieme sul materassino al centro della piscina e al via cercano di far cadere l'avversario spingendo solo con le mani. Torneo a eliminazione diretta fino alla finale, per incoronare il Re o la Regina del materassino.",
@@ -492,7 +494,8 @@
         "perche": "Il duello uno contro uno merita una sigla da arena.",
         "url": "https://www.youtube.com/watch?v=v2AC41dglnM",
         "ricerca": "Thunderstruck AC/DC"
-      }
+      },
+      "escluso": false
     },
     {
       "id": "super-staffetta",
@@ -502,7 +505,7 @@
       "tipo": "finale",
       "durata": 20,
       "orario": "18:30",
-      "riserva": false,
+      "riserva": true,
       "formazione": "a squadre",
       "partecipanti": "Tutta la squadra, sei frazioni",
       "descrizione": "Il gran finale che può ribaltare la classifica: sei frazioni, una dietro l'altra, che riassumono tutto il pomeriggio. I punti valgono il doppio.",
@@ -527,7 +530,8 @@
         "perche": "Il gran finale a tutta velocita, senza fermarsi piu.",
         "url": "https://www.youtube.com/watch?v=HgzGwKwLmgM",
         "ricerca": "Don't Stop Me Now Queen"
-      }
+      },
+      "escluso": false
     }
   ],
   "tornei": [
