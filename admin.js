@@ -198,25 +198,31 @@
     aggiornaLinkInvito();
     $('msgInvito').addEventListener('input', aggiornaLinkInvito);
 
-    /* condivisione con la locandina allegata */
-    testo('admSpiegaCond', (window.LOC && LOC.sannoFarlo())
-      ? 'Il pulsante blu apre l\'elenco delle app e manda locandina e messaggio insieme.'
-      : 'Da questo computer non si può allegare l\'immagine direttamente: il pulsante blu ti scarica la locandina e ti copia il messaggio, poi li unisci nel gruppo. Dal telefono parte tutto insieme.');
-    $('admCondividi').addEventListener('click', function () {
-      var b = this, prima = b.textContent;
-      b.disabled = true;
-      b.textContent = '⏳ Preparo la locandina…';
-      LOC.condividi().then(function (esito) {
-        if (esito === 'scaricata') {
-          CA.toast('⬇️ Locandina scaricata e messaggio copiato: aprili in WhatsApp o Telegram e allega l\'immagine.', 11000);
-        }
-      }).catch(function (e) {
-        CA.toast('⚠️ Non riesco a condividere: ' + e.message, 8000);
-      }).then(function () {
-        b.disabled = false;
-        b.textContent = prima;
+    /* Se cambi i contenuti, ricordati di rifare l'immagine di anteprima:
+       è quella che le app mostrano sopra al messaggio. */
+    testo('admSpiegaCond', 'L\'immagine in testa al messaggio è ' +
+      'images/anteprima-social.jpg. Se cambi data, titolo o luogo, rigenerala ' +
+      'dalla pagina della locandina, altrimenti resta quella vecchia.');
+
+    /* mandare la locandina come file vero: solo dove il telefono lo permette */
+    if (window.LOC && LOC.sannoFarlo()) {
+      $('admCondividi').style.display = '';
+      $('admCondividi').addEventListener('click', function () {
+        var b = this, prima = b.textContent;
+        b.disabled = true;
+        b.textContent = '⏳ Preparo la locandina…';
+        LOC.condividi().then(function (esito) {
+          if (esito === 'scaricata') {
+            CA.toast('⬇️ Locandina scaricata e messaggio copiato: aprili in WhatsApp o Telegram e allega l\'immagine.', 11000);
+          }
+        }).catch(function (e) {
+          CA.toast('⚠️ Non riesco a condividere: ' + e.message, 8000);
+        }).then(function () {
+          b.disabled = false;
+          b.textContent = prima;
+        });
       });
-    });
+    }
     $('btnCopiaMsg').addEventListener('click', function () {
       var t = $('msgInvito');
       t.select();

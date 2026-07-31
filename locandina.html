@@ -114,15 +114,16 @@ html, body, .a4, .foto, .foto .velo, .occhiello, .mondo, .mondo.rag, .mondo.adu,
 <body>
 
 <div class="barra-alta">
-  <button id="btnCondividi">📤 Condividi con la locandina</button>
-  <button onclick="window.print()">🖨️ Stampa</button>
-  <button id="btnPng">⬇️ Scarica l'immagine</button>
-  <a class="chiaro" id="btnWa" target="_blank" rel="noopener">💬 Solo testo su WhatsApp</a>
-  <a class="chiaro" id="btnTg" target="_blank" rel="noopener">✈️ Solo testo su Telegram</a>
+  <a id="btnWa" target="_blank" rel="noopener">💬 Manda su WhatsApp</a>
+  <a id="btnTg" target="_blank" rel="noopener">✈️ Manda su Telegram</a>
+  <button class="chiaro" onclick="window.print()">🖨️ Stampa</button>
+  <button class="chiaro" id="btnPng">⬇️ Scarica l'immagine</button>
+  <button class="chiaro" id="btnAnteprima" title="Rifà l'immagine che le app mostrano sopra al messaggio">🔄 Rigenera l'anteprima</button>
+  <button class="chiaro" id="btnCondividi" style="display:none">📎 Manda come immagine</button>
   <a class="chiaro" href="admin.html">← Area organizzatori</a>
 </div>
 <p style="max-width:210mm;text-align:center;color:#33566b;font-size:.92rem;margin:-6px 0 2px" id="spiega">
-  «Condividi con la locandina» apre l'elenco delle app e manda immagine e messaggio insieme.
+  Con WhatsApp e Telegram arriva la locandina in testa e il messaggio a seguire, già pronto.
 </p>
 
 <div class="a4" id="foglio">
@@ -225,19 +226,45 @@ CA.carica().then(function(d){
   $('btnWa').href = CA.linkWhatsApp();
   $('btnTg').href = CA.linkTelegram();
   $('btnPng').addEventListener('click', function(){ LOC.scarica(); });
-  $('btnCondividi').addEventListener('click', condividiTutto);
-
-  /* su computer la condivisione con allegato non c'è: si spiega prima */
-  if(!LOC.sannoFarlo()){
-    testo('spiega', 'Da questo computer non posso allegare l\'immagine direttamente: premendo ' +
-      '«Condividi con la locandina» te la scarico e ti copio il messaggio, poi li unisci nel gruppo. ' +
-      'Dal telefono invece parte tutto insieme.');
+  $('btnAnteprima').addEventListener('click', rigeneraAnteprima);
+  /* il pulsante che allega l'immagine vera compare solo dove si può fare */
+  if(LOC.sannoFarlo()){
+    $('btnCondividi').style.display = '';
+    $('btnCondividi').addEventListener('click', condividiTutto);
   }
   adattaAllaFinestra();
 }).catch(function(e){
   alert('Non riesco a leggere contenuti.json: ' + e.message);
 });
 
+
+/* L'immagine che WhatsApp e Telegram mostrano sopra al messaggio è un file
+   dentro images/. Va rifatto quando cambiano data, titolo o luogo: questo
+   pulsante lo prepara e lo scarica, poi si carica dall'area organizzatori
+   con «Carica foto» oppure lo si mette nella cartella images del progetto. */
+function rigeneraAnteprima(){
+  var b = $('btnAnteprima');
+  var prima = b.textContent;
+  b.disabled = true;
+  b.textContent = '⏳ Preparo…';
+  LOC.social().then(function(c){
+    c.toBlob(function(blob){
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'anteprima-social.jpg';
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+      b.disabled = false; b.textContent = prima;
+      alert('Immagine di anteprima scaricata.\n\n' +
+            'Per attivarla: caricala nel sito con lo stesso nome ' +
+            '«anteprima-social.jpg», dentro la cartella images.\n\n' +
+            'Serve solo se hai cambiato data, titolo o luogo dell\'evento.');
+    }, 'image/jpeg', 0.82);
+  }).catch(function(e){
+    b.disabled = false; b.textContent = prima;
+    alert('Non sono riuscito a preparare l\'anteprima: ' + e.message);
+  });
+}
 
 /* Condivide locandina e messaggio insieme. Deve partire dal tocco sul
    pulsante: senza un gesto vero i telefoni non aprono il foglio di

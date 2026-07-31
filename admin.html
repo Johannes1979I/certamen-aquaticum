@@ -482,17 +482,18 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
 
   <div class="card">
     <h2>📣 Invita la gente</h2>
-    <p class="aiuto">Il messaggio è già scritto: copialo, oppure apri direttamente WhatsApp o Telegram.
-      Per allegare anche la locandina, scaricala come immagine dal pulsante qui sotto e mettila nel messaggio.</p>
+    <p class="aiuto">Il messaggio è già scritto e i pulsanti WhatsApp e Telegram lo mandano
+      <b>con la locandina in testa</b>: l'app la prende da sola dal sito, non devi allegare
+      niente. Funziona anche dal computer.</p>
     <div class="campo">
       <label for="msgInvito">Messaggio pronto</label>
       <textarea id="msgInvito" style="min-height:200px"></textarea>
     </div>
     <div class="azioni" style="justify-content:flex-start">
-      <button class="btn btn-p" id="admCondividi">📤 Condividi con la locandina</button>
-      <button class="btn btn-chiaro btn-piccolo" id="btnCopiaMsg">📋 Copia solo il messaggio</button>
-      <a class="btn btn-chiaro btn-piccolo" id="admWa" target="_blank" rel="noopener">💬 WhatsApp</a>
-      <a class="btn btn-chiaro btn-piccolo" id="admTg" target="_blank" rel="noopener">✈️ Telegram</a>
+      <a class="btn btn-p" id="admWa" target="_blank" rel="noopener">💬 Manda su WhatsApp</a>
+      <a class="btn btn-p" id="admTg" target="_blank" rel="noopener">✈️ Manda su Telegram</a>
+      <button class="btn btn-chiaro btn-piccolo" id="btnCopiaMsg">📋 Copia il messaggio</button>
+      <button class="btn btn-chiaro btn-piccolo" id="admCondividi" style="display:none">📎 Manda come immagine</button>
       <a class="btn btn-chiaro btn-piccolo" href="locandina.html" target="_blank">🖼️ Locandina</a>
     </div>
     <p class="aiuto" id="admSpiegaCond" style="margin-top:10px"></p>

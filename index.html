@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Certamen Aquaticum — Residence Holiday</title>
 <meta name="description" content="Il torneo di Ferragosto del Residence Holiday a Montalto di Castro: giochi in acqua per i ragazzi e tornei di carte per gli adulti. Programma, regole e iscrizione online." />
+<!-- anteprima del link su WhatsApp, Telegram e social -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Certamen Aquaticum" />
+<meta property="og:locale" content="it_IT" />
+<meta property="og:title" content="Certamen Aquaticum — Residence Holiday" />
+<meta property="og:description" content="Il torneo di Ferragosto del Residence Holiday a Montalto di Castro: giochi in acqua per i ragazzi e tornei di carte per gli adulti. Programma, regole e iscrizione online." />
+<meta property="og:url" content="https://johannes1979i.github.io/certamen-aquaticum/" />
+<meta property="og:image" content="https://johannes1979i.github.io/certamen-aquaticum/images/anteprima-social.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Locandina del Certamen Aquaticum al Residence Holiday" />
+<meta name="twitter:card" content="summary_large_image" />
 <meta name="theme-color" content="#0b7fd4" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏊</text></svg>" />
 <link rel="stylesheet" href="stile.css" />
@@ -105,14 +117,14 @@
   <div class="wrap">
     <div class="nota-box info" style="text-align:center">
       <h3 style="font-size:1.12rem;margin-bottom:6px">📣 Passa parola</h3>
-      <p style="margin-bottom:16px" id="condSpiega">Manda l'invito nel gruppo del residence: parte il messaggio già pronto <b>con la locandina allegata</b>.</p>
+      <p style="margin-bottom:16px" id="condSpiega">Manda l'invito nel gruppo del residence: arriva la <b>locandina in testa</b> e il messaggio a seguire, già pronto.</p>
       <div class="azioni">
-        <button class="btn btn-p btn-grande" id="condTutto">📤 Condividi con la locandina</button>
+        <a class="btn btn-p btn-grande" id="condWa" target="_blank" rel="noopener">💬 Manda su WhatsApp</a>
+        <a class="btn btn-p btn-grande" id="condTg" target="_blank" rel="noopener">✈️ Manda su Telegram</a>
       </div>
       <div class="azioni" style="margin-top:12px">
-        <a class="btn btn-chiaro btn-piccolo" id="condWa" target="_blank" rel="noopener">💬 Solo testo su WhatsApp</a>
-        <a class="btn btn-chiaro btn-piccolo" id="condTg" target="_blank" rel="noopener">✈️ Solo testo su Telegram</a>
-        <a class="btn btn-chiaro btn-piccolo" href="locandina.html">🖼️ Vedi la locandina</a>
+        <button class="btn btn-chiaro btn-piccolo" id="condTutto" style="display:none">📎 Manda la locandina come immagine</button>
+        <a class="btn btn-chiaro btn-piccolo" href="locandina.html">🖼️ Vedi e stampa la locandina</a>
       </div>
     </div>
   </div>
@@ -199,16 +211,15 @@ function disegna(){
   collegaCondivisione();
 }
 
-/* Condivide la locandina insieme al messaggio. Dove il dispositivo non sa
-   allegare file — quasi sempre i computer — scarica l'immagine e copia il
-   testo, spiegando cosa fare. */
+/* I pulsanti WhatsApp e Telegram mandano il messaggio con il link: l'app va a
+   prendere l'immagine di anteprima del sito e la mostra sopra al testo. È il
+   modo che funziona dappertutto, computer compresi.
+   In più, sui telefoni che lo permettono, si può mandare la locandina come
+   immagine vera e propria: è quello che fa questo pulsante. */
 function collegaCondivisione(){
   var b = $('condTutto');
-  if(!window.LOC){ b.style.display = 'none'; return; }
-  if(!LOC.sannoFarlo()){
-    testo('condSpiega', 'Manda l\'invito nel gruppo del residence. Da telefono parte tutto insieme, ' +
-      'messaggio e locandina; da computer ti scarico l\'immagine e ti copio il testo, poi li unisci tu.');
-  }
+  if(!window.LOC || !LOC.sannoFarlo()){ return; }   /* resta nascosto */
+  b.style.display = '';
   b.addEventListener('click', function(){
     var prima = b.textContent;
     b.disabled = true;

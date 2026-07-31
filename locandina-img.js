@@ -211,6 +211,96 @@
     });
   }
 
+  /* ==================== IMMAGINE PER L'ANTEPRIMA DEI LINK ==============
+     Quando si incolla il link in WhatsApp o Telegram, l'app va a prendere
+     l'immagine indicata nella pagina e la mostra sopra al messaggio. Deve
+     essere orizzontale (1200x630): una locandina A4 in piedi verrebbe
+     rimpicciolita o tagliata male. Questa e' la stessa locandina, rifatta
+     su misura per quel riquadro.                                          */
+  function social() {
+    return caricaFoto().then(function (img) {
+      var d = CA.dati();
+      var t = V(d.tema, {}), ev = V(d.evento, {}), res = V(d.residence, {});
+      var aree = V(d.aree, {}), rag = V(aree.ragazzi, {}), adu = V(aree.adulti, {});
+      var q = V(d.quota, {});
+      var W = 1200, H = 630;
+
+      var c = document.createElement('canvas');
+      c.width = W; c.height = H;
+      var x = c.getContext('2d');
+
+      /* foto di sfondo */
+      if (img && img.naturalWidth) {
+        var s = Math.max(W / img.naturalWidth, H / img.naturalHeight);
+        var w = img.naturalWidth * s, h = img.naturalHeight * s;
+        x.drawImage(img, (W - w) / 2, (H - h) * 0.55, w, h);
+      } else {
+        x.fillStyle = '#0b7fd4'; x.fillRect(0, 0, W, H);
+      }
+      var g = x.createLinearGradient(0, 0, W * 0.6, H);
+      g.addColorStop(0, 'rgba(6,50,92,.88)');
+      g.addColorStop(0.6, 'rgba(11,127,212,.66)');
+      g.addColorStop(1, 'rgba(20,196,180,.42)');
+      x.fillStyle = g; x.fillRect(0, 0, W, H);
+
+      var marg = 64;
+
+      /* targhetta gialla */
+      var occhiello = String(V(t.occhiello, 'Ferragosto')).toUpperCase();
+      x.font = 'bold 26px "Trebuchet MS", sans-serif';
+      x.textBaseline = 'middle';
+      pillola(x, marg, 56, x.measureText(occhiello).width + 50, 52, '#ffc233');
+      x.fillStyle = '#4a2c00';
+      x.textAlign = 'left';
+      x.fillText(occhiello, marg + 25, 82);
+      x.textBaseline = 'alphabetic';
+
+      /* titolo */
+      x.fillStyle = '#ffffff';
+      x.font = 'bold 88px "Trebuchet MS", sans-serif';
+      var righe = spezza(x, V(t.titolo, 'Certamen Aquaticum'), W - marg * 2);
+      var y = 230;
+      righe.forEach(function (r, i) { x.fillText(r, marg, y + i * 92); });
+      y += (righe.length - 1) * 92;
+
+      x.font = '34px "Trebuchet MS", sans-serif';
+      x.fillStyle = 'rgba(255,255,255,.95)';
+      x.fillText(V(t.sottotitolo, ''), marg, y + 52);
+
+      /* quando e dove */
+      x.font = 'bold 34px "Trebuchet MS", sans-serif';
+      var giorno = CA.dataIt(ev.data, false);
+      giorno = giorno.charAt(0).toUpperCase() + giorno.slice(1);
+      x.fillText(giorno + ', ' + V(ev.orario, '') + '–' + V(ev.orarioFine, ''), marg, y + 122);
+      x.font = '28px "Trebuchet MS", sans-serif';
+      x.fillStyle = 'rgba(255,255,255,.9)';
+      x.fillText(V(ev.luogo, '') + (res.localita ? ' — ' + res.localita : ''), marg, y + 164);
+
+      /* le due strisce dei mondi */
+      var yy = H - 132;
+      [[V(rag.nome, 'Giochi in acqua'), '#14c4b4'], [V(adu.nome, 'Tornei di carte'), '#0b7fd4']]
+        .forEach(function (v, i) {
+          x.font = 'bold 26px "Trebuchet MS", sans-serif';
+          var largo = x.measureText(v[0]).width + 44;
+          var bx = marg + (i ? x.measureText(V(rag.nome, 'Giochi in acqua')).width + 44 + 16 : 0);
+          pillola(x, bx, yy, largo, 50, v[1]);
+          x.fillStyle = '#ffffff';
+          x.textBaseline = 'middle';
+          x.fillText(v[0], bx + 22, yy + 26);
+          x.textBaseline = 'alphabetic';
+        });
+
+      /* riga finale */
+      x.font = 'bold 28px "Trebuchet MS", sans-serif';
+      x.fillStyle = '#ffc233';
+      x.fillText(q.attiva === true
+        ? ('Iscrizioni con quota di ' + CA.eur(q.importo) + ' a persona')
+        : 'Iscrizioni gratuite online', marg, H - 44);
+
+      return c;
+    });
+  }
+
   /* PNG per chi la scarica (nitida, buona anche da stampare); JPEG per la
      condivisione, che pesa un quinto e nei gruppi viene comunque ricompressa. */
   function file(perCondividere) {
@@ -286,7 +376,7 @@
   }
 
   window.LOC = {
-    disegna: disegna, file: file, scarica: scarica,
+    disegna: disegna, social: social, file: file, scarica: scarica,
     condividi: condividi, sannoFarlo: sannoFarlo
   };
 })();

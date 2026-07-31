@@ -136,22 +136,31 @@ con `-100`).
 
 ## Far girare la voce
 
-Il pulsante **📤 Condividi con la locandina** manda messaggio e locandina
-**insieme**, in un colpo solo. Lo trovi in fondo alla home, nella locandina e in
-`📣 Pubblica → Invita la gente`.
-
-- **Dal telefono** apre l'elenco delle app: scegli WhatsApp o Telegram, il
-  gruppo, e parte tutto — immagine e testo.
-- **Dal computer** non si può allegare un file a quel modo: allora ti scarica
-  la locandina e ti copia il messaggio, poi li unisci tu nel gruppo. Te lo
-  dice prima, così non ci sono sorprese.
-
-I collegamenti `wa.me` e `t.me/share` restano lì accanto, ma portano **solo il
-testo**: quelle scorciatoie un allegato non lo prevedono proprio.
+I pulsanti **💬 Manda su WhatsApp** e **✈️ Manda su Telegram** mandano il
+messaggio con la **locandina in testa**: l'app la prende da sola dal sito, non
+devi allegare niente. Funziona anche dal computer. Li trovi in fondo alla home,
+nella pagina della locandina e in `📣 Pubblica → Invita la gente`.
 
 Il messaggio nel riquadro dell'admin è **modificabile**, e i pulsanti mandano
 esattamente quello che ci leggi dentro. Niente emoji: su parecchi telefoni
 arrivano come quadratini.
+
+### L'immagine che compare sopra al messaggio
+
+È il file `images/anteprima-social.jpg` (1200×630). WhatsApp e Telegram vanno a
+prenderla da soli quando qualcuno incolla il link.
+
+**Se cambi data, titolo o luogo dell'evento, va rifatta**, altrimenti resta
+quella vecchia: apri `locandina.html`, premi **🔄 Rigenera l'anteprima**, e
+rimetti il file scaricato dentro `images/` con lo stesso nome.
+
+⚠️ WhatsApp tiene in memoria l'anteprima per qualche giorno: dopo averla
+cambiata, la prima volta potresti vedere ancora quella vecchia.
+
+Sui telefoni compare anche **📎 Manda come immagine**, che allega il file vero
+della locandina invece del link. Attenzione: quando WhatsApp riceve un'immagine
+**scarta il testo** — arriva solo la foto. Per avere immagine *e* messaggio
+insieme usa i due pulsanti principali.
 
 ## Se le modifiche non si pubblicano
 
