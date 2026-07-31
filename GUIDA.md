@@ -136,13 +136,22 @@ con `-100`).
 
 ## Far girare la voce
 
-In `📣 Pubblica → Invita la gente` trovi il **messaggio già pronto** con data,
-giochi e link per iscriversi: puoi copiarlo o aprire direttamente WhatsApp o
-Telegram. Gli stessi pulsanti stanno anche in fondo alla home del sito.
+Il pulsante **📤 Condividi con la locandina** manda messaggio e locandina
+**insieme**, in un colpo solo. Lo trovi in fondo alla home, nella locandina e in
+`📣 Pubblica → Invita la gente`.
 
-Per allegare la **locandina** apri `locandina.html` e premi
-**⬇️ Scarica come immagine**: viene fuori un PNG in formato A4, che WhatsApp e
-Telegram mostrano subito nel messaggio (i PDF no).
+- **Dal telefono** apre l'elenco delle app: scegli WhatsApp o Telegram, il
+  gruppo, e parte tutto — immagine e testo.
+- **Dal computer** non si può allegare un file a quel modo: allora ti scarica
+  la locandina e ti copia il messaggio, poi li unisci tu nel gruppo. Te lo
+  dice prima, così non ci sono sorprese.
+
+I collegamenti `wa.me` e `t.me/share` restano lì accanto, ma portano **solo il
+testo**: quelle scorciatoie un allegato non lo prevedono proprio.
+
+Il messaggio nel riquadro dell'admin è **modificabile**, e i pulsanti mandano
+esattamente quello che ci leggi dentro. Niente emoji: su parecchi telefoni
+arrivano come quadratini.
 
 ## Se le modifiche non si pubblicano
 

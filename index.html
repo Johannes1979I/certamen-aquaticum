@@ -8,8 +8,10 @@
 <meta name="theme-color" content="#0b7fd4" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏊</text></svg>" />
 <link rel="stylesheet" href="stile.css" />
+<script src="qr.js"></script>
 <script src="firebase.js"></script>
 <script src="comune.js"></script>
+<script src="locandina-img.js"></script>
 <style>
 /* la home è una pagina di ingresso: si vede tutta senza scorrere all'infinito */
 .hero-dentro{ padding:clamp(30px,5vw,64px) 0 clamp(56px,7vw,86px); }
@@ -103,11 +105,14 @@
   <div class="wrap">
     <div class="nota-box info" style="text-align:center">
       <h3 style="font-size:1.12rem;margin-bottom:6px">📣 Passa parola</h3>
-      <p style="margin-bottom:16px">Manda l'invito nel gruppo del residence: il messaggio è già pronto, con la data e il link per iscriversi.</p>
+      <p style="margin-bottom:16px" id="condSpiega">Manda l'invito nel gruppo del residence: parte il messaggio già pronto <b>con la locandina allegata</b>.</p>
       <div class="azioni">
-        <a class="btn btn-p" id="condWa" target="_blank" rel="noopener">💬 Manda su WhatsApp</a>
-        <a class="btn btn-p" id="condTg" target="_blank" rel="noopener">✈️ Manda su Telegram</a>
-        <a class="btn btn-chiaro" href="locandina.html">🖼️ Locandina da stampare o allegare</a>
+        <button class="btn btn-p btn-grande" id="condTutto">📤 Condividi con la locandina</button>
+      </div>
+      <div class="azioni" style="margin-top:12px">
+        <a class="btn btn-chiaro btn-piccolo" id="condWa" target="_blank" rel="noopener">💬 Solo testo su WhatsApp</a>
+        <a class="btn btn-chiaro btn-piccolo" id="condTg" target="_blank" rel="noopener">✈️ Solo testo su Telegram</a>
+        <a class="btn btn-chiaro btn-piccolo" href="locandina.html">🖼️ Vedi la locandina</a>
       </div>
     </div>
   </div>
@@ -191,6 +196,34 @@ function disegna(){
   disegnaFotoBrevi();
   $('condWa').href = CA.linkWhatsApp();
   $('condTg').href = CA.linkTelegram();
+  collegaCondivisione();
+}
+
+/* Condivide la locandina insieme al messaggio. Dove il dispositivo non sa
+   allegare file — quasi sempre i computer — scarica l'immagine e copia il
+   testo, spiegando cosa fare. */
+function collegaCondivisione(){
+  var b = $('condTutto');
+  if(!window.LOC){ b.style.display = 'none'; return; }
+  if(!LOC.sannoFarlo()){
+    testo('condSpiega', 'Manda l\'invito nel gruppo del residence. Da telefono parte tutto insieme, ' +
+      'messaggio e locandina; da computer ti scarico l\'immagine e ti copio il testo, poi li unisci tu.');
+  }
+  b.addEventListener('click', function(){
+    var prima = b.textContent;
+    b.disabled = true;
+    b.textContent = '⏳ Preparo la locandina…';
+    LOC.condividi().then(function(esito){
+      if(esito === 'scaricata'){
+        CA.toast('⬇️ Locandina scaricata e messaggio copiato: ora aprili in WhatsApp o Telegram e allega l\'immagine.', 11000);
+      }
+    }).catch(function(e){
+      CA.toast('⚠️ Non riesco a condividere: ' + e.message, 8000);
+    }).then(function(){
+      b.disabled = false;
+      b.textContent = prima;
+    });
+  });
 }
 
 /* i contatori veri, che si aggiornano da soli */

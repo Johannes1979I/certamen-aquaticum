@@ -11,6 +11,7 @@
 <script src="qr.js"></script>
 <script src="firebase.js"></script>
 <script src="comune.js"></script>
+<script src="locandina-img.js"></script>
 <style>
 /* =========================================================================
    Area organizzatori. Pensata per essere usata dal telefono, a bordo
@@ -488,11 +489,13 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
       <textarea id="msgInvito" style="min-height:200px"></textarea>
     </div>
     <div class="azioni" style="justify-content:flex-start">
-      <button class="btn btn-chiaro btn-piccolo" id="btnCopiaMsg">📋 Copia il messaggio</button>
-      <a class="btn btn-p btn-piccolo" id="admWa" target="_blank" rel="noopener">💬 WhatsApp</a>
-      <a class="btn btn-p btn-piccolo" id="admTg" target="_blank" rel="noopener">✈️ Telegram</a>
-      <a class="btn btn-chiaro btn-piccolo" href="locandina.html" target="_blank">🖼️ Locandina (stampa o immagine)</a>
+      <button class="btn btn-p" id="admCondividi">📤 Condividi con la locandina</button>
+      <button class="btn btn-chiaro btn-piccolo" id="btnCopiaMsg">📋 Copia solo il messaggio</button>
+      <a class="btn btn-chiaro btn-piccolo" id="admWa" target="_blank" rel="noopener">💬 WhatsApp</a>
+      <a class="btn btn-chiaro btn-piccolo" id="admTg" target="_blank" rel="noopener">✈️ Telegram</a>
+      <a class="btn btn-chiaro btn-piccolo" href="locandina.html" target="_blank">🖼️ Locandina</a>
     </div>
+    <p class="aiuto" id="admSpiegaCond" style="margin-top:10px"></p>
   </div>
 
   <div class="card" id="sec-github">
