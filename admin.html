@@ -324,10 +324,30 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
     <div class="campo"><input type="text" id="cerca" placeholder="Cerca per nome, codice, appartamento…" /></div>
     <div class="azioni" style="justify-content:flex-start;margin-bottom:16px">
       <button class="btn btn-chiaro btn-piccolo" id="btnAggiungi">➕ Aggiungi a mano</button>
+      <button class="btn btn-chiaro btn-piccolo" id="btnImportaTg">📨 Incolla da Telegram</button>
       <button class="btn btn-chiaro btn-piccolo" id="btnCsv">⬇️ Scarica CSV</button>
       <button class="btn btn-chiaro btn-piccolo" id="btnSincronizza">🔢 Ricalcola i contatori pubblici</button>
     </div>
     <div id="formManuale" style="display:none"></div>
+
+    <div id="importaTg" style="display:none">
+      <div class="card" style="background:#fff8e5;border-color:var(--c3)">
+        <h3 style="margin-top:0">📨 Recupera un'iscrizione dal messaggio Telegram</h3>
+        <p class="aiuto">Serve quando un'iscrizione è arrivata su Telegram ma non è
+          finita nel registro. Apri Telegram, tieni premuto sul messaggio, scegli
+          <b>Copia</b> e incollalo qui: leggo io tutti i dati. Puoi incollare anche
+          più messaggi uno dietro l'altro.</p>
+        <div class="campo">
+          <textarea id="testoTg" style="min-height:200px" placeholder="🏊 CERTAMEN AQUATICUM — nuova iscrizione&#10;&#10;Sezione: …&#10;Nome: …"></textarea>
+        </div>
+        <div class="azioni" style="justify-content:flex-start">
+          <button class="btn btn-p" id="btnLeggiTg">🔎 Leggi il messaggio</button>
+          <button class="btn btn-chiaro" id="btnChiudiTg">Annulla</button>
+        </div>
+        <div id="anteprimaTg" style="margin-top:16px"></div>
+      </div>
+    </div>
+
     <div id="elencoIscritti"></div>
   </div>
 </section>

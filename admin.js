@@ -121,6 +121,12 @@
     $('cerca').addEventListener('focus', function () { STOSCRIVENDO = true; });
     $('cerca').addEventListener('blur', function () { STOSCRIVENDO = false; });
     $('btnAggiungi').addEventListener('click', apriFormManuale);
+    $('btnImportaTg').addEventListener('click', apriImportaTelegram);
+    $('btnLeggiTg').addEventListener('click', leggiTestoTelegram);
+    $('btnChiudiTg').addEventListener('click', function () {
+      $('importaTg').style.display = 'none';
+      $('anteprimaTg').textContent = '';
+    });
     $('btnCsv').addEventListener('click', esportaCsv);
     $('btnSincronizza').addEventListener('click', sincronizzaContatori);
 
@@ -691,6 +697,157 @@
     var s = '';
     for (var i = 0; i < 4; i++) s += lettere[Math.floor(Math.random() * lettere.length)];
     return V(V(DATI.iscrizione, {}).prefissoCodice, 'CA') + '-' + sig + '-' + s;
+  }
+
+  /* ============ RECUPERO DA UN MESSAGGIO DI TELEGRAM ==================
+     Se il database era bloccato quando qualcuno si e' iscritto, l'avviso
+     Telegram e' partito lo stesso: quel messaggio contiene tutto. Qui lo si
+     rilegge e si ricostruisce l'iscrizione, senza ricopiarla a mano.       */
+  function apriImportaTelegram() {
+    $('importaTg').style.display = '';
+    $('anteprimaTg').textContent = '';
+    $('importaTg').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(function () { try { $('testoTg').focus(); } catch (e) { } }, 400);
+  }
+
+  function interpretaTelegram(testoIntero) {
+    /* più messaggi incollati di seguito: si separano sull'intestazione */
+    var pezzi = String(testoIntero || '')
+      .split(/(?=🏊\s*CERTAMEN AQUATICUM)/)
+      .map(function (x) { return x.trim(); })
+      .filter(function (x) { return x.length > 20; });
+    if (!pezzi.length) pezzi = [String(testoIntero || '')];
+
+    return pezzi.map(leggiUnMessaggio).filter(Boolean);
+  }
+
+  function leggiUnMessaggio(testoMsg) {
+    var campi = {};
+    String(testoMsg).split('\n').forEach(function (r) {
+      var m = r.match(/^\s*([A-Za-zÀ-ÿ' ]+?)\s*:\s*(.+?)\s*$/);
+      if (m) campi[m[1].toLowerCase()] = m[2];
+    });
+    var nome = campi['nome'];
+    if (!nome) return null;
+
+    var sezione = V(campi['sezione'], '');
+    var gruppo = '';
+    if (/burraco/i.test(sezione)) gruppo = 'burraco';
+    else if (/italiana/i.test(sezione)) gruppo = 'italiana';
+    var area = gruppo ? 'adulti' : 'ragazzi';
+
+    var p = {
+      nome: nome,
+      area: area,
+      gruppo: gruppo,
+      sezione: sezione || (area === 'ragazzi' ? 'Giochi in acqua' : 'Tornei di carte'),
+      codice: V(campi['codice'], ''),
+      telefono: V(campi['telefono'], ''),
+      appartamento: V(campi['appartamento'], ''),
+      note: V(campi['note'], ''),
+      dataEvento: V(V(DATI.evento, {}).data, ''),
+      creatoIl: new Date().toISOString(),
+      recuperataDaTelegram: true
+    };
+
+    if (area === 'ragazzi') {
+      p.eta = Number(String(V(campi['età'], campi['eta'] || '')).replace(/\D/g, '')) || 0;
+      var acqua = String(V(campi['in acqua'], '')).toLowerCase();
+      p.nuoto = /bene/.test(acqua) ? 'bene' : (/poco/.test(acqua) ? 'poco' : (/cava/.test(acqua) ? 'media' : ''));
+      p.genitore = V(campi['genitore'], '');
+      p.amico = V(campi['vorrebbe stare con'], '');
+      var gare = String(V(campi['gare individuali'], ''));
+      p.gare = (!gare || /nessuna/i.test(gare)) ? [] : gare.split(',').map(function (n) {
+        var pulito = n.trim();
+        var g = V(DATI.giochi, []).filter(function (x) { return x.nome === pulito; })[0];
+        return { id: g ? g.id : pulito.toLowerCase().replace(/\s+/g, '-'), nome: pulito };
+      });
+    } else {
+      p.livello = V(campi['esperienza'], '');
+      var tornei = String(V(campi['tornei'], ''));
+      p.tornei = tornei ? tornei.split(',').map(function (t) {
+        var nomeT = t.replace(/\(.*?\)/, '').trim();
+        var bl = (t.match(/bl\.?\s*([AB])/i) || [])[1] || '';
+        var vero = V(DATI.tornei, []).filter(function (x) { return x.nome === nomeT; })[0];
+        return { id: vero ? vero.id : nomeT.toLowerCase(), nome: nomeT, blocco: vero ? vero.blocco : bl };
+      }) : [];
+      var coppia = String(V(campi['coppia'], ''));
+      p.inCoppia = !!coppia && !/abbinare/i.test(coppia);
+      p.compagno = p.inCoppia ? coppia : '';
+    }
+    if (!p.codice) p.codice = nuovoCodice(p);
+    return p;
+  }
+
+  function leggiTestoTelegram() {
+    var trovate = interpretaTelegram($('testoTg').value);
+    var box = $('anteprimaTg');
+    box.textContent = '';
+    if (!trovate.length) {
+      box.appendChild(crea('p', 'aiuto', '⚠️ Non ho riconosciuto nessuna iscrizione. Assicurati di aver copiato tutto il messaggio, comprese le righe «Nome:» e «Sezione:».'));
+      return;
+    }
+
+    box.appendChild(crea('h3', null, 'Ho letto ' + trovate.length +
+      (trovate.length === 1 ? ' iscrizione:' : ' iscrizioni:')));
+
+    trovate.forEach(function (p) {
+      var r = crea('div', 'riga-iscr');
+      var c = crea('div', 'cnt');
+      var t = crea('div');
+      t.appendChild(crea('span', 'tag ' + tagClasse(p), tagTesto(p)));
+      var b = crea('b', null, p.nome); b.style.display = 'inline';
+      t.appendChild(b);
+      c.appendChild(t);
+      c.appendChild(crea('small', null, dettaglio(p)));
+      c.appendChild(crea('small', null, '🎟️ ' + p.codice + ' · ☎️ ' + (p.telefono || '—')));
+      var gia = ISCR.filter(function (x) {
+        return x.stato !== 'cestino' &&
+          (x.codice === p.codice || normalizza(x.nome) === normalizza(p.nome));
+      })[0];
+      if (gia) c.appendChild(crea('small', null, '⚠️ Sembra già nel registro: non la aggiungo due volte.'));
+      r.appendChild(c);
+      box.appendChild(r);
+    });
+
+    var nuove = trovate.filter(function (p) {
+      return !ISCR.some(function (x) {
+        return x.stato !== 'cestino' &&
+          (x.codice === p.codice || normalizza(x.nome) === normalizza(p.nome));
+      });
+    });
+
+    var az = crea('div', 'azioni');
+    az.style.cssText = 'justify-content:flex-start;margin-top:14px';
+    if (nuove.length) {
+      var b2 = crea('button', 'btn btn-p', '✅ Aggiungi al registro (' + nuove.length + ')');
+      b2.addEventListener('click', function () { salvaRecuperate(nuove); });
+      az.appendChild(b2);
+    } else {
+      az.appendChild(crea('p', 'aiuto', 'Sono già tutte nel registro: non c\'è niente da aggiungere.'));
+    }
+    box.appendChild(az);
+  }
+
+  function salvaRecuperate(elenco) {
+    if (!SESS) { CA.toast('Prima entra nel database.', 6000); return; }
+    CA.toast('Aggiungo…', 20000);
+    var lavori = elenco.map(function (p) {
+      return token().then(function (t) {
+        return FB.creaIscrizione({
+          nome: p.nome, area: p.area, gruppo: p.gruppo || '', codice: p.codice,
+          stato: 'attiva', creatoIl: p.creatoIl, json: JSON.stringify(p)
+        });
+      });
+    });
+    Promise.all(lavori).then(function () {
+      $('importaTg').style.display = 'none';
+      $('testoTg').value = '';
+      return ricarica(false);
+    }).then(function () {
+      sincronizzaContatori(true);
+      CA.toast('✅ Aggiunte ' + elenco.length + (elenco.length === 1 ? ' iscrizione.' : ' iscrizioni.'), 6000);
+    }).catch(function (e) { CA.toast('⚠️ ' + e.message, 9000); });
   }
 
   function esportaCsv() {

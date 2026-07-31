@@ -156,7 +156,15 @@
   function leggiContatori() {
     return fetch(BASE + '/' + DOC_CONT + '?key=' + API + '&_=' + Date.now(), { cache: 'no-store' })
       .then(jget).then(function (d) {
-        if (d.error) return null;                    /* non esiste o non leggibile */
+        /* Il documento non c'è ancora perché non si è ancora iscritto nessuno:
+           non è un errore, è zero. Distinguerlo dal "non ho il permesso" evita
+           che la home mostri un trattino al posto dei numeri. */
+        if (d.error && String(d.error.status || '') === 'NOT_FOUND') {
+          var vuoto = {};
+          AREE.forEach(function (a) { vuoto[a] = 0; });
+          return vuoto;
+        }
+        if (d.error) return null;                    /* permesso negato */
         var f = d.fields || {};
         var out = {};
         AREE.forEach(function (a) {
