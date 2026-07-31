@@ -198,8 +198,31 @@ service cloud.firestore {
 
 ## Se qualcosa non va
 
+Prima cosa in assoluto: **📊 Cruscotto → 🩺 Stato del database →
+Controlla il collegamento**. Ti dice in italiano che cosa è bloccato e, se
+mancano le regole di sicurezza, te le prepara già pronte da copiare.
+
+- **«Missing or insufficient permissions»** → mancano le regole di sicurezza.
+  Le iscrizioni **non vengono salvate** (l'avviso Telegram arriva lo stesso,
+  ma il registro resta vuoto). Incolla le regole e ricontrolla.
 - **«Non vedo le modifiche»** → quasi sempre è la cache: **⌘⇧R**.
 - **«Non riesco a pubblicare i contenuti»** → manca il token GitHub: si
   incolla in `📣 Pubblica → Collegamento a GitHub`.
-- **«Le iscrizioni non arrivano»** → controlla di aver incollato le regole di
-  sicurezza qui sopra: senza, Firestore rifiuta la scrittura.
+- **Un'iscrizione è arrivata su Telegram ma non nel registro** → succede se il
+  database era bloccato in quel momento. Due strade: se la persona riapre la
+  pagina di iscrizione dal suo telefono, il sito riprova da solo e la
+  registra; altrimenti aggiungila a mano da `📋 Iscrizioni → Aggiungi a mano`,
+  copiando i dati dal messaggio Telegram.
+
+### Le credenziali, chiare una volta per tutte
+
+Sono tre cose diverse e si confondono facilmente:
+
+| Cosa | Dove si usa | A cosa serve |
+|---|---|---|
+| Password `holiday2026` | schermata d'ingresso dell'admin | apre l'area organizzatori |
+| Email + password Firebase | «Entra nel database» dentro l'admin | legge iscrizioni, squadre e punteggi |
+| Account Google del progetto | console di Firebase, sul sito di Google | cambia le **regole di sicurezza** |
+
+Le prime due non danno accesso alle regole: quelle si cambiano solo dalla
+console di Firebase, con l'account Google proprietario del progetto.

@@ -89,6 +89,19 @@
       });
     }
 
+    $('btnDiagnosi').addEventListener('click', diagnosi);
+    $('btnCopiaRegole').addEventListener('click', function () {
+      var t = $('regoleFirestore');
+      t.select(); t.setSelectionRange(0, 99999);
+      var fatto = false;
+      try { fatto = document.execCommand('copy'); } catch (e) { }
+      if (!fatto && navigator.clipboard) {
+        navigator.clipboard.writeText(t.value).then(function () { CA.toast('📋 Regole copiate.', 4000); });
+        return;
+      }
+      CA.toast(fatto ? '📋 Regole copiate: incollale nella console di Firebase.' : '⚠️ Copiale a mano dal riquadro.', 6000);
+    });
+
     $('btnLogin').addEventListener('click', login);
     $('fbPwd').addEventListener('keydown', function (e) { if (e.key === 'Enter') login(); });
     $('btnEsci').addEventListener('click', esci);
@@ -309,6 +322,16 @@
       disegnaTutto();
       if (conAvviso) CA.toast('✅ Registro aggiornato: ' + ISCR.length + ' iscrizioni.', 4000);
     }).catch(function (e) {
+      if (permessiNegati(e)) {
+        /* è il caso più frequente e il messaggio di Firestore non aiuta:
+           lo traduco e porto l'utente dove si risolve */
+        testo('statoCloud', '⛔ database bloccato');
+        CA.toast('⛔ Il database non ti lascia entrare: mancano le regole di sicurezza. Te le preparo qui sotto.', 10000);
+        var s = $('sec-diagnosi');
+        if (s) s.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        diagnosi();
+        return;
+      }
       if (conAvviso) CA.toast('⚠️ ' + e.message, 8000);
     });
   }
@@ -339,19 +362,39 @@
   }
 
   /* =========================== SALVATAGGIO ============================= */
-  var timerSalva = null;
+  var timerSalva = null, salvataggioInSospeso = false;
   function salvaStato(conAvviso) {
     if (!SESS) { if (conAvviso) CA.toast('⚠️ Non sei collegato: non posso salvare.', 7000); return; }
+    salvataggioInSospeso = true;
     if (timerSalva) clearTimeout(timerSalva);
-    timerSalva = setTimeout(function () {
-      token().then(function (t) { return FB.scriviStato(t, STATO); })
-        .then(function () {
-          testo('statoCloud', '✅ salvato nel database');
-          if (conAvviso) CA.toast('💾 Salvato nel database.', 4000);
-        })
-        .catch(function (e) { CA.toast('⚠️ Non ho salvato: ' + e.message, 8000); });
-    }, conAvviso ? 0 : 700);
+    timerSalva = setTimeout(function () { salvaAdesso(conAvviso); }, conAvviso ? 0 : 600);
   }
+  function salvaAdesso(conAvviso) {
+    if (!SESS) return;
+    salvataggioInSospeso = false;
+    token().then(function (t) { return FB.scriviStato(t, STATO); })
+      .then(function () {
+        testo('statoCloud', '✅ salvato nel database');
+        if (conAvviso) CA.toast('💾 Salvato nel database.', 4000);
+      })
+      .catch(function (e) {
+        salvataggioInSospeso = true;
+        if (permessiNegati(e)) {
+          testo('statoCloud', '⛔ database bloccato');
+          CA.toast('⛔ Non riesco a salvare: mancano le regole di sicurezza del database. Vai su 📊 Cruscotto → Stato del database.', 10000);
+        } else {
+          CA.toast('⚠️ Non ho salvato: ' + e.message, 8000);
+        }
+      });
+  }
+  /* se chiudo o metto via il telefono mentre il salvataggio è ancora in coda,
+     lo mando subito: mezzo secondo di ritardo non deve costare un punteggio */
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden && salvataggioInSospeso) {
+      if (timerSalva) clearTimeout(timerSalva);
+      salvaAdesso(false);
+    }
+  });
 
   /* ============================== DISEGNO ============================== */
   function disegnaTutto() {
@@ -1198,13 +1241,16 @@
       });
       Object.keys(turni).forEach(function (k) {
         ci.appendChild(crea('h3', null, k));
-        turni[k].forEach(function (m) { ci.appendChild(rigaIncontroAdmin(m, coppie)); });
+        turni[k].forEach(function (m) { ci.appendChild(rigaIncontroAdmin(m, coppie, TORNEO_APERTO)); });
       });
       el.appendChild(ci);
 
       var cl = crea('div', 'card');
       cl.appendChild(crea('h2', null, '📊 Classifica di ' + V(t.nome, '')));
-      cl.appendChild(tabellaClassificaAdmin(classificaTorneo(TORNEO_APERTO)));
+      var dentroCl = crea('div');
+      dentroCl.id = 'classificaTorneo';
+      dentroCl.appendChild(tabellaClassificaAdmin(classificaTorneo(TORNEO_APERTO)));
+      cl.appendChild(dentroCl);
       el.appendChild(cl);
     }
   }
@@ -1388,21 +1434,35 @@
     return String(id || '—');
   }
 
-  function rigaIncontroAdmin(m, coppie) {
+  /* Una riga di incontro con i due punteggi. Volutamente NON ridisegna tutto
+     il pannello a ogni cifra: a bordo piscina si scrive col telefono, e un
+     ridisegno fa perdere il campo sotto il dito. Si aggiorna solo la
+     classifica, che è l'unica cosa che cambia davvero. */
+  function rigaIncontroAdmin(m, coppie, idTorneo) {
     var d = crea('div', 'incontro-adm');
     d.appendChild(crea('b', null, nomeCoppia(m.a, coppie)));
 
     var cc = crea('div', 'cc');
     var ia = document.createElement('input');
     ia.type = 'number'; ia.value = V(m.puntiA, ''); ia.inputMode = 'numeric';
+    ia.setAttribute('aria-label', 'Punti di ' + nomeCoppia(m.a, coppie));
     var ib = document.createElement('input');
     ib.type = 'number'; ib.value = V(m.puntiB, ''); ib.inputMode = 'numeric';
+    ib.setAttribute('aria-label', 'Punti di ' + nomeCoppia(m.b, coppie));
     function cambia() {
       m.puntiA = ia.value === '' ? '' : Number(ia.value);
       m.puntiB = ib.value === '' ? '' : Number(ib.value);
       salvaStato();
-      var cl = document.querySelector('#pannelloTorneo .card:last-child');
-      disegnaPannelloTorneo();
+      aggiornaClassificaAVideo(idTorneo || TORNEO_APERTO);
+      evidenziaVincente();
+    }
+    function evidenziaVincente() {
+      var a = Number(m.puntiA), b = Number(m.puntiB);
+      var vale = m.puntiA !== '' && m.puntiB !== '' && isFinite(a) && isFinite(b);
+      d.querySelectorAll('b').forEach(function (x) { x.style.color = ''; });
+      if (!vale) return;
+      if (a > b) d.querySelectorAll('b')[0].style.color = '#0f7a4a';
+      if (b > a) d.querySelectorAll('b')[1].style.color = '#0f7a4a';
     }
     ia.addEventListener('change', cambia);
     ib.addEventListener('change', cambia);
@@ -1411,9 +1471,17 @@
     cc.appendChild(ib);
     d.appendChild(cc);
 
-    var b = crea('b', 'dx', nomeCoppia(m.b, coppie));
-    d.appendChild(b);
+    d.appendChild(crea('b', 'dx', nomeCoppia(m.b, coppie)));
+    setTimeout(evidenziaVincente, 0);
     return d;
+  }
+
+  /* rifà solo la tabella della classifica, lasciando stare il resto */
+  function aggiornaClassificaAVideo(idTorneo) {
+    var box = document.getElementById('classificaTorneo');
+    if (!box || !idTorneo) return;
+    box.textContent = '';
+    box.appendChild(tabellaClassificaAdmin(classificaTorneo(idTorneo)));
   }
 
   function classificaTorneo(idTorneo) {
@@ -1558,13 +1626,22 @@
           sel.value = gia ? gia.squadra : '';
           sel.addEventListener('change', function () {
             var nuovo = V(STATO.risultati[g.id], []).slice();
+            /* la stessa squadra non può essere prima e terza: se la scelgo
+               qui, la tolgo dalla posizione in cui stava prima */
+            if (sel.value) {
+              for (var k = 0; k < nuovo.length; k++) {
+                if (k !== pos && nuovo[k] && nuovo[k].squadra === sel.value) nuovo[k] = null;
+              }
+            }
             nuovo[pos] = sel.value ? {
               squadra: sel.value, posizione: pos + 1,
               punti: (scala[pos] !== undefined ? scala[pos] : 1) * (doppio ? 2 : 1)
             } : null;
-            STATO.risultati[g.id] = nuovo.filter(function (x, k) { return x || k < nuovo.length; });
+            STATO.risultati[g.id] = nuovo;
             salvaStato();
+            var dove = window.pageYOffset;
             disegnaPuntiRagazzi();
+            window.scrollTo(0, dove);      /* non far saltare la pagina sotto le dita */
           });
           riga.appendChild(sel);
           riga.appendChild(crea('span', 'tondo-punti',
@@ -1610,7 +1687,7 @@
       inc.forEach(function (m) { (turni[V(m.turno, 'Incontri')] = turni[V(m.turno, 'Incontri')] || []).push(m); });
       Object.keys(turni).forEach(function (k) {
         c.appendChild(crea('h3', null, k));
-        turni[k].forEach(function (m) { c.appendChild(rigaIncontroAdmin(m, V(st.coppie, []))); });
+        turni[k].forEach(function (m) { c.appendChild(rigaIncontroAdmin(m, V(st.coppie, []), t.id)); });
       });
       el.appendChild(c);
     });
@@ -2082,6 +2159,128 @@
 
   function scaricaContenuti() {
     scaricaFile('contenuti.json', JSON.stringify(raccogli(), null, 2), 'application/json');
+  }
+
+  /* ====================== DIAGNOSI DEL DATABASE ========================
+     Il messaggio che Firestore restituisce quando mancano le regole è
+     «Missing or insufficient permissions»: giusto per un programmatore,
+     inutile per chi deve organizzare una festa. Qui si controlla una per
+     una ogni strada e si dice in italiano cosa è bloccato e come si aggiusta.
+  */
+  var REGOLE = [
+    "rules_version = '2';",
+    'service cloud.firestore {',
+    '  match /databases/{database}/documents {',
+    '',
+    '    // ---------- FESTA IN PISCINA (lasciare com\'era) ----------',
+    '    match /prenotazioni/{doc} {',
+    '      allow create: if request.resource.data.nome is string;',
+    '      allow read, update, delete: if request.auth != null;',
+    '    }',
+    '    match /pubblico/{doc} {',
+    '      allow read: if true;',
+    '      allow write: if true;',
+    '    }',
+    '',
+    '    // ---------- CERTAMEN AQUATICUM ----------',
+    '',
+    '    // Chiunque puo iscriversi; nomi e recapiti si leggono solo col login.',
+    '    match /iscrizioni/{doc} {',
+    '      allow create: if request.resource.data.nome is string',
+    "                    && request.resource.data.area in ['ragazzi', 'adulti'];",
+    '      allow read, update, delete: if request.auth != null;',
+    '    }',
+    '',
+    '    // Solo numeri: quanti iscritti per sezione. Nessun dato personale.',
+    '    match /pubblico_certamen/contatore {',
+    '      allow read: if true;',
+    '      allow write: if true;',
+    '    }',
+    '',
+    '    // Classifiche e tabellone: li legge chiunque, li scrive solo',
+    "    // l'organizzatore dopo il login.",
+    '    match /pubblico_certamen/classifica {',
+    '      allow read: if true;',
+    '      allow write: if request.auth != null;',
+    '    }',
+    '',
+    '    // Squadre, punteggi e tabelloni: contengono i nomi veri.',
+    '    match /stato_certamen/{doc} {',
+    '      allow read, write: if request.auth != null;',
+    '    }',
+    '  }',
+    '}'
+  ].join('\n');
+
+  function permessiNegati(e) {
+    return /permission|insufficient|PERMISSION_DENIED/i.test(String(e && e.message ? e.message : e));
+  }
+
+  function diagnosi() {
+    var el = $('esitoDiagnosi');
+    el.textContent = '';
+    el.appendChild(crea('li', null, '⏳ Controllo in corso…'));
+    var mancanoRegole = false;
+
+    function riga(testoRiga) {
+      var li = crea('li', null, testoRiga);
+      el.appendChild(li);
+    }
+
+    /* 1. il contatore pubblico, che deve leggere chiunque */
+    FB.leggiContatori().then(function (c) {
+      el.textContent = '';
+      if (c) {
+        riga('✅ Contatori pubblici leggibili: ' + V(c.ragazzi, 0) + ' ragazzi, ' +
+          V(c.adulti, 0) + ' adulti.');
+      } else {
+        mancanoRegole = true;
+        riga('⛔ I contatori pubblici non si leggono: la home mostrerà «—» invece dei numeri.');
+      }
+      /* 2. il registro delle iscrizioni, che serve il login */
+      if (!SESS) {
+        riga('ℹ️ Non sei collegato al database: entra qui sopra con email e password per controllare anche il registro.');
+        chiudiDiagnosi(mancanoRegole);
+        return;
+      }
+      return token().then(function (t) { return FB.elenco(t); })
+        .then(function (lista) {
+          riga('✅ Registro delle iscrizioni leggibile: ' + lista.length +
+            (lista.length === 1 ? ' iscrizione trovata.' : ' iscrizioni trovate.'));
+          return token().then(function (t) { return FB.leggiStato(t); })
+            .then(function (s) {
+              riga(s ? '✅ Squadre e punteggi leggibili.'
+                : 'ℹ️ Squadre e punteggi non ancora salvati: normale se non hai ancora formato le squadre.');
+              chiudiDiagnosi(mancanoRegole);
+            });
+        })
+        .catch(function (e) {
+          if (permessiNegati(e)) {
+            mancanoRegole = true;
+            riga('⛔ Il registro delle iscrizioni è bloccato: le iscrizioni che arrivano NON vengono salvate.');
+          } else {
+            riga('⚠️ Errore leggendo il registro: ' + e.message);
+          }
+          chiudiDiagnosi(mancanoRegole);
+        });
+    }).catch(function (e) {
+      el.textContent = '';
+      riga('⚠️ ' + e.message);
+      chiudiDiagnosi(true);
+    });
+  }
+
+  function chiudiDiagnosi(mancanoRegole) {
+    var box = $('boxRegole');
+    if (mancanoRegole) {
+      box.style.display = '';
+      $('regoleFirestore').value = REGOLE;
+      $('esitoDiagnosi').appendChild(crea('li', null,
+        '👉 Sotto trovi le regole da incollare: è l\'unica cosa che manca.'));
+    } else {
+      box.style.display = 'none';
+      $('esitoDiagnosi').appendChild(crea('li', null, '🎉 Tutto collegato: non manca niente.'));
+    }
   }
 
   /* ======================= AVVISI SU TELEGRAM ==========================

@@ -538,10 +538,17 @@
     registra(FATTA);
   }
 
-  /* ---------------- invio: cloud + Telegram + contatore ---------------- */
+  /* ---------------- invio: cloud + Telegram + contatore ----------------
+     Sono due strade indipendenti e vanno tenute distinte:
+       · il registro nel database è quello che conta (l'admin legge da lì);
+       · il messaggio Telegram è l'avviso immediato all'organizzatore.
+     Se passa solo Telegram l'iscrizione NON è persa, ma non è nemmeno
+     completa: si dice com'è andata e si riprova da soli alla prossima
+     apertura della pagina. Dire «tutto a posto» quando il registro non ha
+     ricevuto niente sarebbe il modo migliore per perdere un iscritto.   */
   function registra(p) {
     if (!p) return Promise.resolve(false);
-    if (p.inviata || p.salvataCloud) { avviso('ok'); return Promise.resolve(true); }
+    if (p.salvataCloud) { avviso('ok'); return Promise.resolve(true); }
     avviso('corso');
 
     return contatore(p)
@@ -549,9 +556,9 @@
         return Promise.all([telegram(p), cloud(p)]);
       })
       .then(function (esiti) {
-        var ok = esiti[0] || esiti[1];
-        avviso(ok ? 'ok' : 'ko');
-        return ok;
+        var tg = esiti[0], db = esiti[1];
+        avviso(db ? 'ok' : (tg ? 'parziale' : 'ko'));
+        return db || tg;
       })
       .catch(function () { avviso('ko'); return false; });
   }
@@ -560,9 +567,12 @@
     if (p.contato || !window.FB || !FB.attivo()) return Promise.resolve(true);
     var lavori = [FB.incrementaContatore(p.area, 1)];
     if (p.gruppo) lavori.push(FB.incrementaContatore(p.gruppo, 1));
-    return Promise.all(lavori).then(function () {
-      p.contato = true;
-      CA.memScrivi(CHIAVE, JSON.stringify(p));
+    return Promise.all(lavori).then(function (esiti) {
+      /* solo se è andata davvero: altrimenti si riprova al prossimo giro */
+      if (esiti.every(Boolean)) {
+        p.contato = true;
+        CA.memScrivi(CHIAVE, JSON.stringify(p));
+      }
       return CA.leggiContatori();
     }).catch(function () { return true; });
   }
@@ -640,13 +650,18 @@
     var el = $('invioAvviso');
     if (!el) return;
     el.style.display = '';
-    el.className = 'avviso-invio ' + stato;
+    /* «parziale» usa i colori dell'attesa: è andata, ma non del tutto */
+    el.className = 'avviso-invio ' + (stato === 'parziale' ? 'corso' : stato);
     if (stato === 'corso') {
       testo('invioTitolo', '⏳ Sto inviando l\'iscrizione…');
       testo('invioSotto', 'Un secondo, non chiudere la pagina.');
     } else if (stato === 'ok') {
       testo('invioTitolo', '✅ Iscrizione inviata: puoi chiudere la pagina');
       testo('invioSotto', 'Non devi fare altro. Conserva il pass qui sotto e mostralo all\'accoglienza.');
+    } else if (stato === 'parziale') {
+      testo('invioTitolo', '✅ Gli organizzatori hanno ricevuto la tua iscrizione');
+      testo('invioSotto', 'Il registro del sito però non l\'ha ancora presa: ci riprova da solo. ' +
+        'Tieni il pass qui sotto e mostralo all\'accoglienza, è sufficiente.');
     } else {
       testo('invioTitolo', '⚠️ Non sono riuscito a inviarla');
       testo('invioSotto', 'Fai uno screenshot del pass e mandalo agli organizzatori, oppure riapri questa pagina più tardi: riproverà da sola.');
@@ -735,11 +750,15 @@
     var gf = $('giaFatto');
     if (gf) gf.className = 'gia-fatto visibile';
 
-    /* recupero automatico: se non è mai arrivata, riprova da sola */
-    if (!p.inviata && !p.salvataCloud) {
+    /* Recupero automatico: finché il registro non l'ha presa si riprova, anche
+       se il messaggio Telegram era già partito. Prima bastava uno dei due e
+       un'iscrizione poteva restare fuori dal registro per sempre. */
+    if (!p.salvataCloud) {
       setTimeout(function () {
         registra(p).then(function (ok) {
-          if (ok) CA.toast('✅ La tua iscrizione ' + p.codice + ' è stata inviata agli organizzatori.', 8000);
+          if (ok && p.salvataCloud) {
+            CA.toast('✅ La tua iscrizione ' + p.codice + ' è ora registrata.', 8000);
+          }
         });
       }, 1200);
     }
@@ -757,7 +776,9 @@
     });
     var ri = $('btnRivedi');
     if (ri) ri.addEventListener('click', function () {
-      if (FATTA) { mostraPass(); avviso(FATTA.inviata || FATTA.salvataCloud ? 'ok' : 'ko'); }
+      if (!FATTA) return;
+      mostraPass();
+      avviso(FATTA.salvataCloud ? 'ok' : (FATTA.inviata ? 'parziale' : 'ko'));
     });
   });
 })();
