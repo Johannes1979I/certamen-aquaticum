@@ -171,8 +171,8 @@ function disegna(){
   if(foto){ $('heroSfondo').style.backgroundImage = 'url("' + encodeURI(foto) + '")'; }
   CA.avviaConto('conto', ev.data, ev.orario);
 
-  testo('ragEta', V(rag.eta, ''));
-  testo('aduEta', V(adu.eta, '') + ' · due iscrizioni: giochi all\'italiana e burraco');
+  testo('ragEta', V(rag.etichetta, 'ragazzi') + (rag.eta ? ' ' + rag.eta : ''));
+  testo('aduEta', V(adu.etichetta, 'adulti') + ' · due iscrizioni: il Trittico e il Burraco');
 
   var chiusura = V(ev.chiusuraIscrizioni, '');
   if(chiusura){

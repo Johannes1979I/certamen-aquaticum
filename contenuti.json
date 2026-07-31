@@ -27,7 +27,7 @@
       "titoloLungo": "Giochi in acqua dei ragazzi",
       "emoji": "🤽",
       "sottotitolo": "Quattordici sfide a squadre in piscina, con palloni e materassini",
-      "eta": "12 – 17 anni",
+      "eta": "dagli 8 anni in su",
       "postiTotali": 32,
       "minimo": 16,
       "colore": "#14c4b4",
@@ -40,14 +40,16 @@
         "nota": "I punti valgono così quando le squadre sono quattro; con più squadre si continua a scendere di un punto per posizione, fino a un minimo di 1. Nella Super staffetta finale i punti valgono il doppio. A fine giornata la giuria assegna 3 punti bonus alla squadra che si è comportata meglio (premio fair play)."
       },
       "squadre": 0,
-      "squadreNota": "Quante squadre fare lo decidiamo in base a quanti vi iscrivete: l'importante è che siano equilibrate per età e capacità in acqua, non che siano quattro."
+      "squadreNota": "Quante squadre fare lo decidiamo in base a quanti vi iscrivete. L'importante è che siano equilibrate: le squadre si formano mescolando le età e la capacità in acqua, così i più piccoli non si trovano tutti insieme contro i più grandi.",
+      "etaMin": 8,
+      "etichetta": "ragazzi"
     },
     "adulti": {
       "nome": "Tornei di carte",
       "titoloLungo": "Tornei di carte degli adulti",
       "emoji": "🃏",
       "sottotitolo": "Il Trittico e il Burraco, all'ombra a bordo piscina",
-      "eta": "dai 18 anni",
+      "eta": "",
       "postiTotali": 64,
       "minimo": 8,
       "colore": "#0b7fd4",
@@ -59,7 +61,8 @@
         "nota": "In caso di parità in classifica contano, nell'ordine: lo scontro diretto, poi la differenza punti realizzati."
       },
       "avvisoTornei": "Il Trittico si gioca nel blocco A e il Burraco nel blocco B: chi vuole può fare tutti e due.",
-      "sezioni": "Le carte hanno due iscrizioni separate: i giochi all'italiana e il burraco."
+      "sezioni": "Le carte hanno due iscrizioni separate: il Trittico e il Burraco.",
+      "etichetta": "adulti"
     }
   },
   "quota": {
@@ -972,7 +975,7 @@
       "sottotitolo": "Due mazzi, il pozzetto e la corsa a chiudere",
       "descrizione": "Il torneo di burraco ha la sua iscrizione a parte, il suo tavolo e la sua coppa. Si gioca rigorosamente a coppie: se non hai il compagno te ne troviamo uno.",
       "premio": "Coppa Burraco",
-      "nota": "Il burraco si gioca nel blocco B: chi si iscrive qui può comunque fare un torneo all'italiana nel blocco A."
+      "nota": "Il burraco si gioca nel blocco B: chi si iscrive qui può comunque fare il Trittico nel blocco A."
     }
   ],
   "formatiSquadre": {

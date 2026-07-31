@@ -193,7 +193,9 @@
       'ci servono per fare squadre equilibrate e per la sicurezza. ' + V(V(DATI.iscrizione, {}).notaRagazzi, '')));
 
     box.appendChild(campo('fNome', 'Nome e cognome del ragazzo o della ragazza *', '', 'text'));
-    box.appendChild(campo('fEta', 'Quanti anni ha *', 'L\'età consigliata è ' + V(a.eta, '12 – 17 anni') + '.', 'number', [8, 19]));
+    box.appendChild(campo('fEta', 'Quanti anni ha *',
+      'Serve a formare squadre equilibrate: si gioca ' + V(a.eta, 'dagli 8 anni in su') +
+      ', e i più piccoli non finiscono tutti nella stessa squadra.', 'number', [8, 19]));
     box.appendChild(campo('fNuoto', 'Come se la cava in acqua *',
       'Nessuno viene escluso: serve solo a stargli vicino e a bilanciare le squadre.', 'select', [
         ['', '— scegli —'],

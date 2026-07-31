@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Giochi in acqua — Certamen Aquaticum</title>
-<meta name="description" content="I giochi in acqua di Ferragosto al Residence Holiday: regole, varianti, squadre e punteggi. Per ragazzi dai 12 ai 17 anni." />
+<meta name="description" content="I giochi in acqua di Ferragosto al Residence Holiday: regole, varianti, squadre e punteggi. Per ragazzi dagli 8 anni in su." />
 <meta name="theme-color" content="#14c4b4" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤽</text></svg>" />
 <link rel="stylesheet" href="stile.css" />
@@ -55,7 +55,7 @@
   <div class="sfondo" id="heroSfondo"></div>
   <div class="velo"></div>
   <div class="hero-dentro wrap">
-    <span class="targhetta" id="heroEta">12 – 17 anni</span>
+    <span class="targhetta" id="heroEta">ragazzi</span>
     <h1 id="heroTitolo">Giochi in acqua</h1>
     <p class="sottotitolo" id="heroSottotitolo"></p>
     <div class="conto" style="margin-top:22px">
@@ -178,7 +178,7 @@ function disegna(){
   testo('marchioNome', V(t.titolo, 'Certamen Aquaticum'));
   testo('heroTitolo', V(area.titoloLungo, V(area.nome, 'Giochi in acqua')));
   testo('heroSottotitolo', V(area.sottotitolo, ''));
-  testo('heroEta', V(area.eta, ''));
+  testo('heroEta', V(area.etichetta, V(area.eta, '')));
   testo('nGiochi', String(giochi.length));
   var foto = V(DATI.fotoHero, (V(DATI.foto, [])[0] || ''));
   if(foto) $('heroSfondo').style.backgroundImage = 'url("' + encodeURI(foto) + '")';

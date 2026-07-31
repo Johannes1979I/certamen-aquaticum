@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Tornei di carte — Certamen Aquaticum</title>
-<meta name="description" content="I tornei di carte di Ferragosto al Residence Holiday: scopone, briscola, tresette e burraco. Formula, regole e iscrizione a coppie." />
+<meta name="description" content="I tornei di carte di Ferragosto al Residence Holiday: il Trittico (briscola, scopone e tresette) e il Burraco. Formula, regole e iscrizione a coppie." />
 <meta name="theme-color" content="#0b7fd4" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>" />
 <link rel="stylesheet" href="stile.css" />
@@ -52,7 +52,7 @@
   <div class="sfondo" id="heroSfondo"></div>
   <div class="velo"></div>
   <div class="hero-dentro wrap">
-    <span class="targhetta" id="heroEta">dai 18 anni</span>
+    <span class="targhetta" id="heroEta">adulti</span>
     <h1 id="heroTitolo">Tornei di carte</h1>
     <p class="sottotitolo" id="heroSottotitolo"></p>
     <div class="conto" style="margin-top:22px">
@@ -74,7 +74,7 @@
 <section id="iscrizioni">
   <div class="wrap">
     <h2 class="titolo-sez">Due <span class="em">iscrizioni</span> separate</h2>
-    <p class="occhiello">I giochi all'italiana e il burraco sono due tornei distinti, con il loro tavolo, la loro classifica e la loro coppa. Scegli quello che fa per te: se vuoi, puoi fare tutti e due.</p>
+    <p class="occhiello">Il Trittico e il Burraco sono due tornei distinti, con il loro tavolo, la loro classifica e la loro coppa. Scegli quello che fa per te: se vuoi, puoi fare tutti e due.</p>
     <div class="porte" id="gruppi"></div>
   </div>
 </section>
@@ -119,8 +119,8 @@
 <!-- ============================== I TORNEI =============================== -->
 <section id="elenco">
   <div class="wrap">
-    <h2 class="titolo-sez">I quattro <span class="em">tornei</span></h2>
-    <p class="occhiello">Per ognuno trovi la formula del torneo, le regole con cui si gioca qui e qualche variante, se al tavolo vi mettete d'accordo diversamente.</p>
+    <h2 class="titolo-sez">I due <span class="em">tornei</span></h2>
+    <p class="occhiello">Per ognuno trovi la formula, le regole con cui si gioca qui e qualche variante, se al tavolo vi mettete d'accordo diversamente. Nel Trittico ogni prova ha le sue regole, una per gioco.</p>
     <div class="giochi" id="tornei"></div>
   </div>
 </section>
@@ -190,7 +190,7 @@ function disegna(){
   testo('marchioNome', V(t.titolo, 'Certamen Aquaticum'));
   testo('heroTitolo', V(area.titoloLungo, V(area.nome, 'Tornei di carte')));
   testo('heroSottotitolo', V(area.sottotitolo, ''));
-  testo('heroEta', V(area.eta, ''));
+  testo('heroEta', V(area.etichetta, V(area.eta, '')));
   testo('nTornei', String(tornei.length));
   var foto = V(DATI.fotoHero, (V(DATI.foto, [])[0] || ''));
   if(foto) $('heroSfondo').style.backgroundImage = 'url("' + encodeURI(foto) + '")';

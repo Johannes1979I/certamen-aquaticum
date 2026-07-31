@@ -196,7 +196,8 @@ CA.carica().then(function(d){
   testo('qLuogo', V(ev.luogo, ''));
 
   testo('mRagTitolo', V(rag.nome, 'Giochi in acqua'));
-  testo('mRagTesto', CA.giochiAttivi().length + ' giochi a squadre con palloni e materassini. ' + V(rag.eta, ''));
+  testo('mRagTesto', CA.giochiAttivi().length + ' giochi a squadre con palloni e materassini. ' +
+    'Per ' + V(rag.etichetta, 'ragazzi') + (rag.eta ? ' ' + rag.eta : '') + '.');
   testo('mAduTitolo', V(adu.nome, 'Tornei di carte'));
   testo('mAduTesto', CA.torneiAttivi().map(function(x){ return x.nome; }).join(', ') + '. Si gioca a coppie.');
 
@@ -332,7 +333,8 @@ function png(){
   var wCard = Math.round((LARG - marg * 2 - 30) / 2), hCard = 250;
   cartaMondo(x, marg, y, wCard, hCard, '#14c4b4', '#0b7fd4', '🤽',
     V(rag.nome, 'Giochi in acqua'),
-    CA.giochiAttivi().length + ' giochi a squadre con palloni e materassini. ' + V(rag.eta, ''));
+    CA.giochiAttivi().length + ' giochi a squadre con palloni e materassini. Per ' +
+    V(rag.etichetta, 'ragazzi') + (rag.eta ? ' ' + rag.eta : '') + '.');
   cartaMondo(x, marg + wCard + 30, y, wCard, hCard, '#0b7fd4', '#1f8a5b', '🃏',
     V(adu.nome, 'Tornei di carte'),
     CA.torneiAttivi().map(function(v){ return v.nome; }).join(', ') + '. Si gioca a coppie.');
