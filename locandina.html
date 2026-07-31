@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Locandina A4 — Certamen Aquaticum</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼️</text></svg>" />
+<script src="qr.js"></script>
+<script src="firebase.js"></script>
+<script src="comune.js"></script>
+<style>
+:root{ --c1:#0b7fd4; --c2:#14c4b4; --c3:#ffc233; --ink:#0a2540; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{
+  font-family:"Trebuchet MS", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background:#e9eff5; color:var(--ink); padding:20px; display:flex; flex-direction:column;
+  align-items:center; gap:16px;
+}
+.barra-alta{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+.barra-alta button, .barra-alta a{
+  border:none; background:var(--ink); color:#fff; border-radius:999px; padding:11px 20px;
+  font:inherit; font-weight:bold; cursor:pointer; text-decoration:none; min-height:44px;
+}
+.barra-alta .chiaro{ background:#fff; color:var(--ink); border:2px solid rgba(10,37,64,.15); }
+
+/* il foglio A4 vero: 210 x 297 mm */
+.a4{
+  width:210mm; height:297mm; background:#fff; position:relative; overflow:hidden;
+  box-shadow:0 24px 60px -24px rgba(10,37,64,.6); display:flex; flex-direction:column;
+}
+.foto{
+  height:104mm; position:relative; overflow:hidden; background:#cfe6f5;
+}
+.foto .img{ position:absolute; inset:0; background-size:cover; background-position:center 55%; }
+.foto .velo{
+  position:absolute; inset:0;
+  background:linear-gradient(165deg, rgba(6,50,92,.72) 0%, rgba(11,127,212,.5) 55%, rgba(255,255,255,0) 100%);
+}
+.foto .sopra{ position:absolute; inset:0; padding:12mm 14mm; color:#fff; display:flex; flex-direction:column; }
+.occhiello{
+  align-self:flex-start; background:var(--c3); color:#4a2c00; font-weight:bold;
+  padding:2.5mm 6mm; border-radius:999px; font-size:5mm; letter-spacing:.5mm; text-transform:uppercase;
+}
+h1{ font-size:17mm; line-height:1; margin-top:auto; text-shadow:0 2mm 8mm rgba(0,0,0,.4); }
+.sottotitolo{ font-size:6mm; margin-top:3mm; max-width:150mm; }
+.onda{ display:block; width:100%; height:12mm; margin-top:-6mm; position:relative; z-index:2; }
+
+.corpo{ flex:1; padding:2mm 14mm 10mm; display:flex; flex-direction:column; }
+.claim{ font-size:8mm; font-weight:bold; text-align:center; color:var(--c1); line-height:1.15; }
+.quando{
+  display:flex; justify-content:center; gap:5mm; flex-wrap:wrap; margin-top:6mm;
+}
+.quando div{
+  background:#f2f8fd; border:0.6mm solid rgba(10,37,64,.12); border-radius:5mm;
+  padding:4mm 7mm; text-align:center; min-width:44mm;
+}
+.quando b{ display:block; font-size:6mm; }
+.quando span{ font-size:4.2mm; color:#5a7583; }
+
+.due{ display:grid; grid-template-columns:1fr 1fr; gap:6mm; margin-top:7mm; }
+.mondo{ border-radius:6mm; padding:6mm; color:#fff; }
+.mondo.rag{ background:linear-gradient(140deg,#14c4b4,#0b7fd4); }
+.mondo.adu{ background:linear-gradient(140deg,#0b7fd4,#1f8a5b); }
+.mondo .em{ font-size:11mm; line-height:1; }
+.mondo h2{ font-size:6.5mm; margin:2mm 0 2mm; }
+.mondo p{ font-size:4.3mm; line-height:1.35; }
+
+.basso{ margin-top:auto; display:flex; gap:8mm; align-items:center; }
+.qr-box{ text-align:center; }
+.qr-box canvas{ display:block; border:1mm solid var(--ink); border-radius:3mm; }
+.istruzioni{ flex:1; }
+.istruzioni h3{ font-size:6mm; margin-bottom:2.5mm; }
+.istruzioni p{ font-size:4.6mm; line-height:1.4; color:#33566b; }
+.nota{
+  margin-top:4mm; background:var(--c3); color:#4a2c00; border-radius:3mm;
+  padding:3mm 5mm; font-weight:bold; font-size:4.4mm; display:inline-block;
+}
+.piedino{
+  margin-top:5mm; border-top:0.5mm solid rgba(10,37,64,.15); padding-top:3mm;
+  font-size:4mm; color:#5a7583; display:flex; justify-content:space-between; gap:4mm; flex-wrap:wrap;
+}
+
+@media print{
+  @page{ size:A4 portrait; margin:0; }
+  body{ background:#fff; padding:0; display:block; }
+  .barra-alta{ display:none !important; }
+  .a4{ box-shadow:none; width:210mm; height:297mm; }
+}
+@media(max-width:230mm){
+  .a4{ transform-origin:top center; }
+}
+</style>
+</head>
+<body>
+
+<div class="barra-alta">
+  <button onclick="window.print()">🖨️ Stampa la locandina</button>
+  <a class="chiaro" href="admin.html">← Torna all'area organizzatori</a>
+  <a class="chiaro" href="index.html">Vedi il sito</a>
+</div>
+
+<div class="a4" id="foglio">
+  <div class="foto">
+    <div class="img" id="foto"></div>
+    <div class="velo"></div>
+    <div class="sopra">
+      <span class="occhiello" id="occhiello">Ferragosto 2026</span>
+      <h1 id="titolo">Certamen Aquaticum</h1>
+      <p class="sottotitolo" id="sottotitolo"></p>
+    </div>
+  </div>
+  <svg class="onda" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#ffffff" d="M0,64L60,58.7C120,53,240,43,360,48C480,53,600,75,720,74.7C840,75,960,53,1080,45.3C1200,37,1320,43,1380,45.3L1440,48L1440,120L0,120Z"></path>
+  </svg>
+
+  <div class="corpo">
+    <p class="claim" id="claim">—</p>
+
+    <div class="quando">
+      <div><b id="qData">—</b><span>quando</span></div>
+      <div><b id="qOra">—</b><span>orario</span></div>
+      <div><b id="qLuogo">—</b><span>dove</span></div>
+    </div>
+
+    <div class="due">
+      <div class="mondo rag">
+        <div class="em">🤽</div>
+        <h2 id="mRagTitolo">Giochi in acqua</h2>
+        <p id="mRagTesto">—</p>
+      </div>
+      <div class="mondo adu">
+        <div class="em">🃏</div>
+        <h2 id="mAduTitolo">Tornei di carte</h2>
+        <p id="mAduTesto">—</p>
+      </div>
+    </div>
+
+    <div class="basso">
+      <div class="qr-box">
+        <canvas id="qr" width="150" height="150"></canvas>
+      </div>
+      <div class="istruzioni">
+        <h3>Iscriviti online, è gratis</h3>
+        <p id="istruzioni">Inquadra il QR con la fotocamera del telefono per vedere i giochi e iscriverti.</p>
+        <div class="nota" id="nota">—</div>
+      </div>
+    </div>
+
+    <div class="piedino">
+      <span id="pRes">Residence Holiday — Montalto di Castro</span>
+      <span id="pTel"></span>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" style="display:none"></div>
+
+<script>
+var $ = CA.$, V = CA.V, testo = CA.testo;
+
+CA.carica().then(function(d){
+  var t = V(d.tema, {}), ev = V(d.evento, {}), res = V(d.residence, {});
+  var loc = V(d.locandina, {}), con = V(d.contatti, {}), cond = V(d.condivisione, {});
+  var aree = V(d.aree, {}), rag = V(aree.ragazzi, {}), adu = V(aree.adulti, {});
+
+  testo('occhiello', V(t.occhiello, 'Ferragosto'));
+  testo('titolo', V(loc.titolo, V(t.titolo, 'Certamen Aquaticum')));
+  testo('sottotitolo', V(loc.sottotitolo, V(t.sottotitolo, '')));
+  testo('claim', V(loc.claim, ''));
+  testo('qData', CA.dataIt(ev.data, false));
+  testo('qOra', V(ev.orario,'') + ' – ' + V(ev.orarioFine,''));
+  testo('qLuogo', V(ev.luogo, ''));
+
+  testo('mRagTitolo', V(rag.nome, 'Giochi in acqua'));
+  testo('mRagTesto', V(d.giochi, []).length + ' giochi a squadre con palloni e materassini. ' + V(rag.eta, ''));
+  testo('mAduTitolo', V(adu.nome, 'Tornei di carte'));
+  testo('mAduTesto', V(d.tornei, []).map(function(x){ return x.nome; }).join(', ') + '. Si gioca a coppie.');
+
+  testo('istruzioni', V(loc.istruzioniQr, ''));
+  var q = V(d.quota, {});
+  testo('nota', V(loc.nota, '') + (q.attiva === true ? (' · quota ' + CA.eur(q.importo) + ' a persona') : ''));
+  testo('pRes', V(res.nome, '') + (res.localita ? ' — ' + res.localita : ''));
+  testo('pTel', con.telefono ? ('Informazioni: ' + con.telefono) : '');
+
+  var foto = V(loc.foto, V(d.fotoHero, (V(d.foto, [])[0] || '')));
+  if(foto){
+    var el = $('foto');
+    el.style.backgroundImage = 'url("' + encodeURI(foto) + '")';
+    if(loc.fotoPos) el.style.backgroundPosition = loc.fotoPos;
+  }
+
+  var url = V(cond.urlSito, 'https://johannes1979i.github.io/certamen-aquaticum/');
+  try{
+    QR.draw($('qr'), url, { size: 150, margin: 2, ecc: 'M', dark: '#0a2540', light: '#ffffff' });
+  }catch(e){
+    $('qr').style.display = 'none';
+  }
+  adattaAllaFinestra();
+}).catch(function(e){
+  alert('Non riesco a leggere contenuti.json: ' + e.message);
+});
+
+/* su schermi stretti la pagina A4 si rimpicciolisce, ma in stampa resta A4 */
+function adattaAllaFinestra(){
+  var f = $('foglio');
+  function calcola(){
+    var largA4 = f.offsetWidth;
+    var disponibile = document.body.clientWidth - 40;
+    var s = Math.min(1, disponibile / largA4);
+    f.style.transform = s < 1 ? ('scale(' + s + ')') : '';
+    f.style.marginBottom = s < 1 ? (-(f.offsetHeight * (1 - s)) + 'px') : '';
+  }
+  calcola();
+  window.addEventListener('resize', calcola);
+}
+</script>
+</body>
+</html>

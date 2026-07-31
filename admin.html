@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Area organizzatori — Certamen Aquaticum</title>
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#0a2540" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛠️</text></svg>" />
+<link rel="stylesheet" href="stile.css" />
+<script src="qr.js"></script>
+<script src="firebase.js"></script>
+<script src="comune.js"></script>
+<style>
+/* =========================================================================
+   Area organizzatori. Pensata per essere usata dal telefono, a bordo
+   piscina, con le mani bagnate: pulsanti grandi, poche schermate, niente
+   menù nascosti.
+   ========================================================================= */
+body{ background:#eef4fa; }
+.testata-admin{
+  background:var(--ink); color:#fff; padding:14px 0; position:sticky; top:0; z-index:50;
+  box-shadow:0 8px 22px -12px rgba(10,37,64,.7);
+}
+.testata-admin .dentro{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.testata-admin h1{ font-size:1.15rem; margin-right:auto; }
+.testata-admin .stato{ font-size:.82rem; opacity:.8; }
+.linguette-admin{
+  display:flex; gap:6px; overflow-x:auto; padding:10px 0; background:#fff;
+  border-bottom:1px solid var(--linea); position:sticky; top:56px; z-index:40;
+}
+.linguette-admin button{
+  flex:0 0 auto; border:none; background:rgba(10,37,64,.07); color:var(--ink);
+  border-radius:999px; padding:11px 18px; font:inherit; font-weight:bold; font-size:.92rem;
+  cursor:pointer; min-height:46px; white-space:nowrap;
+}
+.linguette-admin button.attiva{ background:var(--ink); color:#fff; }
+.vista{ display:none; padding:26px 0 60px; }
+.vista.attiva{ display:block; }
+.card{
+  background:#fff; border:1px solid var(--linea); border-radius:18px; padding:20px;
+  box-shadow:var(--shadow-s); margin-bottom:18px;
+}
+.card h2{ font-size:1.2rem; margin-bottom:6px; }
+.card h3{ font-size:1.03rem; margin:16px 0 8px; }
+.card .aiuto{ color:var(--muted); font-size:.92rem; margin-bottom:14px; }
+.griglia2{ display:grid; gap:14px; grid-template-columns:1fr; }
+@media(min-width:760px){ .griglia2{ grid-template-columns:1fr 1fr; } }
+.griglia3{ display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); }
+.numeroni{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); }
+.numerone{
+  background:linear-gradient(140deg,var(--c1),var(--c2)); color:#fff; border-radius:16px;
+  padding:16px; text-align:center;
+}
+.numerone.verde{ background:linear-gradient(140deg,#1f8a5b,#22c55e); }
+.numerone.giallo{ background:linear-gradient(140deg,#e8a600,#ffc233); color:#4a2c00; }
+.numerone.grigio{ background:linear-gradient(140deg,#5a7583,#8ba3ae); }
+.numerone b{ display:block; font-size:2rem; line-height:1; }
+.numerone span{ font-size:.84rem; opacity:.92; }
+.riga-iscr{
+  display:flex; gap:12px; align-items:flex-start; background:#fff; border:1px solid var(--linea);
+  border-radius:14px; padding:12px 14px; margin-bottom:9px;
+}
+.riga-iscr.cestinata{ opacity:.55; background:#f6f6f6; }
+.riga-iscr .cnt{ flex:1; min-width:0; }
+.riga-iscr .cnt b{ display:block; }
+.riga-iscr .cnt small{ display:block; color:var(--muted); font-size:.85rem; margin-top:2px; }
+.riga-iscr .azioni-r{ display:flex; gap:6px; flex-wrap:wrap; }
+.bottoncino{
+  border:none; background:rgba(10,37,64,.08); color:var(--ink); border-radius:10px;
+  padding:8px 11px; font:inherit; font-size:.84rem; cursor:pointer; min-height:38px; font-weight:bold;
+}
+.bottoncino.rosso{ background:rgba(193,18,31,.12); color:#a30f1a; }
+.bottoncino.verde{ background:rgba(34,197,94,.16); color:#0f7a4a; }
+.tag{
+  display:inline-block; border-radius:999px; padding:3px 10px; font-size:.76rem;
+  font-weight:bold; margin-right:5px;
+}
+.tag.rag{ background:rgba(20,196,180,.2); color:#0a7a70; }
+.tag.ita{ background:rgba(31,138,91,.18); color:#14663f; }
+.tag.bur{ background:rgba(28,111,168,.18); color:#12527d; }
+.filtri{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+
+/* ---- formazione squadre ---- */
+.tavolo-squadre{ display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); }
+.colonna-sq{
+  background:#fff; border:2px dashed var(--linea); border-radius:16px; padding:12px; min-height:130px;
+}
+.colonna-sq.sopra{ border-color:var(--c1); background:rgba(11,127,212,.06); }
+.colonna-sq h4{ font-size:1rem; display:flex; align-items:center; gap:7px; margin-bottom:4px; }
+.colonna-sq .dati-sq{ font-size:.8rem; color:var(--muted); margin-bottom:9px; }
+.pedina{
+  display:flex; align-items:center; gap:8px; background:rgba(10,37,64,.05); border-radius:10px;
+  padding:8px 10px; margin-bottom:6px; cursor:grab; font-size:.9rem; border:2px solid transparent;
+}
+.pedina.scelta{ border-color:var(--c3); background:rgba(255,194,51,.18); }
+.pedina .eta-p{ margin-left:auto; font-weight:bold; font-size:.82rem; color:var(--muted); }
+.pedina .cap{ cursor:pointer; }
+.pedina.capitano{ background:rgba(255,194,51,.22); }
+.serbatoio{ background:#fff; border:2px dashed var(--linea); border-radius:16px; padding:12px; min-height:100px; }
+
+/* ---- punteggi ---- */
+.gioco-punti{ background:#fff; border:1px solid var(--linea); border-radius:16px; padding:16px; margin-bottom:14px; }
+.gioco-punti h3{ margin:0 0 10px; font-size:1.06rem; }
+.ordine-sq{ display:grid; gap:8px; }
+.posto-riga{ display:flex; gap:10px; align-items:center; }
+.posto-riga .medaglia{ font-size:1.3rem; width:34px; text-align:center; }
+.posto-riga select{ flex:1; min-height:46px; }
+.tondo-punti{
+  background:var(--ink); color:#fff; border-radius:999px; padding:6px 12px;
+  font-weight:bold; font-size:.86rem; min-width:44px; text-align:center;
+}
+.incontro-adm{
+  display:grid; gap:8px; grid-template-columns:1fr auto 1fr; align-items:center;
+  background:#fff; border:1px solid var(--linea); border-radius:14px; padding:11px 12px; margin-bottom:8px;
+}
+.incontro-adm input{ width:66px; text-align:center; min-height:46px; padding:8px; }
+.incontro-adm .cc{ display:flex; gap:6px; align-items:center; }
+.incontro-adm b{ font-size:.93rem; }
+.incontro-adm .dx{ text-align:right; }
+
+/* ---- procedura guidata ---- */
+.guidata{ background:#fff8e5; border:2px solid var(--c3); border-radius:18px; padding:18px; margin-bottom:18px; }
+.guidata h3{ margin-top:0; }
+.consiglio{
+  background:rgba(34,197,94,.12); border-left:5px solid #22c55e; border-radius:10px;
+  padding:12px 14px; margin:12px 0; font-size:.94rem;
+}
+.scelte-formato{ display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); }
+.scelta-f{
+  border:2px solid var(--linea); border-radius:14px; padding:14px; background:#fff; cursor:pointer;
+  text-align:left; font:inherit; color:inherit;
+}
+.scelta-f.presa{ border-color:var(--c1); background:rgba(11,127,212,.06); }
+.scelta-f b{ display:block; margin-bottom:4px; }
+.scelta-f small{ color:var(--muted); }
+
+/* ---- editor contenuti ---- */
+.voce-edit{ border:1px solid var(--linea); border-radius:14px; padding:14px; margin-bottom:10px; background:#fff; }
+.voce-edit summary{ cursor:pointer; font-weight:bold; padding:4px 0; }
+.mini{ font-size:.86rem; }
+input.mini, select.mini{ min-height:42px; padding:9px 11px; }
+
+/* ---- foglio di stampa ---- */
+.foglio{
+  display:none; position:fixed; inset:0; background:rgba(10,37,64,.75); z-index:100;
+  overflow:auto; padding:20px;
+}
+.foglio.aperto{ display:block; }
+.foglio-corpo{
+  background:#fff; max-width:900px; margin:0 auto; padding:30px; border-radius:8px; color:#0a2540;
+}
+.foglio-corpo table{ width:100%; border-collapse:collapse; margin-top:12px; }
+.foglio-corpo th, .foglio-corpo td{ border:1px solid #ccd; padding:7px 9px; text-align:left; font-size:.9rem; }
+.foglio-corpo th{ background:#eef4fa; }
+@media print{
+  body.stampa-foglio > *:not(.foglio){ display:none !important; }
+  body.stampa-foglio .foglio{ position:static; background:#fff; padding:0; display:block; }
+  body.stampa-foglio .foglio-corpo{ box-shadow:none; margin:0; padding:0; max-width:100%; border-radius:0; }
+  .no-stampa{ display:none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- =============================== ACCESSO ============================== -->
+<div id="cancello" style="min-height:100vh;display:grid;place-items:center;padding:20px">
+  <div class="card" style="max-width:420px;width:100%;text-align:center">
+    <div style="font-size:2.6rem">🛠️</div>
+    <h2>Area organizzatori</h2>
+    <p class="aiuto">Certamen Aquaticum — Residence Holiday</p>
+    <div class="campo" style="text-align:left">
+      <label for="pwd">Password</label>
+      <input type="password" id="pwd" autocomplete="current-password" />
+      <div class="errore" id="e_pwd"></div>
+    </div>
+    <button class="btn btn-p btn-largo" id="btnEntra">Entra</button>
+  </div>
+</div>
+
+<!-- =============================== PANNELLO ============================= -->
+<div id="pannello" style="display:none">
+
+<header class="testata-admin no-stampa">
+  <div class="wrap dentro">
+    <h1>🛠️ Certamen Aquaticum — organizzatori</h1>
+    <span class="stato" id="statoCloud">non collegato</span>
+    <a href="index.html" class="btn btn-chiaro btn-piccolo">Vedi il sito</a>
+  </div>
+</header>
+
+<nav class="linguette-admin no-stampa">
+  <div class="wrap" style="display:flex;gap:6px">
+    <button data-vista="cruscotto" class="attiva">📊 Cruscotto</button>
+    <button data-vista="iscrizioni">📋 Iscrizioni</button>
+    <button data-vista="squadre">🚩 Squadre</button>
+    <button data-vista="tornei">🃏 Tornei</button>
+    <button data-vista="punteggi">🏅 Punteggi</button>
+    <button data-vista="pubblica">📣 Pubblica</button>
+    <button data-vista="contenuti">⚙️ Contenuti</button>
+    <button data-vista="stampe">🖨️ Stampe</button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<!-- ------------------------------ CRUSCOTTO ---------------------------- -->
+<section class="vista attiva" id="v-cruscotto">
+  <div class="card" id="cardLogin">
+    <h2>🔐 Collegamento al database</h2>
+    <p class="aiuto">Le iscrizioni, le squadre e i punteggi vivono nel database, come per le prenotazioni della festa. Per vederli serve la tua email e la password di Firebase.</p>
+    <div id="boxLogin">
+      <div class="griglia2">
+        <div class="campo"><label for="fbEmail">Email</label><input type="text" id="fbEmail" autocomplete="username" /></div>
+        <div class="campo"><label for="fbPwd">Password</label><input type="password" id="fbPwd" autocomplete="current-password" /></div>
+      </div>
+      <div class="errore" id="e_login"></div>
+      <button class="btn btn-p" id="btnLogin">Entra nel database</button>
+    </div>
+    <div id="boxConnesso" style="display:none">
+      <p>✅ Collegato come <b id="chiSono">—</b> <span id="quandoAgg" style="color:var(--muted);font-size:.86rem"></span></p>
+      <div class="azioni" style="justify-content:flex-start;margin-top:12px">
+        <button class="btn btn-chiaro btn-piccolo" id="btnRicarica">🔄 Ricarica adesso</button>
+        <button class="btn btn-chiaro btn-piccolo" id="btnEsci">Esci</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📊 A che punto siamo</h2>
+    <div class="numeroni" id="numeroni"></div>
+    <p class="aiuto" style="margin-top:14px" id="notaCruscotto"></p>
+  </div>
+
+  <div class="card">
+    <h2>✅ Cosa manca</h2>
+    <ul class="lista" id="checklist" style="max-width:none"></ul>
+  </div>
+</section>
+
+<!-- ----------------------------- ISCRIZIONI ---------------------------- -->
+<section class="vista" id="v-iscrizioni">
+  <div class="card">
+    <h2>📋 Registro delle iscrizioni</h2>
+    <p class="aiuto">Tutte le iscrizioni arrivate. Si aggiorna da solo ogni minuto, ma si ferma mentre stai scrivendo.</p>
+    <div class="filtri">
+      <button class="btn btn-p btn-piccolo" data-fi="tutti">Tutte</button>
+      <button class="btn btn-chiaro btn-piccolo" data-fi="ragazzi">🤽 Ragazzi</button>
+      <button class="btn btn-chiaro btn-piccolo" data-fi="italiana">🂡 All'italiana</button>
+      <button class="btn btn-chiaro btn-piccolo" data-fi="burraco">🃟 Burraco</button>
+      <button class="btn btn-chiaro btn-piccolo" data-fi="cestino">🗑️ Cestino</button>
+    </div>
+    <div class="campo"><input type="text" id="cerca" placeholder="Cerca per nome, codice, appartamento…" /></div>
+    <div class="azioni" style="justify-content:flex-start;margin-bottom:16px">
+      <button class="btn btn-chiaro btn-piccolo" id="btnAggiungi">➕ Aggiungi a mano</button>
+      <button class="btn btn-chiaro btn-piccolo" id="btnCsv">⬇️ Scarica CSV</button>
+      <button class="btn btn-chiaro btn-piccolo" id="btnSincronizza">🔢 Ricalcola i contatori pubblici</button>
+    </div>
+    <div id="formManuale" style="display:none"></div>
+    <div id="elencoIscritti"></div>
+  </div>
+</section>
+
+<!-- ------------------------------ SQUADRE ------------------------------ -->
+<section class="vista" id="v-squadre">
+  <div class="guidata">
+    <h3>🚩 Procedura guidata: forma le squadre</h3>
+    <p class="mini">Quante squadre fare dipende da quanti si sono iscritti. Qui sotto il consiglio, ma decidi tu.</p>
+    <div class="consiglio" id="consiglioSquadre">—</div>
+    <div class="griglia3">
+      <div class="campo"><label for="sqNumero">Quante squadre</label><input type="number" id="sqNumero" min="2" max="8" class="mini" /></div>
+      <div class="campo"><label for="sqPer">Componenti per squadra</label><input type="number" id="sqPer" min="2" max="12" class="mini" /><div class="aiuto" id="sqPerNota"></div></div>
+      <div class="campo"><label for="sqCriterio">Come le formo</label>
+        <select id="sqCriterio" class="mini">
+          <option value="auto">Automatico bilanciato per età</option>
+          <option value="manuale">A mano, sposto io i nomi</option>
+        </select>
+      </div>
+    </div>
+    <div class="azioni" style="justify-content:flex-start">
+      <button class="btn btn-p" id="btnGeneraSquadre">🎲 Genera le squadre</button>
+      <button class="btn btn-chiaro btn-piccolo" id="btnSvuotaSquadre">↩️ Ricomincia da capo</button>
+    </div>
+    <details style="margin-top:14px">
+      <summary class="mini" style="cursor:pointer;font-weight:bold">Con quali regole bilancia?</summary>
+      <ul class="mini" id="regoleBilanciamento" style="margin:10px 0 0 18px"></ul>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>👥 Le squadre</h2>
+    <p class="aiuto">Trascina i nomi da una squadra all'altra, oppure tocca un nome e poi tocca la squadra dove spostarlo. Il 🧢 assegna il capitano.</p>
+    <div id="equilibrio" class="consiglio" style="display:none"></div>
+    <div class="tavolo-squadre" id="tavoloSquadre"></div>
+    <h3>Da assegnare</h3>
+    <div class="serbatoio" id="serbatoio"></div>
+    <div class="azioni" style="justify-content:flex-start;margin-top:16px">
+      <button class="btn btn-p" id="btnSalvaSquadre">💾 Salva le squadre nel database</button>
+    </div>
+  </div>
+</section>
+
+<!-- ------------------------------- TORNEI ------------------------------ -->
+<section class="vista" id="v-tornei">
+  <div class="card">
+    <h2>🃏 Tornei di carte</h2>
+    <p class="aiuto">Per ogni torneo: forma le coppie, scegli la formula in base a quante coppie ci sono e genera il tabellone.</p>
+    <div class="filtri" id="scegliTorneo"></div>
+  </div>
+  <div id="pannelloTorneo"></div>
+</section>
+
+<!-- ------------------------------ PUNTEGGI ----------------------------- -->
+<section class="vista" id="v-punteggi">
+  <div class="card">
+    <h2>🏅 Punteggi</h2>
+    <p class="aiuto">Registra i risultati mano a mano. Ogni modifica si salva da sola nel database.</p>
+    <div class="filtri">
+      <button class="btn btn-p btn-piccolo" data-fp="ragazzi">🤽 Gare dei ragazzi</button>
+      <button class="btn btn-chiaro btn-piccolo" data-fp="carte">🃏 Partite di carte</button>
+      <button class="btn btn-chiaro btn-piccolo" data-fp="titoli">⭐ Titoli e premi</button>
+    </div>
+  </div>
+  <div id="puntiRagazzi"></div>
+  <div id="puntiCarte" style="display:none"></div>
+  <div id="puntiTitoli" style="display:none"></div>
+</section>
+
+<!-- ------------------------------ PUBBLICA ----------------------------- -->
+<section class="vista" id="v-pubblica">
+  <div class="card">
+    <h2>📣 Pubblica le classifiche</h2>
+    <p class="aiuto">Manda in bacheca quello che vedono tutti nella pagina delle classifiche. Vanno online solo squadre, punti e tabellone: nessun recapito, mai.</p>
+    <div class="campo">
+      <label for="pubNomi">Come mostrare i nomi dei ragazzi</label>
+      <select id="pubNomi">
+        <option value="iniziale">Nome e iniziale del cognome (consigliato)</option>
+        <option value="nome">Solo il nome</option>
+        <option value="intero">Nome e cognome per intero</option>
+        <option value="niente">Non mostrare i componenti delle squadre</option>
+      </select>
+    </div>
+    <div class="azioni" style="justify-content:flex-start">
+      <button class="btn btn-p btn-grande" id="btnPubblicaClass">📣 Pubblica adesso</button>
+      <a href="classifiche.html" target="_blank" class="btn btn-chiaro btn-piccolo">👀 Vedi la pagina pubblica</a>
+    </div>
+    <p class="aiuto" id="statoPubblicazione" style="margin-top:12px"></p>
+  </div>
+
+  <div class="card" id="sec-github">
+    <h2>🌐 Pubblica i contenuti del sito</h2>
+    <p class="aiuto">Serve solo quando cambi testi, giochi, orari o foto nella scheda «Contenuti». Le iscrizioni e i punteggi non passano da qui: quelli stanno nel database.</p>
+    <details>
+      <summary style="cursor:pointer;font-weight:bold;padding:6px 0">Collegamento a GitHub</summary>
+      <div class="griglia2" style="margin-top:12px">
+        <div class="campo"><label for="gh_owner">Utente</label><input type="text" id="gh_owner" value="Johannes1979I" class="mini" /></div>
+        <div class="campo"><label for="gh_repo">Repository</label><input type="text" id="gh_repo" value="certamen-aquaticum" class="mini" /></div>
+        <div class="campo"><label for="gh_branch">Ramo</label><input type="text" id="gh_branch" value="main" class="mini" /></div>
+        <div class="campo"><label for="gh_token">Token</label><input type="password" id="gh_token" class="mini" /></div>
+      </div>
+      <button class="btn btn-chiaro btn-piccolo" id="btnSalvaGh">Salva in questo browser</button>
+    </details>
+    <div class="azioni" style="justify-content:flex-start;margin-top:14px">
+      <button class="btn btn-p" id="btnPubblicaContenuti">🌐 Pubblica contenuti.json</button>
+      <button class="btn btn-chiaro btn-piccolo" id="btnScarica">⬇️ Scarica contenuti.json</button>
+    </div>
+    <p class="aiuto" style="margin-top:10px">Dopo ogni pubblicazione ricordati di premere <b>⌘⇧R</b> sul sito per vedere le modifiche.</p>
+  </div>
+</section>
+
+<!-- ------------------------------ CONTENUTI ---------------------------- -->
+<section class="vista" id="v-contenuti">
+  <div class="card">
+    <h2>⚙️ Evento</h2>
+    <div class="griglia2">
+      <div class="campo"><label for="c_titolo">Titolo</label><input type="text" id="c_titolo" class="mini" /></div>
+      <div class="campo"><label for="c_sotto">Sottotitolo</label><input type="text" id="c_sotto" class="mini" /></div>
+      <div class="campo"><label for="c_data">Data</label><input type="date" id="c_data" class="mini" /></div>
+      <div class="campo"><label for="c_chiusura">Chiusura iscrizioni</label><input type="date" id="c_chiusura" class="mini" /></div>
+      <div class="campo"><label for="c_ora">Dalle</label><input type="text" id="c_ora" class="mini" /></div>
+      <div class="campo"><label for="c_oraFine">Alle</label><input type="text" id="c_oraFine" class="mini" /></div>
+      <div class="campo"><label for="c_luogo">Luogo</label><input type="text" id="c_luogo" class="mini" /></div>
+      <div class="campo"><label for="c_tel">Telefono organizzatori</label><input type="text" id="c_tel" class="mini" /></div>
+    </div>
+    <div class="campo"><label for="c_desc">Descrizione</label><textarea id="c_desc"></textarea></div>
+    <div class="griglia3">
+      <div class="campo"><label for="c_col1">Colore primario</label><input type="text" id="c_col1" class="mini" /></div>
+      <div class="campo"><label for="c_col2">Colore secondario</label><input type="text" id="c_col2" class="mini" /></div>
+      <div class="campo"><label for="c_col3">Colore accento</label><input type="text" id="c_col3" class="mini" /></div>
+    </div>
+    <div class="griglia2">
+      <div class="campo"><label for="c_postiRag">Posti ragazzi</label><input type="number" id="c_postiRag" class="mini" /></div>
+      <div class="campo"><label for="c_postiAdu">Posti adulti</label><input type="number" id="c_postiAdu" class="mini" /></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🏆 Quota per i premi</h2>
+    <label class="spunta" for="c_quotaAttiva" style="margin-bottom:12px">
+      <input type="checkbox" id="c_quotaAttiva" />
+      <span>Chiedi una quota di iscrizione. Se la spengo sparisce da tutto il sito.</span>
+    </label>
+    <div class="griglia2">
+      <div class="campo"><label for="c_quotaImporto">Importo a persona (€)</label><input type="number" id="c_quotaImporto" step="0.5" class="mini" /></div>
+      <div class="campo"><label for="c_quotaEtichetta">Come si chiama</label><input type="text" id="c_quotaEtichetta" class="mini" /></div>
+    </div>
+    <div class="campo"><label for="c_quotaSpiega">Spiegazione</label><textarea id="c_quotaSpiega"></textarea></div>
+  </div>
+
+  <div class="card">
+    <h2>🎵 Musica dei giochi</h2>
+    <p class="aiuto">Ogni gioco dei ragazzi ha la sua canzone. Se lasci vuoto il collegamento, il sito apre la ricerca su YouTube del titolo: funziona sempre. Se vuoi un video preciso, incolla qui il suo indirizzo.</p>
+    <label class="spunta" for="c_musicaAttiva" style="margin-bottom:14px">
+      <input type="checkbox" id="c_musicaAttiva" />
+      <span>Mostra la canzone accanto a ogni gioco</span>
+    </label>
+    <div id="editMusica"></div>
+  </div>
+
+  <div class="card">
+    <h2>🎯 Giochi in acqua</h2>
+    <p class="aiuto">Titolo, orario, durata e testi di ogni gioco. Le regole e le varianti si scrivono una per riga.</p>
+    <div id="editGiochi"></div>
+  </div>
+
+  <div class="card">
+    <h2>🃏 Tornei di carte</h2>
+    <div id="editTornei"></div>
+  </div>
+
+  <div class="card">
+    <h2>📝 Elenchi</h2>
+    <div class="campo"><label for="c_sicurezza">Regole di sicurezza (una per riga)</label><textarea id="c_sicurezza" style="min-height:140px"></textarea></div>
+    <div class="campo"><label for="c_regolamento">Regolamento (una per riga)</label><textarea id="c_regolamento" style="min-height:140px"></textarea></div>
+    <div class="campo"><label for="c_foto">Foto (un percorso per riga)</label><textarea id="c_foto"></textarea></div>
+  </div>
+
+  <div class="card">
+    <h2>🕓 Programma</h2>
+    <p class="aiuto">Una riga per tappa, nel formato: <code>16:15 | ragazzi | Titolo | nota</code>. L'area può essere <code>tutti</code>, <code>ragazzi</code> o <code>adulti</code>.</p>
+    <div class="campo"><textarea id="c_programma" style="min-height:220px"></textarea></div>
+  </div>
+
+  <div class="card">
+    <p class="aiuto">Le modifiche restano solo in questa pagina finché non premi «Pubblica contenuti.json» nella scheda <b>📣 Pubblica</b>.</p>
+    <button class="btn btn-p" id="btnVaiPubblica">Vai a pubblicare →</button>
+  </div>
+</section>
+
+<!-- ------------------------------- STAMPE ------------------------------ -->
+<section class="vista" id="v-stampe">
+  <div class="card">
+    <h2>🖨️ Fogli da stampare</h2>
+    <p class="aiuto">Tutto pronto da appendere o da tenere al banco dell'accoglienza.</p>
+    <div class="griglia3">
+      <button class="btn btn-chiaro" data-stampa="accoglienza">📋 Elenco per l'accoglienza</button>
+      <button class="btn btn-chiaro" data-stampa="squadre">🚩 Le squadre</button>
+      <button class="btn btn-chiaro" data-stampa="tabelloni">🃏 Tabelloni dei tornei</button>
+      <button class="btn btn-chiaro" data-stampa="classifiche">🏆 Classifiche finali</button>
+      <button class="btn btn-chiaro" data-stampa="programma">🕓 Programma del pomeriggio</button>
+      <a class="btn btn-chiaro" href="locandina.html" target="_blank">🖼️ Locandina A4 con QR</a>
+    </div>
+  </div>
+</section>
+
+</div><!-- /wrap -->
+</div><!-- /pannello -->
+
+<div class="foglio" id="foglio">
+  <div class="wrap no-stampa" style="max-width:900px;margin:0 auto 12px;display:flex;gap:10px;justify-content:flex-end">
+    <button class="btn btn-chiaro btn-piccolo" id="btnStampaFoglio">🖨️ Stampa</button>
+    <button class="btn btn-scuro btn-piccolo" id="btnChiudiFoglio">Chiudi</button>
+  </div>
+  <div class="foglio-corpo" id="foglioCorpo"></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="admin.js"></script>
+</body>
+</html>

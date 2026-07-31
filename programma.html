@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Programma — Certamen Aquaticum</title>
+<meta name="description" content="Il programma ora per ora del Certamen Aquaticum: giochi in acqua dei ragazzi e tornei di carte degli adulti, dalle 16 alle 19." />
+<meta name="theme-color" content="#7c4dff" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕓</text></svg>" />
+<link rel="stylesheet" href="stile.css" />
+<script src="firebase.js"></script>
+<script src="comune.js"></script>
+<style>
+.hero.corta .hero-dentro{ padding:clamp(28px,4vw,52px) 0 clamp(52px,6vw,74px); }
+.hero.corta .velo{ background:linear-gradient(160deg, rgba(40,20,92,.86), rgba(124,77,255,.66) 60%, rgba(11,127,212,.6)); }
+</style>
+</head>
+<body>
+
+<nav class="barra no-stampa">
+  <div class="wrap barra-dentro">
+    <a class="marchio" href="index.html"><span class="goccia">🏊</span><span id="marchioNome">Certamen Aquaticum</span></a>
+    <div class="menu">
+      <a href="index.html">Home</a>
+      <a href="ragazzi.html">🤽 Ragazzi</a>
+      <a href="carte.html">🃏 Adulti</a>
+      <a href="programma.html">🕓 Programma</a>
+      <a href="classifiche.html">🏆 Classifiche</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+<header class="hero corta">
+  <div class="sfondo" id="heroSfondo"></div>
+  <div class="velo"></div>
+  <div class="hero-dentro wrap">
+    <span class="targhetta">🕓 Ora per ora</span>
+    <h1>Il programma</h1>
+    <p class="sottotitolo" id="sottoProg">Le due gare vanno avanti in parallelo: i ragazzi in vasca, gli adulti ai tavoli. Ci si ritrova insieme per la pausa e per la premiazione.</p>
+    <p class="posto" id="quandoProg"></p>
+  </div>
+  <svg class="onde" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#f7fbff" d="M0,64L60,58.7C120,53,240,43,360,48C480,53,600,75,720,74.7C840,75,960,53,1080,45.3C1200,37,1320,43,1380,45.3L1440,48L1440,120L0,120Z"></path>
+  </svg>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="azioni no-stampa" style="margin-bottom:30px">
+      <button class="btn btn-p btn-piccolo" data-filtro="tutti" id="fTutti">Tutto insieme</button>
+      <button class="btn btn-chiaro btn-piccolo" data-filtro="ragazzi">🤽 Solo i ragazzi</button>
+      <button class="btn btn-chiaro btn-piccolo" data-filtro="adulti">🃏 Solo gli adulti</button>
+    </div>
+    <div class="linea-tempo" id="lineaTempo"></div>
+
+    <div class="azioni" style="margin-top:38px">
+      <a href="ragazzi.html" class="btn btn-g">🤽 I giochi in acqua</a>
+      <a href="carte.html" class="btn btn-p">🃏 I tornei di carte</a>
+      <button class="btn btn-chiaro no-stampa" onclick="window.print()">🖨️ Stampa il programma</button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="piede"><div class="wrap" id="piede"></div></footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+var $ = CA.$, V = CA.V, testo = CA.testo, crea = CA.crea;
+var DATI = {};
+
+CA.carica().then(function(d){
+  DATI = d;
+  var ev = V(d.evento, {});
+  testo('marchioNome', V(V(d.tema,{}).titolo, 'Certamen Aquaticum'));
+  testo('quandoProg', '📅 ' + CA.dataIt(ev.data, true) + ' · dalle ' + V(ev.orario,'') + ' alle ' + V(ev.orarioFine,''));
+  var foto = V(d.fotoHero, (V(d.foto,[])[0] || ''));
+  if(foto) $('heroSfondo').style.backgroundImage = 'url("' + encodeURI(foto) + '")';
+  disegna('tutti');
+  collega();
+  CA.segnaPagina();
+  CA.disegnaPiede('piede');
+}).catch(function(e){ CA.toast('Non riesco a leggere i contenuti: ' + e.message, 9000); });
+
+function disegna(filtro){
+  var el = $('lineaTempo');
+  el.textContent = '';
+  var righe = V(DATI.programma, []).filter(function(r){
+    return filtro === 'tutti' ? true : (r.area === filtro || r.area === 'tutti');
+  });
+  if(!righe.length){ el.appendChild(crea('p', null, 'Programma in preparazione.')); return; }
+  righe.forEach(function(r){
+    var d = crea('div', 'tappa ' + V(r.area, 'tutti'));
+    d.appendChild(crea('div', 'ora', V(r.ora, '')));
+    var seg = V(r.area, 'tutti');
+    var badge = seg === 'ragazzi' ? '🤽 ' : (seg === 'adulti' ? '🃏 ' : '👋 ');
+    d.appendChild(crea('div', 'cosa', badge + V(r.titolo, '')));
+    if(r.nota) d.appendChild(crea('div', 'nota', r.nota));
+    el.appendChild(d);
+  });
+}
+
+function collega(){
+  var b = document.querySelectorAll('[data-filtro]');
+  for(var i=0;i<b.length;i++){
+    b[i].addEventListener('click', function(){
+      for(var j=0;j<b.length;j++){ b[j].className = 'btn btn-chiaro btn-piccolo'; }
+      this.className = 'btn btn-p btn-piccolo';
+      disegna(this.getAttribute('data-filtro'));
+    });
+  }
+}
+</script>
+</body>
+</html>

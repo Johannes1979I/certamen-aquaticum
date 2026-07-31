@@ -1,0 +1,1025 @@
+{
+  "versione": 1,
+  "residence": {
+    "nome": "Residence Holiday",
+    "localita": "Montalto di Castro",
+    "emoji": "🏖️"
+  },
+  "tema": {
+    "titolo": "Certamen Aquaticum",
+    "sottotitolo": "Il torneo di Ferragosto del Residence Holiday",
+    "occhiello": "Ferragosto 2026",
+    "colorePrimario": "#0b7fd4",
+    "coloreSecondario": "#14c4b4",
+    "coloreAccento": "#ffc233"
+  },
+  "evento": {
+    "data": "2026-08-15",
+    "orario": "16:00",
+    "orarioFine": "19:00",
+    "luogo": "Piscina del Residence Holiday",
+    "descrizione": "Un pomeriggio intero di sfide, per grandi e piccoli. In acqua i ragazzi si affrontano a squadre con palloni e materassini; all'ombra, a bordo piscina, gli adulti si sfidano ai tornei di carte. Si finisce tutti insieme con la premiazione. Iscriversi è gratis e ci vogliono due minuti.",
+    "chiusuraIscrizioni": "2026-08-13"
+  },
+  "aree": {
+    "ragazzi": {
+      "nome": "Giochi in acqua",
+      "titoloLungo": "Giochi in acqua dei ragazzi",
+      "emoji": "🤽",
+      "sottotitolo": "Quattordici sfide a squadre in piscina, con palloni e materassini",
+      "eta": "12 – 17 anni",
+      "postiTotali": 32,
+      "minimo": 16,
+      "colore": "#14c4b4",
+      "descrizione": "I ragazzi vengono divisi in squadre equilibrate per età e capacità natatoria: quante saranno dipende da quanti vi iscrivete. Ogni squadra sceglie un nome, un capitano e un grido di battaglia. Si gioca dalle 16:00 alle 19:00, con una pausa per bere a metà pomeriggio, e si chiude con la premiazione.",
+      "punteggio": {
+        "primo": 5,
+        "secondo": 3,
+        "terzo": 2,
+        "quarto": 1,
+        "nota": "I punti valgono così quando le squadre sono quattro; con più squadre si continua a scendere di un punto per posizione, fino a un minimo di 1. Nella Super staffetta finale i punti valgono il doppio. A fine giornata la giuria assegna 3 punti bonus alla squadra che si è comportata meglio (premio fair play)."
+      },
+      "squadre": 0,
+      "squadreNota": "Quante squadre fare lo decidiamo in base a quanti vi iscrivete: l'importante è che siano equilibrate per età e capacità in acqua, non che siano quattro."
+    },
+    "adulti": {
+      "nome": "Tornei di carte",
+      "titoloLungo": "Tornei di carte degli adulti",
+      "emoji": "🃏",
+      "sottotitolo": "Scopone, briscola, tresette e burraco all'ombra, a bordo piscina",
+      "eta": "dai 18 anni",
+      "postiTotali": 64,
+      "minimo": 8,
+      "colore": "#0b7fd4",
+      "descrizione": "Quattro tornei a coppie ai tavoli sotto gli ombrelloni. Ci si iscrive da soli o già in coppia: chi arriva solo viene abbinato dagli organizzatori. I tornei si giocano in due blocchi, così chi vuole può partecipare a due tornei diversi.",
+      "punteggio": {
+        "vittoria": 3,
+        "pareggio": 1,
+        "sconfitta": 0,
+        "nota": "In caso di parità in classifica contano, nell'ordine: lo scontro diretto, poi la differenza punti realizzati."
+      },
+      "avvisoTornei": "I tornei del blocco A si giocano in contemporanea, e così quelli del blocco B: puoi iscriverti al massimo a un torneo per blocco.",
+      "sezioni": "Le carte hanno due iscrizioni separate: i giochi all'italiana e il burraco."
+    }
+  },
+  "quota": {
+    "attiva": false,
+    "importo": 3,
+    "etichetta": "Quota premi",
+    "emoji": "🏆",
+    "titolo": "La quota per i premi",
+    "spiegazione": "Una piccola quota a persona che serve solo a comprare le coppe, le medaglie e i premi della premiazione finale. Si consegna il giorno stesso all'accoglienza.",
+    "nota": "Nessuno resta fuori per la quota: chi ha difficoltà lo dica agli organizzatori."
+  },
+  "giochi": [
+    {
+      "id": "palla-bollente",
+      "nome": "Palla bollente",
+      "emoji": "🔥",
+      "illustrazione": "palla-bollente",
+      "tipo": "riscaldamento",
+      "durata": 10,
+      "orario": "16:15",
+      "riserva": false,
+      "formazione": "tutti insieme",
+      "partecipanti": "Tutti i ragazzi in un unico cerchio",
+      "descrizione": "Il riscaldamento con cui si rompe il ghiaccio. Tutti in acqua, in un grande cerchio, ci si passa il pallone il più velocemente possibile mentre parte la musica. Quando la musica si ferma, chi ha il pallone in mano deve eseguire una piccola prova.",
+      "regole": [
+        "Tutti i ragazzi si dispongono in acqua formando un grande cerchio.",
+        "Il pallone gira veloce da un giocatore all'altro finché suona la musica o l'animatore conta.",
+        "Quando il gioco si ferma, chi ha la palla esegue una prova: cinque battiti di mani sopra la testa, un giro su sé stesso, una breve nuotata oppure il grido della propria squadra.",
+        "Non ci sono eliminazioni: nessuno resta fuori, si gioca per scaldarsi e ridere."
+      ],
+      "varianti": [
+        "Palla bollente al contrario: il pallone deve girare passando sempre sopra la testa.",
+        "Doppio pallone: se ne aggiunge un secondo che gira nel senso opposto, così non si sa mai da che parte arriva.",
+        "Prova a sorpresa: la prova la sceglie il ragazzo che ha passato la palla, non l'animatore."
+      ],
+      "punti": "Nessun punteggio: serve solo a scaldarsi",
+      "musica": {
+        "titolo": "Boom, Boom, Boom, Boom!!",
+        "artista": "Vengaboys",
+        "perche": "Ritmo veloce e stop improvvisi: perfetta per far girare la palla.",
+        "url": "",
+        "ricerca": "Boom, Boom, Boom, Boom!! Vengaboys"
+      }
+    },
+    {
+      "id": "staffetta-materassino",
+      "nome": "Staffetta sul materassino",
+      "emoji": "🛟",
+      "illustrazione": "staffetta-materassino",
+      "tipo": "squadre",
+      "durata": 15,
+      "orario": "16:25",
+      "riserva": false,
+      "formazione": "a squadre",
+      "partecipanti": "Un concorrente per volta per ogni squadra",
+      "descrizione": "La prima vera gara a squadre. Un concorrente alla volta percorre la distanza stabilita stando sopra il materassino e usando mani e gambe per avanzare, poi torna indietro e passa il materassino al compagno.",
+      "regole": [
+        "Si parte uno alla volta: il compagno successivo entra in acqua solo quando il materassino è tornato al punto di partenza.",
+        "Si avanza usando mani e gambe, restando sopra il materassino.",
+        "Se si cade si risale dal punto in cui si è caduti e si continua.",
+        "Vince la squadra che completa il giro di tutti i suoi componenti nel minor tempo."
+      ],
+      "varianti": [
+        "Seduti sul materassino, come su una canoa.",
+        "Sdraiati a pancia in giù, si avanza a bracciate.",
+        "In ginocchio: solo per i più esperti, è la posizione più instabile.",
+        "Spingendo il materassino mentre si nuota accanto, per chi preferisce non salirci."
+      ],
+      "punti": "5 / 3 / 2 / 1",
+      "musica": {
+        "titolo": "Surfin' USA",
+        "artista": "The Beach Boys",
+        "perche": "Il classico da tavola da surf, per chi pagaia sul materassino.",
+        "url": "",
+        "ricerca": "Surfin' USA The Beach Boys"
+      }
+    },
+    {
+      "id": "staffetta-pallone",
+      "nome": "Staffetta con pallone",
+      "emoji": "⚽",
+      "illustrazione": "staffetta-pallone",
+      "tipo": "squadre",
+      "durata": 15,
+      "orario": "16:40",
+      "riserva": false,
+      "formazione": "a squadre",
+      "partecipanti": "Un concorrente per volta per ogni squadra",
+      "descrizione": "Si attraversa la piscina trasportando il pallone, ma ogni frazione ha il suo modo: chi lo spinge con la testa, chi lo tiene in alto, chi lo stringe tra le braccia, chi lo spinge senza mai afferrarlo.",
+      "regole": [
+        "Prima frazione: si spinge il pallone con la testa.",
+        "Seconda frazione: si tiene il pallone sopra la testa con le mani.",
+        "Terza frazione: si tiene il pallone stretto tra le braccia.",
+        "Quarta frazione: si spinge il pallone davanti a sé senza mai afferrarlo.",
+        "Se il pallone scappa, il concorrente lo recupera e riparte dal punto in cui si trovava."
+      ],
+      "varianti": [
+        "Sorteggio: il modo di trasporto viene estratto a sorte poco prima della partenza.",
+        "Andata e ritorno con cambio: si va con un modo e si torna con un altro.",
+        "Doppia palla: le ultime due frazioni si fanno con due palloni insieme."
+      ],
+      "punti": "5 / 3 / 2 / 1",
+      "musica": {
+        "titolo": "Waka Waka (This Time for Africa)",
+        "artista": "Shakira",
+        "perche": "L'inno dello sport: si parte a tempo di palla.",
+        "url": "",
+        "ricerca": "Waka Waka (This Time for Africa) Shakira"
+      }
+    },
+    {
+      "id": "trasporto-compagno",
+      "nome": "Trasporto del compagno",
+      "emoji": "🤝",
+      "illustrazione": "trasporto-compagno",
+      "tipo": "squadre",
+      "durata": 15,
+      "orario": "16:55",
+      "riserva": false,
+      "formazione": "a squadre",
+      "partecipanti": "Tre alla volta: uno trasportato, due che spingono",
+      "descrizione": "Un ragazzo si sistema sopra il materassino e due compagni lo trasportano fino al punto stabilito e ritorno. Al turno successivo cambia il ragazzo trasportato, così passano tutti.",
+      "regole": [
+        "Chi viene trasportato resta fermo sopra il materassino: non aiuta con le mani.",
+        "I due compagni possono spingere o trainare, mai sollevare il materassino.",
+        "È severamente vietato capovolgere il materassino di proposito, anche per scherzo.",
+        "Vince la squadra che completa tutti i trasporti nel minor tempo."
+      ],
+      "varianti": [
+        "Staffetta a coppie fisse: le coppie che trasportano restano le stesse per tutta la gara.",
+        "Carico prezioso: sul materassino, insieme al compagno, viaggia anche un pallone che non deve cadere.",
+        "Cambio al volo: a metà vasca i due che spingono si scambiano con altri due compagni."
+      ],
+      "punti": "5 / 3 / 2 / 1",
+      "musica": {
+        "titolo": "Count on Me",
+        "artista": "Bruno Mars",
+        "perche": "Parla di contare sugli amici: e qui il compagno lo porti tu.",
+        "url": "",
+        "ricerca": "Count on Me Bruno Mars"
+      }
+    },
+    {
+      "id": "traghetto",
+      "nome": "Il materassino traghetto",
+      "emoji": "⛴️",
+      "illustrazione": "traghetto",
+      "tipo": "squadre",
+      "durata": 15,
+      "orario": "17:20",
+      "riserva": false,
+      "formazione": "a squadre",
+      "partecipanti": "Tutta la squadra insieme",
+      "descrizione": "Tutta la squadra deve raggiungere il lato opposto della piscina usando uno o due materassini soltanto. Come organizzarsi lo decide la squadra: si può cavalcare, spingere, trainare, passare il materassino da un compagno all'altro.",
+      "regole": [
+        "La squadra ha a disposizione uno o due materassini, non di più.",
+        "Ogni componente deve toccare il materassino almeno una volta durante il percorso.",
+        "Il materassino può essere cavalcato, spinto, trainato o passato di mano.",
+        "Vince la squadra che porta tutti i suoi componenti dall'altra parte per prima."
+      ],
+      "varianti": [
+        "Traghetto cieco: chi sta sul materassino tiene gli occhi chiusi e viene guidato a voce dai compagni.",
+        "Un solo materassino: si toglie il secondo e la squadra deve organizzarsi meglio.",
+        "Carico obbligatorio: sul materassino viaggia sempre almeno un compagno, non può mai andare vuoto."
+      ],
+      "punti": "5 / 3 / 2 / 1",
+      "musica": {
+        "titolo": "Yellow Submarine",
+        "artista": "The Beatles",
+        "perche": "Una ciurma sola su una barchetta gialla: il traghetto in musica.",
+        "url": "",
+        "ricerca": "Yellow Submarine The Beatles"
+      }
+    },
+    {
+      "id": "palla-capitano",
+      "nome": "Palla al capitano acquatica",
+      "emoji": "👑",
+      "illustrazione": "palla-capitano",
+      "tipo": "squadre",
+      "durata": 20,
+      "orario": "17:35",
+      "riserva": false,
+      "formazione": "sfide tra due squadre",
+      "partecipanti": "Due squadre alla volta in acqua",
+      "descrizione": "Il capitano di ogni squadra sta in piedi o seduto sul materassino vicino al lato opposto della piscina. I compagni devono far arrivare il pallone fino a lui: ogni presa buona del capitano vale un punto.",
+      "regole": [
+        "Il capitano non può scendere dal materassino.",
+        "Ogni presa corretta del capitano vale un punto; dopo il punto il pallone passa agli avversari.",
+        "Vietato il contatto fisico: niente spinte, niente trattenute.",
+        "Non si può nuotare tenendo il pallone per più di 5 secondi.",
+        "Il pallone deve essere passato almeno due volte prima di arrivare al capitano."
+      ],
+      "varianti": [
+        "Capitano a rotazione: ogni tre minuti sale sul materassino un compagno diverso.",
+        "Due capitani: due materassini per squadra, il punto vale doppio se la palla arriva a quello più lontano.",
+        "Presa al volo: il punto vale doppio se il capitano prende il pallone al volo senza farlo toccare in acqua."
+      ],
+      "punti": "5 / 3 / 2 / 1",
+      "musica": {
+        "titolo": "We Will Rock You",
+        "artista": "Queen",
+        "perche": "Il battito di mani lo fanno le squadre a bordo vasca.",
+        "url": "",
+        "ricerca": "We Will Rock You Queen"
+      }
+    },
+    {
+      "id": "catena",
+      "nome": "La catena acquatica",
+      "emoji": "🔗",
+      "illustrazione": "catena",
+      "tipo": "squadre",
+      "durata": 10,
+      "orario": "17:55",
+      "riserva": false,
+      "formazione": "a squadre",
+      "partecipanti": "Tutta la squadra in fila",
+      "descrizione": "I componenti della squadra si mettono in fila tenendosi per le spalle o per la vita. Il primo della fila trasporta un pallone e tutta la catena deve attraversare la piscina senza spezzarsi.",
+      "regole": [
+        "Ci si tiene per le spalle o per la vita, mai per il collo.",
+        "Il primo della fila trasporta il pallone.",
+        "Se la catena si spezza tutti si fermano, si ricompongono e si riparte dal punto in cui ci si è fermati.",
+        "Se il pallone cade, la catena si ferma e lo recupera senza spezzarsi."
+      ],
+      "varianti": [
+        "Catena al contrario: si procede all'indietro, guidati dall'ultimo della fila.",
+        "Catena silenziosa: vietato parlare, ci si intende solo a gesti.",
+        "Staffetta di catene: a metà vasca la catena si divide in due e si ricompone al contrario."
+      ],
+      "punti": "5 / 3 / 2 / 1",
+      "musica": {
+        "titolo": "Conga",
+        "artista": "Gloria Estefan",
+        "perche": "La canzone delle file che non si spezzano mai.",
+        "url": "",
+        "ricerca": "Conga Gloria Estefan"
+      }
+    },
+    {
+      "id": "pallanuoto",
+      "nome": "Pallanuoto semplificata",
+      "emoji": "🥅",
+      "illustrazione": "pallanuoto",
+      "tipo": "squadre",
+      "durata": 25,
+      "orario": "18:05",
+      "riserva": false,
+      "formazione": "sfide tra due squadre",
+      "partecipanti": "4 o 5 giocatori per squadra, partite da 5 minuti",
+      "descrizione": "Il torneo vero e proprio del pomeriggio: mini partite da cinque minuti, quattro o cinque giocatori per squadra. Le porte si ricavano da una porzione del bordo della piscina o dallo spazio fra due riferimenti già presenti.",
+      "regole": [
+        "Vietato spingere o trattenere gli avversari.",
+        "Vietato strappare la palla dalle mani: si può solo intercettarla.",
+        "Massimo 5 secondi con la palla in mano.",
+        "Obbligatori almeno due passaggi prima di tirare in porta.",
+        "Dopo ogni punto la palla riparte dal centro."
+      ],
+      "varianti": [
+        "Tutti in gol: il primo gol di ogni giocatore vale doppio, così giocano davvero tutti.",
+        "Portiere sul materassino: il portiere difende stando sopra il materassino.",
+        "Girone all'italiana: ogni squadra incontra tutte le altre in partite da tre minuti."
+      ],
+      "punti": "5 / 3 / 2 / 1",
+      "musica": {
+        "titolo": "Seven Nation Army",
+        "artista": "The White Stripes",
+        "perche": "Il coro da stadio: parte da solo appena si segna.",
+        "url": "",
+        "ricerca": "Seven Nation Army The White Stripes"
+      }
+    },
+    {
+      "id": "passaggi-materassino",
+      "nome": "Passaggi sul materassino",
+      "emoji": "🙌",
+      "illustrazione": "passaggi-materassino",
+      "tipo": "squadre",
+      "durata": 15,
+      "orario": "",
+      "riserva": true,
+      "formazione": "a squadre",
+      "partecipanti": "Tutta la squadra intorno a un compagno",
+      "descrizione": "Un giocatore in equilibrio sul materassino, i compagni intorno che gli passano il pallone. Vale il numero di passaggi completati in un minuto, senza far cadere il compagno e senza perdere la palla.",
+      "regole": [
+        "Si conta un passaggio ogni volta che il pallone va da un compagno al ragazzo sul materassino e torna indietro.",
+        "Se il ragazzo sul materassino cade o il pallone finisce lontano, il conteggio si ferma e riparte da capo.",
+        "Dopo ogni minuto cambia il ragazzo sul materassino.",
+        "Vale il totale dei passaggi di tutta la squadra."
+      ],
+      "varianti": [
+        "In piedi: chi se la sente prova a stare in piedi sul materassino, e ogni passaggio vale doppio.",
+        "Giro completo: i passaggi devono arrivare da compagni sempre diversi, in senso orario.",
+        "Due palloni contemporaneamente, per i più coraggiosi."
+      ],
+      "punti": "5 / 3 / 2 / 1",
+      "musica": {
+        "titolo": "Happy",
+        "artista": "Pharrell Williams",
+        "perche": "Un minuto di passaggi vuole un minuto di buonumore.",
+        "url": "",
+        "ricerca": "Happy Pharrell Williams"
+      }
+    },
+    {
+      "id": "re-materassino",
+      "nome": "Re e regina del materassino",
+      "emoji": "👑",
+      "illustrazione": "re-materassino",
+      "tipo": "individuale",
+      "durata": 15,
+      "orario": "",
+      "riserva": true,
+      "formazione": "batterie da 3-4",
+      "partecipanti": "Batterie da 3 o 4 concorrenti alla volta",
+      "descrizione": "Prova di equilibrio individuale: si resta sul materassino mentre l'animatore chiama i comandi, uno più difficile dell'altro. Vince chi resiste più a lungo. Si assegnano due titoli, Re e Regina del materassino.",
+      "regole": [
+        "L'animatore chiama i comandi uno alla volta: sedersi, inginocchiarsi, alzare un braccio, battere le mani, girarsi lentamente, prendere e rilanciare un pallone.",
+        "Chi cade in acqua è eliminato dalla batteria.",
+        "Si gioca in batterie da massimo 3 o 4 concorrenti, per evitare gli scontri.",
+        "Vince chi resta più a lungo sul materassino."
+      ],
+      "varianti": [
+        "Comandi doppi: due ordini insieme, per esempio in ginocchio e con un braccio alzato.",
+        "Onda: i compagni fuori gara creano piccole onde da bordo vasca, senza toccare il materassino.",
+        "A tempo: si resiste un minuto intero per passare al turno successivo."
+      ],
+      "punti": "Titolo individuale: Re e Regina del materassino",
+      "musica": {
+        "titolo": "The Final Countdown",
+        "artista": "Europe",
+        "perche": "Tensione pura mentre l'animatore chiama i comandi.",
+        "url": "",
+        "ricerca": "The Final Countdown Europe"
+      }
+    },
+    {
+      "id": "nuoto-pallone",
+      "nome": "Nuoto con pallone",
+      "emoji": "🏊",
+      "illustrazione": "nuoto-pallone",
+      "tipo": "individuale",
+      "durata": 10,
+      "orario": "",
+      "riserva": true,
+      "formazione": "batterie per età",
+      "partecipanti": "Batterie separate per età e capacità natatoria",
+      "descrizione": "Breve gara di velocità: si percorre una distanza corta spingendo il pallone solo con la testa, il naso, la spalla o l'avambraccio. Le mani non si usano.",
+      "regole": [
+        "Il pallone si spinge solo con testa, naso, spalla o avambraccio.",
+        "Il pallone non può mai essere afferrato con entrambe le mani.",
+        "Le batterie sono separate per età e capacità natatoria.",
+        "Chi perde il pallone lo recupera e riparte dal punto in cui si trovava."
+      ],
+      "varianti": [
+        "Solo naso: la versione più difficile, si spinge esclusivamente con il naso.",
+        "Slalom: si aggira un paio di riferimenti prima di arrivare.",
+        "A coppie: due concorrenti spingono lo stesso pallone insieme."
+      ],
+      "punti": "Titolo individuale",
+      "musica": {
+        "titolo": "Eye of the Tiger",
+        "artista": "Survivor",
+        "perche": "Per spingere il pallone col naso serve grinta.",
+        "url": "",
+        "ricerca": "Eye of the Tiger Survivor"
+      }
+    },
+    {
+      "id": "cavalca-materassino",
+      "nome": "Cavalca il materassino",
+      "emoji": "🏄",
+      "illustrazione": "cavalca-materassino",
+      "tipo": "individuale",
+      "durata": 10,
+      "orario": "",
+      "riserva": true,
+      "formazione": "batterie ridotte",
+      "partecipanti": "Batterie con pochi partecipanti alla volta",
+      "descrizione": "Ognuno parte seduto sul proprio materassino e deve raggiungere il lato opposto senza cadere. Chi cade può risalire e continuare, ma perde tempo prezioso.",
+      "regole": [
+        "Si parte seduti sul materassino, al segnale dell'animatore.",
+        "Chi cade può risalire e proseguire.",
+        "Vietato ostacolare o toccare il materassino degli altri.",
+        "Per sicurezza si gioca in batterie con pochi partecipanti alla volta."
+      ],
+      "varianti": [
+        "In ginocchio, per chi vuole rendersela difficile.",
+        "Con remo: si avanza usando una tavoletta o un braccio solo.",
+        "Andata e ritorno, con giro di boa a metà."
+      ],
+      "punti": "Titolo individuale",
+      "musica": {
+        "titolo": "Wipe Out",
+        "artista": "The Surfaris",
+        "perche": "La batteria delle cadute: come quando si scivola giu.",
+        "url": "",
+        "ricerca": "Wipe Out The Surfaris"
+      }
+    },
+    {
+      "id": "king-of-the-mat",
+      "nome": "King of the Mat",
+      "emoji": "🥇",
+      "illustrazione": "king-of-the-mat",
+      "tipo": "individuale",
+      "durata": 20,
+      "orario": "",
+      "riserva": true,
+      "formazione": "torneo 1 contro 1",
+      "partecipanti": "Sfide uno contro uno a eliminazione diretta",
+      "descrizione": "Il duello del pomeriggio. Due ragazzi salgono insieme sul materassino al centro della piscina e al via cercano di far cadere l'avversario spingendo solo con le mani. Torneo a eliminazione diretta fino alla finale, per incoronare il Re o la Regina del materassino.",
+      "regole": [
+        "Si sale sul materassino in ginocchio o in piedi, secondo la profondità e quanto ci si sente sicuri.",
+        "Si spinge solo con le mani e le braccia: vietati calci, prese, sgambetti e strattoni.",
+        "Chi tocca l'acqua ha perso la sfida.",
+        "Torneo a eliminazione diretta: chi perde esce, chi vince passa al turno successivo.",
+        "L'assistente bagnanti sta sempre accanto al materassino durante le sfide."
+      ],
+      "varianti": [
+        "Sfida a punti: vince chi fa cadere l'avversario due volte su tre.",
+        "Sumo seduti: si combatte da seduti, ancora più equilibrio e meno rischio.",
+        "A squadre: due contro due sullo stesso materassino, vince la coppia che resta a galla.",
+        "Torneo a fasce d'età, così i più piccoli non incontrano subito i più grandi."
+      ],
+      "punti": "Titolo individuale: Re o Regina del materassino",
+      "musica": {
+        "titolo": "Thunderstruck",
+        "artista": "AC/DC",
+        "perche": "Il duello uno contro uno merita una sigla da arena.",
+        "url": "",
+        "ricerca": "Thunderstruck AC/DC"
+      }
+    },
+    {
+      "id": "super-staffetta",
+      "nome": "Super staffetta di Ferragosto",
+      "emoji": "🏁",
+      "illustrazione": "super-staffetta",
+      "tipo": "finale",
+      "durata": 20,
+      "orario": "18:30",
+      "riserva": false,
+      "formazione": "a squadre",
+      "partecipanti": "Tutta la squadra, sei frazioni",
+      "descrizione": "Il gran finale che può ribaltare la classifica: sei frazioni, una dietro l'altra, che riassumono tutto il pomeriggio. I punti valgono il doppio.",
+      "regole": [
+        "Prima frazione: nuoto libero con pallone.",
+        "Seconda frazione: attraversamento sopra il materassino.",
+        "Terza frazione: ritorno spingendo il materassino.",
+        "Quarta frazione: trasporto di un compagno sul materassino.",
+        "Quinta frazione: percorso spingendo il pallone con la testa.",
+        "Sesta frazione: ultima vasca del capitano con il pallone in mano.",
+        "Il cambio è valido solo quando il compagno tocca la mano di chi arriva."
+      ],
+      "varianti": [
+        "Frazioni sorteggiate: l'ordine delle sei frazioni si estrae poco prima della partenza.",
+        "Frazione jolly: la squadra sceglie una frazione da far valere doppio.",
+        "Ultima vasca tutti insieme: la squadra chiude nuotando in gruppo, si ferma il tempo sull'ultimo che arriva."
+      ],
+      "punti": "Punteggio doppio: 10 / 6 / 4 / 2",
+      "musica": {
+        "titolo": "Don't Stop Me Now",
+        "artista": "Queen",
+        "perche": "Il gran finale a tutta velocita, senza fermarsi piu.",
+        "url": "",
+        "ricerca": "Don't Stop Me Now Queen"
+      }
+    }
+  ],
+  "tornei": [
+    {
+      "id": "briscola",
+      "nome": "Briscola",
+      "emoji": "🂡",
+      "illustrazione": "briscola",
+      "blocco": "A",
+      "orario": "16:15",
+      "formazione": "coppia",
+      "coppiaObbligatoria": false,
+      "giocatoriTavolo": 4,
+      "postiTotali": 16,
+      "durataPartita": 20,
+      "descrizione": "La più veloce e la più popolare: quaranta carte, un seme di briscola e la complicità con il compagno. Si gioca in quattro, a coppie incrociate, e si può giocare anche senza conoscere bene il compagno.",
+      "formula": "La formula la decidono gli organizzatori il giorno stesso, in base a quante coppie si sono iscritte: girone all'italiana se siamo pochi, gironi con finale se siamo tanti, tabellone a eliminazione se siamo tantissimi. Ogni partita dura al massimo 20 minuti e si gioca al meglio delle tre smazzate.",
+      "regole": [
+        "Si gioca in quattro, a coppie: i compagni siedono uno di fronte all'altro.",
+        "Mazzo da 40 carte, si scopre la briscola all'inizio della mano.",
+        "Ordine delle carte: asso, tre, re, cavallo, fante, poi 7, 6, 5, 4, 2.",
+        "Vince la mano chi ha la carta più alta del seme di uscita, o la briscola più alta.",
+        "Vince la smazzata la coppia che supera i 60 punti; a 60 pari la smazzata è patta.",
+        "Vietato ogni segno convenuto con il compagno: qui si gioca per divertirsi."
+      ],
+      "varianti": [
+        "Briscola chiamata in cinque, se al tavolo ci si ritrova in numero dispari.",
+        "Briscola scoperta: si gioca a carte scoperte, tutta strategia e niente fortuna.",
+        "Briscola a perdere: vince la coppia che fa meno punti."
+      ],
+      "premio": "Coppa Briscola",
+      "partita": "Ogni partita dura al massimo 20 minuti e si gioca al meglio delle tre smazzate.",
+      "gruppo": "italiana"
+    },
+    {
+      "id": "scopone",
+      "nome": "Scopone scientifico",
+      "emoji": "🂱",
+      "illustrazione": "scopone",
+      "blocco": "A",
+      "orario": "16:15",
+      "formazione": "coppia",
+      "coppiaObbligatoria": true,
+      "giocatoriTavolo": 4,
+      "postiTotali": 16,
+      "durataPartita": 30,
+      "descrizione": "Il torneo dei veterani: dieci carte a testa, niente mazzo da pescare, solo memoria e testa. Si gioca rigorosamente a coppie e il compagno va scelto bene.",
+      "formula": "La formula la decidono gli organizzatori il giorno stesso, in base a quante coppie si sono iscritte: girone all'italiana se siamo pochi, gironi con finale se siamo tanti, tabellone a eliminazione se siamo tantissimi. Ogni partita si gioca a 11 punti, con un tetto di 30 minuti: se scade il tempo vince chi è avanti.",
+      "regole": [
+        "Quattro giocatori, due coppie: i compagni siedono uno di fronte all'altro.",
+        "Tutte e 40 le carte vengono distribuite: 10 a testa, 4 scoperte sul tavolo.",
+        "Si prende con la carta uguale o con la somma esatta delle carte in tavola.",
+        "Punti: carte (chi ne ha più di 20), denari (chi ha più ori), settebello, primiera.",
+        "Ogni scopa vale un punto: si fa scopa quando si prende tutto quello che c'è in tavola.",
+        "Le ultime carte rimaste in tavola vanno a chi ha preso per ultimo, ma non è scopa."
+      ],
+      "varianti": [
+        "Scopone a 21 punti per la finale, se resta tempo.",
+        "Scopa normale a coppie, più semplice per chi non ha mai giocato a scopone.",
+        "Scopone con l'asso piglia tutto, per una versione più mossa."
+      ],
+      "premio": "Coppa Scopone",
+      "partita": "Ogni partita si gioca a 11 punti, con un tetto di 30 minuti: se scade il tempo vince chi è avanti.",
+      "gruppo": "italiana"
+    },
+    {
+      "id": "tresette",
+      "nome": "Tresette",
+      "emoji": "🂲",
+      "illustrazione": "tresette",
+      "blocco": "B",
+      "orario": "17:35",
+      "formazione": "coppia",
+      "coppiaObbligatoria": true,
+      "giocatoriTavolo": 4,
+      "postiTotali": 16,
+      "durataPartita": 25,
+      "descrizione": "Il gioco del silenzio e delle parole giuste: si può parlare solo con le frasi ammesse, e il resto lo deve capire il compagno. Elegante, lento e spietato.",
+      "formula": "La formula la decidono gli organizzatori il giorno stesso, in base a quante coppie si sono iscritte: girone all'italiana se siamo pochi, gironi con finale se siamo tanti, tabellone a eliminazione se siamo tantissimi. Ogni partita si gioca a 21 punti, con un tetto di 25 minuti: se scade il tempo vince chi è avanti.",
+      "regole": [
+        "Quattro giocatori, due coppie: i compagni siedono uno di fronte all'altro.",
+        "Mazzo da 40 carte, 10 a testa. Si deve sempre rispondere al seme di uscita.",
+        "Valore delle carte: asso 1 punto, due, tre, re, cavallo e fante un terzo di punto ciascuno.",
+        "L'ultima presa vale 1 punto.",
+        "Ordine di forza: tre, due, asso, re, cavallo, fante, 7, 6, 5, 4.",
+        "Si può parlare solo con le frasi ammesse: busso, striscio, volo. Nient'altro."
+      ],
+      "varianti": [
+        "Tresette a non prendere: vince la coppia che fa meno punti.",
+        "Tresette con l'accuso di napoletana e buon gioco, per chi lo gioca così da sempre.",
+        "Tresette in due, se qualcuno resta senza compagno."
+      ],
+      "premio": "Coppa Tresette",
+      "partita": "Ogni partita si gioca a 21 punti, con un tetto di 25 minuti: se scade il tempo vince chi è avanti.",
+      "gruppo": "italiana"
+    },
+    {
+      "id": "burraco",
+      "nome": "Burraco",
+      "emoji": "🃟",
+      "illustrazione": "burraco",
+      "blocco": "B",
+      "orario": "17:35",
+      "formazione": "coppia",
+      "coppiaObbligatoria": true,
+      "giocatoriTavolo": 4,
+      "postiTotali": 16,
+      "durataPartita": 30,
+      "descrizione": "Due mazzi francesi, le jolly, il pozzetto e la corsa a chiudere. Il torneo più affollato e il più chiacchierato di tutti.",
+      "formula": "La formula la decidono gli organizzatori il giorno stesso, in base a quante coppie si sono iscritte: girone all'italiana se siamo pochi, gironi con finale se siamo tanti, tabellone a eliminazione se siamo tantissimi. Ogni partita dura 30 minuti a tempo: vince la coppia che ha totalizzato più punti.",
+      "regole": [
+        "Quattro giocatori, due coppie: i compagni siedono uno di fronte all'altro.",
+        "Due mazzi da 54 carte, jolly compresi. Undici carte a testa e due pozzetti da undici.",
+        "Si formano scale e tris di almeno tre carte; la pinella e il jolly sostituiscono qualsiasi carta.",
+        "Burraco pulito 200 punti, burraco sporco 100 punti.",
+        "Si può chiudere solo dopo aver preso il pozzetto e aver fatto almeno un burraco.",
+        "Chiusura 100 punti; le carte rimaste in mano si sottraggono."
+      ],
+      "varianti": [
+        "Burraco a 1005 punti invece che a tempo, se il torneo parte in anticipo.",
+        "Burraco a coppie fisse per tutto il torneo, senza cambio di compagno.",
+        "Semirapido: si chiude alla seconda smazzata, chi ha più punti passa il turno."
+      ],
+      "premio": "Coppa Burraco",
+      "partita": "Ogni partita dura 30 minuti a tempo: vince la coppia che ha totalizzato più punti.",
+      "gruppo": "burraco"
+    }
+  ],
+  "programma": [
+    {
+      "ora": "16:00",
+      "area": "tutti",
+      "titolo": "Accoglienza e ritrovo a bordo piscina",
+      "nota": "Si ritira il pass, si controllano le iscrizioni"
+    },
+    {
+      "ora": "16:00",
+      "area": "ragazzi",
+      "titolo": "Formazione delle quattro squadre",
+      "nota": "Nome, capitano e grido di battaglia"
+    },
+    {
+      "ora": "16:00",
+      "area": "adulti",
+      "titolo": "Sorteggio dei tavoli e abbinamento delle coppie",
+      "nota": "Chi si è iscritto da solo viene abbinato adesso"
+    },
+    {
+      "ora": "16:15",
+      "area": "ragazzi",
+      "titolo": "Palla bollente — riscaldamento",
+      "nota": ""
+    },
+    {
+      "ora": "16:15",
+      "area": "adulti",
+      "titolo": "Blocco A — Briscola e Scopone: primo turno",
+      "nota": ""
+    },
+    {
+      "ora": "16:25",
+      "area": "ragazzi",
+      "titolo": "Staffetta sul materassino",
+      "nota": ""
+    },
+    {
+      "ora": "16:40",
+      "area": "ragazzi",
+      "titolo": "Staffetta con pallone",
+      "nota": ""
+    },
+    {
+      "ora": "16:50",
+      "area": "adulti",
+      "titolo": "Blocco A — secondo turno",
+      "nota": ""
+    },
+    {
+      "ora": "16:55",
+      "area": "ragazzi",
+      "titolo": "Trasporto del compagno",
+      "nota": ""
+    },
+    {
+      "ora": "17:10",
+      "area": "tutti",
+      "titolo": "Pausa: tutti a bere",
+      "nota": "Dieci minuti d'ombra, obbligatori"
+    },
+    {
+      "ora": "17:20",
+      "area": "ragazzi",
+      "titolo": "Il materassino traghetto",
+      "nota": ""
+    },
+    {
+      "ora": "17:25",
+      "area": "adulti",
+      "titolo": "Blocco A — finali di Briscola e Scopone",
+      "nota": ""
+    },
+    {
+      "ora": "17:35",
+      "area": "ragazzi",
+      "titolo": "Palla al capitano acquatica",
+      "nota": ""
+    },
+    {
+      "ora": "17:35",
+      "area": "adulti",
+      "titolo": "Blocco B — Tresette e Burraco: primo turno",
+      "nota": ""
+    },
+    {
+      "ora": "17:55",
+      "area": "ragazzi",
+      "titolo": "La catena acquatica",
+      "nota": ""
+    },
+    {
+      "ora": "18:05",
+      "area": "ragazzi",
+      "titolo": "Pallanuoto semplificata",
+      "nota": "Mini partite da cinque minuti"
+    },
+    {
+      "ora": "18:05",
+      "area": "adulti",
+      "titolo": "Blocco B — secondo turno",
+      "nota": ""
+    },
+    {
+      "ora": "18:30",
+      "area": "ragazzi",
+      "titolo": "Super staffetta di Ferragosto",
+      "nota": "Punti doppi: qui si decide tutto"
+    },
+    {
+      "ora": "18:35",
+      "area": "adulti",
+      "titolo": "Blocco B — finali di Tresette e Burraco",
+      "nota": ""
+    },
+    {
+      "ora": "18:50",
+      "area": "tutti",
+      "titolo": "Premiazione",
+      "nota": "Coppe, medaglie e foto di gruppo"
+    }
+  ],
+  "premi": [
+    {
+      "nome": "Squadra campione di Ferragosto",
+      "emoji": "🏆",
+      "area": "ragazzi"
+    },
+    {
+      "nome": "Miglior giocatore",
+      "emoji": "⭐",
+      "area": "ragazzi"
+    },
+    {
+      "nome": "Miglior giocatrice",
+      "emoji": "🌟",
+      "area": "ragazzi"
+    },
+    {
+      "nome": "Miglior capitano",
+      "emoji": "🧢",
+      "area": "ragazzi"
+    },
+    {
+      "nome": "Squadra più simpatica",
+      "emoji": "😄",
+      "area": "ragazzi"
+    },
+    {
+      "nome": "Premio fair play",
+      "emoji": "🤝",
+      "area": "ragazzi"
+    },
+    {
+      "nome": "Re e Regina del materassino",
+      "emoji": "👑",
+      "area": "ragazzi"
+    },
+    {
+      "nome": "Coppa Briscola",
+      "emoji": "🂡",
+      "area": "adulti"
+    },
+    {
+      "nome": "Coppa Scopone",
+      "emoji": "🂱",
+      "area": "adulti"
+    },
+    {
+      "nome": "Coppa Tresette",
+      "emoji": "🂲",
+      "area": "adulti"
+    },
+    {
+      "nome": "Coppa Burraco",
+      "emoji": "🃟",
+      "area": "adulti"
+    }
+  ],
+  "sicurezza": [
+    "L'assistente bagnanti è presente per tutta la durata dei giochi: al suo fischio il gioco si ferma subito, senza discutere.",
+    "Vietate le spinte, le trattenute e i rovesciamenti volontari dei materassini.",
+    "Non si usano materassini grandi o instabili con più ragazzi sopra contemporaneamente.",
+    "I ragazzi che non nuotano bene giocano nella zona bassa e vengono seguiti a parte.",
+    "Non si fanno gare di apnea, mai, per nessun motivo.",
+    "Vietati i tuffi durante i giochi.",
+    "Le prove di equilibrio si fanno in batterie da massimo 3 o 4 ragazzi.",
+    "Dopo circa un'ora di gioco è prevista una pausa obbligatoria per bere.",
+    "I ragazzi restano comunque sotto la responsabilità dei genitori."
+  ],
+  "regolamento": [
+    "L'iscrizione è gratuita e si chiude giovedì 13 agosto: serve a formare le squadre e i tavoli in anticipo.",
+    "Porta con te il pass, stampato o sul telefono, e mostralo all'accoglienza.",
+    "Le squadre dei ragazzi le formano gli organizzatori, equilibrate per età e capacità natatoria: non si cambiano su richiesta.",
+    "Chi si iscrive ai tornei di carte da solo viene abbinato a un compagno dagli organizzatori.",
+    "I tornei del blocco A si giocano in contemporanea, e così quelli del blocco B: al massimo un torneo per blocco.",
+    "Chi non si presenta entro dieci minuti dall'inizio del proprio turno viene sostituito.",
+    "Le decisioni dell'animatore e dell'arbitro sono definitive: si gioca per divertirsi.",
+    "In caso di maltempo l'evento viene rimandato: l'avviso arriva sul gruppo del residence."
+  ],
+  "iscrizione": {
+    "prefissoCodice": "CA",
+    "chiediAppartamento": true,
+    "messaggioBase": "Ciao! Ecco la mia iscrizione al Certamen Aquaticum del Residence Holiday.",
+    "notaRagazzi": "Per i ragazzi serve il nome di un genitore e un numero di telefono: senza non possiamo accettare l'iscrizione.",
+    "notaAdulti": "Se hai già il compagno di gioco scrivi il suo nome: vi mettiamo in coppia. Se non ce l'hai lascia il campo vuoto, ci pensiamo noi."
+  },
+  "notifiche": {
+    "telegramBotToken": "8857816817:AAEAO2_SADgpDs4aUTMOuoCmQWclxtgxOGs",
+    "telegramChatId": "1992022292"
+  },
+  "cloud": {
+    "firebaseApiKey": "AIzaSyCB1Opg-CGCPTx4JDl7QNPYHMHVChYnHcw",
+    "firebaseProjectId": "residence-holiday-ef6e9"
+  },
+  "condivisione": {
+    "urlSito": "https://johannes1979i.github.io/certamen-aquaticum/",
+    "linkGruppoTelegram": "",
+    "linkGruppoWhatsApp": ""
+  },
+  "contatti": {
+    "organizzatore": "Organizzazione Certamen Aquaticum",
+    "telefono": "3277565727",
+    "email": ""
+  },
+  "foto": [
+    "images/piscina-vasca.jpg",
+    "images/dettaglio-acqua.jpg",
+    "images/dettaglio-vasca.jpg",
+    "images/dettaglio-ombrelloni.jpg",
+    "images/piscina-sera.jpg",
+    "images/dettaglio-residence.jpg"
+  ],
+  "fotoHero": "images/piscina-vasca.jpg",
+  "locandina": {
+    "claim": "Ragazzi in acqua, adulti alle carte: che vinca il migliore!",
+    "istruzioniQr": "Inquadra il QR con la fotocamera del telefono per vedere i giochi e iscriverti",
+    "nota": "Iscrizioni gratuite entro giovedì 13 agosto",
+    "foto": "images/piscina-vasca.jpg",
+    "fotoPos": "center 55%"
+  },
+  "classifichePubbliche": {
+    "attive": true,
+    "nomiRagazzi": "iniziale",
+    "nota": "Le classifiche vengono aggiornate durante il pomeriggio dagli organizzatori."
+  },
+  "musicaAttiva": true,
+  "musicaNota": "Ogni gioco ha la sua canzone. Il collegamento apre YouTube: se l'organizzatore non ha incollato un video preciso, si apre la ricerca del brano.",
+  "formatiTorneo": {
+    "nota": "Quante coppie si presentano non si sa fino all'ultimo, e la formula giusta cambia a seconda del numero. Per questo la si sceglie il giorno stesso: qui sotto i criteri che seguono gli organizzatori, e il tabellone compare in tempo reale nella pagina delle classifiche appena viene generato.",
+    "regole": [
+      {
+        "min": 2,
+        "max": 2,
+        "formato": "sfida",
+        "nome": "Sfida diretta",
+        "descrizione": "Due sole coppie: si gioca il testa a testa al meglio delle tre partite.",
+        "turni": "3 partite"
+      },
+      {
+        "min": 3,
+        "max": 6,
+        "formato": "italiana",
+        "nome": "Girone all'italiana",
+        "descrizione": "Tutte le coppie si incontrano una volta sola. Vince chi fa più punti in classifica: è la formula più giusta, perché nessuno esce per un colpo di sfortuna.",
+        "turni": "una partita contro ognuna"
+      },
+      {
+        "min": 7,
+        "max": 12,
+        "formato": "gironi",
+        "nome": "Due gironi e finale",
+        "descrizione": "Le coppie vengono divise in due gironi all'italiana. Le prime due di ogni girone vanno alle semifinali incrociate, poi la finale e la finalina per il terzo posto.",
+        "turni": "girone + semifinali + finale"
+      },
+      {
+        "min": 13,
+        "max": 128,
+        "formato": "eliminazione",
+        "nome": "Tabellone a eliminazione diretta",
+        "descrizione": "Con tante coppie non c'è tempo per i gironi: si fa il tabellone, chi perde esce. Le coppie in eccesso rispetto alla potenza di due riposano al primo turno.",
+        "turni": "turni a eliminazione fino alla finale"
+      }
+    ]
+  },
+  "gruppiCarte": [
+    {
+      "id": "italiana",
+      "nome": "Torneo dei giochi all'italiana",
+      "nomeBreve": "Giochi all'italiana",
+      "emoji": "🂡",
+      "illustrazione": "briscola",
+      "colore": "#1f8a5b",
+      "tornei": [
+        "briscola",
+        "scopone",
+        "tresette"
+      ],
+      "postiTotali": 48,
+      "sottotitolo": "Scopone, briscola e tresette: le carte di sempre, con il mazzo da 40",
+      "descrizione": "Un'unica iscrizione per i tre tornei con le carte italiane. Scegli a quali vuoi partecipare: puoi farne anche più di uno, purché siano in blocchi orari diversi. Oltre alla coppa di ogni torneo c'è la classifica generale dei giochi all'italiana, che somma i punti dei tre.",
+      "premio": "Coppa dei giochi all'italiana",
+      "nota": "I tre tornei hanno ognuno la sua coppa, ma i punti si sommano anche in una classifica unica."
+    },
+    {
+      "id": "burraco",
+      "nome": "Torneo di Burraco",
+      "nomeBreve": "Burraco",
+      "emoji": "🃟",
+      "illustrazione": "burraco",
+      "colore": "#1c6fa8",
+      "tornei": [
+        "burraco"
+      ],
+      "postiTotali": 16,
+      "sottotitolo": "Due mazzi, il pozzetto e la corsa a chiudere",
+      "descrizione": "Il torneo di burraco ha la sua iscrizione a parte, il suo tavolo e la sua coppa. Si gioca rigorosamente a coppie: se non hai il compagno te ne troviamo uno.",
+      "premio": "Coppa Burraco",
+      "nota": "Il burraco si gioca nel blocco B: chi si iscrive qui può comunque fare un torneo all'italiana nel blocco A."
+    }
+  ],
+  "formatiSquadre": {
+    "nota": "Il numero delle squadre si decide dopo le iscrizioni. La regola è semplice: squadre abbastanza numerose da far giocare tutti, ma non così grandi da lasciare qualcuno a guardare. Sotto i criteri che segue la procedura guidata.",
+    "perSquadraIdeale": 6,
+    "perSquadraMin": 4,
+    "perSquadraMax": 8,
+    "regole": [
+      {
+        "min": 8,
+        "max": 11,
+        "squadre": 2,
+        "descrizione": "Pochi iscritti: due squadre, sfide dirette per tutto il pomeriggio."
+      },
+      {
+        "min": 12,
+        "max": 17,
+        "squadre": 3,
+        "descrizione": "Tre squadre: girone continuo, ognuna incontra le altre."
+      },
+      {
+        "min": 18,
+        "max": 26,
+        "squadre": 4,
+        "descrizione": "Quattro squadre: la formula classica, punteggio 5/3/2/1."
+      },
+      {
+        "min": 27,
+        "max": 34,
+        "squadre": 5,
+        "descrizione": "Cinque squadre: si aggiunge una posizione al punteggio."
+      },
+      {
+        "min": 35,
+        "max": 99,
+        "squadre": 6,
+        "descrizione": "Sei squadre: gare a batterie, due squadre alla volta in vasca."
+      }
+    ],
+    "criteriBilanciamento": [
+      "Le età vengono distribuite a serpentina: dal più grande al più piccolo e poi al contrario, così l'età media delle squadre resta quasi identica.",
+      "Chi ha dichiarato di non nuotare bene viene sparpagliato: mai tutti nella stessa squadra.",
+      "Maschi e femmine vengono distribuiti in modo uniforme.",
+      "Fratelli, sorelle e amici inseparabili si possono bloccare insieme prima del sorteggio.",
+      "Dopo il sorteggio la procedura fa qualche scambio per avvicinare ancora di più le età medie."
+    ]
+  }
+}

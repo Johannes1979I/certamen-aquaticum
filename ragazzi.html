@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Giochi in acqua — Certamen Aquaticum</title>
+<meta name="description" content="I giochi in acqua di Ferragosto al Residence Holiday: regole, varianti, squadre e punteggi. Per ragazzi dai 12 ai 17 anni." />
+<meta name="theme-color" content="#14c4b4" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤽</text></svg>" />
+<link rel="stylesheet" href="stile.css" />
+<script src="firebase.js"></script>
+<script src="comune.js"></script>
+<script src="illustrazioni.js"></script>
+<style>
+.hero.area .velo{ background:linear-gradient(160deg, rgba(6,80,92,.86), rgba(20,196,180,.72) 60%, rgba(11,127,212,.6)); }
+.punti-tab{ max-width:520px; margin:0 auto; }
+
+/* la canzone abbinata al gioco */
+.musica-chip{
+  display:flex; align-items:center; gap:11px; text-decoration:none; color:inherit;
+  background:linear-gradient(120deg, rgba(255,0,0,.07), rgba(124,77,255,.09));
+  border:1px solid rgba(10,37,64,.12); border-radius:15px; padding:11px 14px;
+  transition:transform .12s ease, border-color .12s ease;
+}
+.musica-chip:hover{ transform:translateY(-2px); border-color:var(--c1); }
+.musica-chip .nota-mus{ font-size:1.3rem; line-height:1; }
+.musica-chip b{ display:block; font-size:.95rem; }
+.musica-chip small{ display:block; color:var(--muted); font-size:.82rem; margin-top:2px; }
+.musica-chip .freccia-mus{
+  margin-left:auto; background:#ff0000; color:#fff; width:30px; height:30px; flex:0 0 30px;
+  border-radius:50%; display:grid; place-items:center; font-size:.8rem;
+}
+</style>
+</head>
+<body>
+
+<nav class="barra no-stampa">
+  <div class="wrap barra-dentro">
+    <a class="marchio" href="index.html">
+      <span class="goccia">🏊</span><span id="marchioNome">Certamen Aquaticum</span>
+    </a>
+    <div class="menu">
+      <a href="index.html">Home</a>
+      <a href="ragazzi.html">🤽 Ragazzi</a>
+      <a href="carte.html">🃏 Adulti</a>
+      <a href="programma.html">🕓 Programma</a>
+      <a href="classifiche.html">🏆 Classifiche</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+<header class="hero area">
+  <div class="sfondo" id="heroSfondo"></div>
+  <div class="velo"></div>
+  <div class="hero-dentro wrap">
+    <span class="targhetta" id="heroEta">12 – 17 anni</span>
+    <h1 id="heroTitolo">Giochi in acqua</h1>
+    <p class="sottotitolo" id="heroSottotitolo"></p>
+    <div class="conto" style="margin-top:22px">
+      <div class="cella"><span class="n" id="nGiochi">—</span><span class="u">giochi</span></div>
+      <div class="cella"><span class="n" id="nIscritti">—</span><span class="u">iscritti</span></div>
+      <div class="cella"><span class="n">🚩</span><span class="u">a squadre</span></div>
+    </div>
+    <div class="azioni" style="margin-top:26px">
+      <a href="iscrizione-ragazzi.html" class="btn btn-a btn-grande" id="btnIscrizione">🎟️ Iscriviti ai giochi in acqua</a>
+      <a href="#elenco" class="btn btn-fantasma">🌊 Vedi tutti i giochi</a>
+    </div>
+  </div>
+  <svg class="onde" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#f7fbff" d="M0,64L60,58.7C120,53,240,43,360,48C480,53,600,75,720,74.7C840,75,960,53,1080,45.3C1200,37,1320,43,1380,45.3L1440,48L1440,120L0,120Z"></path>
+  </svg>
+</header>
+
+<!-- ============================ COME FUNZIONA ============================ -->
+<section id="come">
+  <div class="wrap">
+    <h2 class="titolo-sez">Come <span class="em">funziona</span></h2>
+    <p class="occhiello" id="comeDesc"></p>
+
+    <div class="nota-box info" style="margin-bottom:26px">
+      <h3 style="font-size:1.06rem;margin-bottom:6px">🚩 Quante squadre saranno?</h3>
+      <p id="notaSquadre"></p>
+    </div>
+
+    <h3 style="text-align:center;margin-bottom:16px;font-size:1.15rem">⚖️ Come vengono formate</h3>
+    <ul class="lista" id="listaBilanciamento"></ul>
+
+    <h3 style="text-align:center;margin:38px 0 14px;font-size:1.15rem">🏅 Come si fanno i punti</h3>
+    <div class="tabella-scroll punti-tab">
+      <table class="tab">
+        <thead><tr><th>Posizione nel gioco</th><th class="n">Punti</th></tr></thead>
+        <tbody id="tabPunti"></tbody>
+      </table>
+    </div>
+    <p class="centro" style="margin-top:14px;color:var(--muted);max-width:640px;margin-left:auto;margin-right:auto" id="notaPunti"></p>
+  </div>
+</section>
+
+<!-- ============================== I GIOCHI =============================== -->
+<section id="elenco" style="background:#fff;border-top:1px solid var(--linea);border-bottom:1px solid var(--linea)">
+  <div class="wrap">
+    <h2 class="titolo-sez">I <span class="em">giochi</span>, uno per uno</h2>
+    <p class="occhiello">Apri il gioco che ti interessa per leggere le regole. Sotto ogni gioco trovi anche qualche variante, se l'animatore vuole cambiare le carte in tavola.</p>
+
+    <div class="azioni no-stampa" style="margin-bottom:28px">
+      <button class="btn btn-p btn-piccolo" data-tipo="programma" id="fProgramma">In programma</button>
+      <button class="btn btn-chiaro btn-piccolo" data-tipo="squadre">A squadre</button>
+      <button class="btn btn-chiaro btn-piccolo" data-tipo="individuale">Individuali</button>
+      <button class="btn btn-chiaro btn-piccolo" data-tipo="tutti">Tutti quanti</button>
+    </div>
+
+    <div class="giochi" id="giochi"></div>
+    <p class="centro" style="margin-top:20px;color:var(--muted);font-size:.94rem" id="notaRiserva"></p>
+  </div>
+</section>
+
+<!-- ============================ DOVE ANDARE ============================== -->
+<section id="altro">
+  <div class="wrap">
+    <h2 class="titolo-sez">E adesso?</h2>
+    <div class="tessere" style="max-width:1000px;margin:0 auto">
+      <a class="tessera" href="iscrizione-ragazzi.html" style="--tc:#ffc233" id="tessIscr">
+        <div class="tico">🎟️</div><h3>Iscriviti</h3>
+        <p>Due minuti: nome, età, un recapito del genitore e ricevi il pass con il codice.</p>
+        <span class="vai">Vai all'iscrizione →</span>
+      </a>
+      <a class="tessera" href="programma.html" style="--tc:#7c4dff">
+        <div class="tico">🕓</div><h3>Programma</h3>
+        <p>Gli orari di tutti i giochi, dalla prima gara alla premiazione.</p>
+        <span class="vai">Vedi il programma →</span>
+      </a>
+      <a class="tessera" href="regole.html" style="--tc:#ff6b6b">
+        <div class="tico">🛟</div><h3>Sicurezza in acqua</h3>
+        <p>Le regole che valgono per tutti: l'assistente bagnanti ha sempre l'ultima parola.</p>
+        <span class="vai">Leggi le regole →</span>
+      </a>
+      <a class="tessera" href="classifiche.html" style="--tc:#0b7fd4">
+        <div class="tico">🏆</div><h3>Classifiche</h3>
+        <p>I punteggi delle squadre, aggiornati durante il pomeriggio.</p>
+        <span class="vai">Vedi le classifiche →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="piede"><div class="wrap" id="piede"></div></footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =========================================================================
+   Pagina dei giochi in acqua. L'elenco, le regole e le varianti arrivano
+   tutte da contenuti.json; l'illustrazione la disegna illustrazioni.js.
+   ========================================================================= */
+var $ = CA.$, V = CA.V, testo = CA.testo, crea = CA.crea;
+var DATI = {}, FILTRO = 'programma';
+
+CA.carica().then(function(d){
+  DATI = d;
+  disegna();
+  CA.segnaPagina();
+  CA.disegnaPiede('piede');
+  CA.avviaContatori(function(c){
+    testo('nIscritti', String(c.ragazzi || 0));
+  });
+}).catch(function(e){
+  CA.toast('Non riesco a leggere i contenuti: ' + e.message, 9000);
+});
+
+function disegna(){
+  var t = V(DATI.tema, {}), ev = V(DATI.evento, {});
+  var area = V(V(DATI.aree, {}).ragazzi, {});
+  var giochi = V(DATI.giochi, []);
+
+  testo('marchioNome', V(t.titolo, 'Certamen Aquaticum'));
+  testo('heroTitolo', V(area.titoloLungo, V(area.nome, 'Giochi in acqua')));
+  testo('heroSottotitolo', V(area.sottotitolo, ''));
+  testo('heroEta', V(area.eta, ''));
+  testo('nGiochi', String(giochi.length));
+  var foto = V(DATI.fotoHero, (V(DATI.foto, [])[0] || ''));
+  if(foto) $('heroSfondo').style.backgroundImage = 'url("' + encodeURI(foto) + '")';
+
+  if(CA.iscrizioniChiuse()){
+    var b = $('btnIscrizione');
+    if(b){ b.textContent = '⛔ Iscrizioni chiuse'; b.removeAttribute('href'); b.className = 'btn btn-chiaro btn-grande'; }
+    var t = $('tessIscr');
+    if(t){ t.removeAttribute('href'); t.style.opacity = '.55'; }
+  }
+
+  testo('comeDesc', V(area.descrizione, ''));
+  testo('notaSquadre', V(area.squadreNota, '') + ' ' + V(V(DATI.formatiSquadre, {}).nota, ''));
+  disegnaElenco('listaBilanciamento', V(V(DATI.formatiSquadre, {}).criteriBilanciamento, []));
+  disegnaPunti(V(area.punteggio, {}));
+  disegnaGiochi();
+  collegaFiltri();
+
+  var riserva = giochi.filter(function(g){ return g.riserva; }).length;
+  testo('notaRiserva', riserva
+    ? ('Nel programma ci stanno ' + (giochi.length - riserva) + ' giochi: gli altri ' + riserva +
+       ' restano di riserva e si giocano se avanza tempo o se il meteo cambia i piani.')
+    : '');
+}
+
+function disegnaPunti(p){
+  var t = $('tabPunti');
+  t.textContent = '';
+  [['🥇 Primo posto', p.primo], ['🥈 Secondo posto', p.secondo],
+   ['🥉 Terzo posto', p.terzo], ['4️⃣ Quarto posto', p.quarto]].forEach(function(r){
+    var tr = document.createElement('tr');
+    var td1 = document.createElement('td'); td1.textContent = r[0];
+    var td2 = document.createElement('td'); td2.className = 'n'; td2.textContent = String(V(r[1], 0));
+    tr.appendChild(td1); tr.appendChild(td2); t.appendChild(tr);
+  });
+  testo('notaPunti', V(p.nota, ''));
+}
+
+/* ------------------------------- i giochi ------------------------------- */
+function disegnaGiochi(){
+  var el = $('giochi');
+  el.textContent = '';
+  var tutti = V(DATI.giochi, []);
+  var lista = tutti.filter(function(g){
+    if(FILTRO === 'tutti') return true;
+    if(FILTRO === 'programma') return !g.riserva;
+    if(FILTRO === 'squadre') return g.tipo === 'squadre' || g.tipo === 'finale' || g.tipo === 'riscaldamento';
+    if(FILTRO === 'individuale') return g.tipo === 'individuale';
+    return true;
+  });
+
+  if(!lista.length){
+    el.appendChild(crea('p', null, 'Nessun gioco in questa selezione.'));
+    return;
+  }
+
+  lista.forEach(function(g, i){
+    el.appendChild(cartaGioco(g, tutti.indexOf(g) + 1));
+  });
+}
+
+function cartaGioco(g, numero){
+  var art = crea('article', 'gioco');
+
+  var dis = crea('div', 'disegno');
+  ILL.disegna(dis, V(g.illustrazione, 'generica'), 'Illustrazione: ' + V(g.nome, ''));
+  var num = crea('span', 'num', String(numero));
+  dis.appendChild(num);
+  art.appendChild(dis);
+
+  var dentro = crea('div', 'dentro');
+  var h = crea('h3');
+  h.appendChild(crea('span', null, V(g.emoji, '🎯')));
+  h.appendChild(crea('span', null, V(g.nome, '')));
+  dentro.appendChild(h);
+
+  var eti = crea('div', 'etichette');
+  if(g.orario) eti.appendChild(crea('span', 'eti', '🕓 ' + g.orario));
+  if(g.durata) eti.appendChild(crea('span', 'eti grigia', '⏱️ ' + g.durata + ' min'));
+  eti.appendChild(crea('span', 'eti verde', tipoEtichetta(g.tipo)));
+  if(g.riserva) eti.appendChild(crea('span', 'eti gialla', '🔄 di riserva'));
+  if(g.punti) eti.appendChild(crea('span', 'eti', '🏅 ' + g.punti));
+  dentro.appendChild(eti);
+
+  dentro.appendChild(crea('p', 'desc', V(g.descrizione, '')));
+
+  if(g.partecipanti){
+    var p = crea('p', null, '👥 ' + g.partecipanti);
+    p.style.cssText = 'font-size:.9rem;color:var(--muted)';
+    dentro.appendChild(p);
+  }
+
+  /* la canzone del gioco: apre YouTube in una scheda nuova */
+  var link = CA.linkMusica(g.musica);
+  if(DATI.musicaAttiva !== false && link){
+    var m = crea('a', 'musica-chip');
+    m.href = link;
+    m.target = '_blank';
+    m.rel = 'noopener noreferrer';
+    m.appendChild(crea('span', 'nota-mus', '🎵'));
+    var mt = crea('span');
+    mt.appendChild(crea('b', null, CA.titoloMusica(g.musica)));
+    if(g.musica && g.musica.perche) mt.appendChild(crea('small', null, g.musica.perche));
+    m.appendChild(mt);
+    m.appendChild(crea('span', 'freccia-mus', '▶'));
+    dentro.appendChild(m);
+  }
+
+  if((g.regole || []).length) dentro.appendChild(blocco('📋 Regole', g.regole, true));
+  if((g.varianti || []).length) dentro.appendChild(blocco('✨ Varianti da provare', g.varianti, false));
+
+  art.appendChild(dentro);
+  return art;
+}
+
+function tipoEtichetta(t){
+  if(t === 'riscaldamento') return '🔥 riscaldamento';
+  if(t === 'individuale') return '🙋 gara individuale';
+  if(t === 'finale') return '🏁 gran finale';
+  return '🚩 gara a squadre';
+}
+
+function blocco(titolo, voci, aperto){
+  var d = document.createElement('details');
+  d.className = 'blocco';
+  if(aperto) d.open = false;
+  var s = document.createElement('summary');
+  s.textContent = titolo + ' (' + voci.length + ')';
+  d.appendChild(s);
+  var ul = document.createElement('ul');
+  voci.forEach(function(v){ ul.appendChild(crea('li', null, v)); });
+  d.appendChild(ul);
+  return d;
+}
+
+function collegaFiltri(){
+  var b = document.querySelectorAll('[data-tipo]');
+  for(var i=0;i<b.length;i++){
+    b[i].addEventListener('click', function(){
+      for(var j=0;j<b.length;j++){ b[j].className = 'btn btn-chiaro btn-piccolo'; }
+      this.className = 'btn btn-p btn-piccolo';
+      FILTRO = this.getAttribute('data-tipo');
+      disegnaGiochi();
+    });
+  }
+}
+
+function disegnaElenco(id, voci){
+  var el = $(id);
+  el.textContent = '';
+  voci.forEach(function(v){ el.appendChild(crea('li', null, v)); });
+}
+</script>
+</body>
+</html>

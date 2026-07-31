@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Regole e sicurezza — Certamen Aquaticum</title>
+<meta name="description" content="Le regole di sicurezza in acqua e il regolamento delle iscrizioni del Certamen Aquaticum al Residence Holiday." />
+<meta name="theme-color" content="#ff6b6b" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>" />
+<link rel="stylesheet" href="stile.css" />
+<script src="firebase.js"></script>
+<script src="comune.js"></script>
+<style>
+.hero.corta .hero-dentro{ padding:clamp(28px,4vw,52px) 0 clamp(52px,6vw,74px); }
+.hero.corta .velo{ background:linear-gradient(160deg, rgba(120,20,30,.84), rgba(255,107,107,.6) 60%, rgba(255,194,51,.5)); }
+</style>
+</head>
+<body>
+
+<nav class="barra no-stampa">
+  <div class="wrap barra-dentro">
+    <a class="marchio" href="index.html"><span class="goccia">🏊</span><span id="marchioNome">Certamen Aquaticum</span></a>
+    <div class="menu">
+      <a href="index.html">Home</a>
+      <a href="ragazzi.html">🤽 Ragazzi</a>
+      <a href="carte.html">🃏 Adulti</a>
+      <a href="programma.html">🕓 Programma</a>
+      <a href="classifiche.html">🏆 Classifiche</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+<header class="hero corta">
+  <div class="sfondo" id="heroSfondo"></div>
+  <div class="velo"></div>
+  <div class="hero-dentro wrap">
+    <span class="targhetta">📋 Da leggere prima</span>
+    <h1>Regole e sicurezza</h1>
+    <p class="sottotitolo">In acqua non si scherza, e l'iscrizione ha due o tre regole semplici. Cinque minuti di lettura, poi si gioca.</p>
+  </div>
+  <svg class="onde" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#f7fbff" d="M0,64L60,58.7C120,53,240,43,360,48C480,53,600,75,720,74.7C840,75,960,53,1080,45.3C1200,37,1320,43,1380,45.3L1440,48L1440,120L0,120Z"></path>
+  </svg>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2 class="titolo-sez">🛟 Sicurezza in <span class="em">acqua</span></h2>
+    <p class="occhiello">Valgono per tutti, per tutto il pomeriggio. L'assistente bagnanti ha sempre l'ultima parola.</p>
+    <ul class="lista pericolo" id="listaSicurezza"></ul>
+  </div>
+</section>
+
+<section style="background:#fff;border-top:1px solid var(--linea);border-bottom:1px solid var(--linea)">
+  <div class="wrap">
+    <h2 class="titolo-sez">📋 Regolamento delle <span class="em">iscrizioni</span></h2>
+    <ul class="lista" id="listaRegolamento"></ul>
+    <div id="boxQuota" style="display:none;margin-top:30px">
+      <div class="nota-box">
+        <h3 id="quotaTitolo" style="margin-bottom:6px"></h3>
+        <p id="quotaTesto"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2 class="titolo-sez">🏆 Cosa si <span class="em">vince</span></h2>
+    <p class="occhiello">Alla fine si premia tutto: chi ha vinto, chi ha fatto ridere e chi si è comportato meglio.</p>
+    <div class="schede" id="premiElenco"></div>
+    <div class="azioni" style="margin-top:34px">
+      <a href="classifiche.html" class="btn btn-p">🏆 Vedi le classifiche</a>
+      <button class="btn btn-chiaro no-stampa" onclick="window.print()">🖨️ Stampa questa pagina</button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="piede"><div class="wrap" id="piede"></div></footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+var $ = CA.$, V = CA.V, testo = CA.testo, crea = CA.crea;
+
+CA.carica().then(function(d){
+  testo('marchioNome', V(V(d.tema,{}).titolo, 'Certamen Aquaticum'));
+  var foto = V(d.foto, [])[2] || V(d.fotoHero, '');
+  if(foto) $('heroSfondo').style.backgroundImage = 'url("' + encodeURI(foto) + '")';
+
+  elenco('listaSicurezza', V(d.sicurezza, []));
+  elenco('listaRegolamento', V(d.regolamento, []));
+
+  var q = V(d.quota, {});
+  if(q.attiva === true){
+    $('boxQuota').style.display = '';
+    testo('quotaTitolo', V(q.emoji,'🏆') + ' ' + V(q.titolo, 'La quota'));
+    testo('quotaTesto', V(q.spiegazione,'') + ' Importo: ' + CA.eur(q.importo) + ' a persona. ' + V(q.nota,''));
+  }
+
+  var el = $('premiElenco');
+  el.textContent = '';
+  V(d.premi, []).forEach(function(p){
+    var s = crea('div', 'scheda');
+    s.appendChild(crea('div', 'ico', V(p.emoji, '🏅')));
+    s.appendChild(crea('h3', null, V(p.nome, '')));
+    s.appendChild(crea('p', null, p.area === 'ragazzi' ? 'Giochi in acqua' : 'Tornei di carte'));
+    el.appendChild(s);
+  });
+
+  CA.segnaPagina();
+  CA.disegnaPiede('piede');
+}).catch(function(e){ CA.toast('Non riesco a leggere i contenuti: ' + e.message, 9000); });
+
+function elenco(id, voci){
+  var el = $(id);
+  el.textContent = '';
+  voci.forEach(function(v){ el.appendChild(crea('li', null, v)); });
+}
+</script>
+</body>
+</html>

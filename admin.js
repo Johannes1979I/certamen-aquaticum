@@ -1,0 +1,2095 @@
+/* =========================================================================
+   admin.js — l'area organizzatori del Certamen Aquaticum.
+
+   Tutto quello che conta vive nel database (Firestore), come per le
+   prenotazioni della festa:
+     · iscrizioni            -> collezione "iscrizioni"
+     · squadre e punteggi    -> documento "stato_certamen/gara"
+     · classifiche pubbliche -> documento "pubblico_certamen/classifica"
+     · contatori pubblici    -> documento "pubblico_certamen/contatore"
+   Nel browser non resta niente di importante: si può lavorare dal telefono
+   a bordo piscina e ritrovare tutto sul computer.
+   ========================================================================= */
+(function () {
+  'use strict';
+
+  var $ = CA.$, V = CA.V, crea = CA.crea, testo = CA.testo;
+  var PASSWORD = 'holiday2026';
+
+  var DATI = {};            /* contenuti.json (modificabile) */
+  var ISCR = [];            /* le iscrizioni lette dal database */
+  var STATO = statoVuoto(); /* squadre, punteggi, tornei */
+  var SESS = null;          /* sessione Firebase */
+  var CARICATO = false;     /* ho letto davvero i contenuti? */
+  var STOSCRIVENDO = false; /* sospende l'aggiornamento automatico */
+  var FILTRO = 'tutti', FILTRO_PUNTI = 'ragazzi';
+  var TORNEO_APERTO = null;
+  var SCELTA = null;        /* pedina selezionata col dito */
+  var sqToccato = false;    /* ho già scelto io quante squadre fare? */
+
+  var COLORI_SQ = ['#0b7fd4', '#ff6b6b', '#ffc233', '#14c4b4', '#7c4dff', '#1f8a5b', '#e8734a', '#8d5ac2'];
+  var NOMI_SQ = ['Delfini', 'Squali', 'Tartarughe', 'Meduse', 'Orche', 'Piovre', 'Granchi', 'Stelle marine'];
+
+  function statoVuoto() {
+    return { squadre: [], configSquadre: {}, risultati: {}, titoli: [], tornei: {}, bonus: {} };
+  }
+
+  /* ========================= ACCESSO ALLA PAGINA ======================== */
+  $('btnEntra').addEventListener('click', entra);
+  $('pwd').addEventListener('keydown', function (e) { if (e.key === 'Enter') entra(); });
+
+  function entra() {
+    if ($('pwd').value !== PASSWORD) {
+      var e = $('e_pwd');
+      e.textContent = 'Password sbagliata.';
+      e.className = 'errore visibile';
+      return;
+    }
+    CA.memScrivi('ca_admin_ok', '1');
+    apri();
+  }
+  function apri() {
+    $('cancello').style.display = 'none';
+    $('pannello').style.display = '';
+    avvia();
+  }
+  if (CA.memLeggi('ca_admin_ok') === '1') { apri(); }
+
+  /* ============================== AVVIO ================================ */
+  function avvia() {
+    CA.carica().then(function (d) {
+      DATI = d;
+      CARICATO = true;
+      riempiContenuti();
+      collega();
+      var s = sessLeggi();
+      if (s) { SESS = s; dopoLogin(); } else { mostraLogin(); }
+      disegnaTutto();
+    }).catch(function (e) {
+      CA.toast('⚠️ Non riesco a leggere contenuti.json: ' + e.message, 9000);
+    });
+  }
+
+  function collega() {
+    /* linguette */
+    var b = document.querySelectorAll('[data-vista]');
+    for (var i = 0; i < b.length; i++) {
+      b[i].addEventListener('click', function () {
+        for (var j = 0; j < b.length; j++) b[j].classList.remove('attiva');
+        this.classList.add('attiva');
+        var v = this.getAttribute('data-vista');
+        var viste = document.querySelectorAll('.vista');
+        for (var k = 0; k < viste.length; k++) viste[k].classList.remove('attiva');
+        $('v-' + v).classList.add('attiva');
+        window.scrollTo(0, 0);
+        if (v === 'squadre') disegnaSquadre();
+        if (v === 'tornei') disegnaTornei();
+        if (v === 'punteggi') disegnaPunteggi();
+      });
+    }
+
+    $('btnLogin').addEventListener('click', login);
+    $('fbPwd').addEventListener('keydown', function (e) { if (e.key === 'Enter') login(); });
+    $('btnEsci').addEventListener('click', esci);
+    $('btnRicarica').addEventListener('click', function () { ricarica(true); });
+
+    /* filtri del registro */
+    var fi = document.querySelectorAll('[data-fi]');
+    for (var n = 0; n < fi.length; n++) {
+      fi[n].addEventListener('click', function () {
+        for (var m = 0; m < fi.length; m++) fi[m].className = 'btn btn-chiaro btn-piccolo';
+        this.className = 'btn btn-p btn-piccolo';
+        FILTRO = this.getAttribute('data-fi');
+        disegnaIscritti();
+      });
+    }
+    $('cerca').addEventListener('input', disegnaIscritti);
+    $('cerca').addEventListener('focus', function () { STOSCRIVENDO = true; });
+    $('cerca').addEventListener('blur', function () { STOSCRIVENDO = false; });
+    $('btnAggiungi').addEventListener('click', apriFormManuale);
+    $('btnCsv').addEventListener('click', esportaCsv);
+    $('btnSincronizza').addEventListener('click', sincronizzaContatori);
+
+    /* squadre */
+    ['sqNumero', 'sqPer'].forEach(function (id) {
+      $(id).addEventListener('input', function () { sqToccato = true; });
+    });
+    $('btnGeneraSquadre').addEventListener('click', generaSquadre);
+    $('btnSvuotaSquadre').addEventListener('click', function () {
+      if (!confirm('Sicuro? Cancello le squadre e ricomincio da capo.')) return;
+      STATO.squadre = [];
+      salvaStato();
+      disegnaSquadre();
+    });
+    $('btnSalvaSquadre').addEventListener('click', function () {
+      salvaStato(true);
+    });
+
+    /* punteggi */
+    var fp = document.querySelectorAll('[data-fp]');
+    for (var p = 0; p < fp.length; p++) {
+      fp[p].addEventListener('click', function () {
+        for (var q = 0; q < fp.length; q++) fp[q].className = 'btn btn-chiaro btn-piccolo';
+        this.className = 'btn btn-p btn-piccolo';
+        FILTRO_PUNTI = this.getAttribute('data-fp');
+        $('puntiRagazzi').style.display = FILTRO_PUNTI === 'ragazzi' ? '' : 'none';
+        $('puntiCarte').style.display = FILTRO_PUNTI === 'carte' ? '' : 'none';
+        $('puntiTitoli').style.display = FILTRO_PUNTI === 'titoli' ? '' : 'none';
+      });
+    }
+
+    /* pubblicazione */
+    $('btnPubblicaClass').addEventListener('click', pubblicaClassifiche);
+    $('btnPubblicaContenuti').addEventListener('click', pubblicaContenuti);
+    $('btnScarica').addEventListener('click', scaricaContenuti);
+    $('btnSalvaGh').addEventListener('click', salvaGh);
+    $('btnVaiPubblica').addEventListener('click', function () {
+      document.querySelector('[data-vista="pubblica"]').click();
+    });
+    caricaGh();
+
+    /* stampe */
+    var st = document.querySelectorAll('[data-stampa]');
+    for (var s = 0; s < st.length; s++) {
+      st[s].addEventListener('click', function () { stampa(this.getAttribute('data-stampa')); });
+    }
+    $('btnChiudiFoglio').addEventListener('click', chiudiFoglio);
+    $('btnStampaFoglio').addEventListener('click', function () {
+      document.body.classList.add('stampa-foglio');
+      window.print();
+      setTimeout(function () { document.body.classList.remove('stampa-foglio'); }, 600);
+    });
+
+    /* mentre scrivo nei campi, l'aggiornamento automatico si ferma */
+    document.addEventListener('focusin', function (e) {
+      var t = e.target.tagName;
+      if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT') STOSCRIVENDO = true;
+    });
+    document.addEventListener('focusout', function () {
+      setTimeout(function () {
+        var a = document.activeElement;
+        var t = a ? a.tagName : '';
+        STOSCRIVENDO = (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT');
+      }, 60);
+    });
+
+    /* aggiornamento automatico del registro: ogni minuto, mai mentre scrivo */
+    setInterval(function () {
+      if (document.hidden || STOSCRIVENDO || !SESS) return;
+      ricarica(false);
+    }, 60000);
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden && SESS && !STOSCRIVENDO) ricarica(false);
+    });
+  }
+
+  /* ============================== LOGIN ================================ */
+  function sessSalva() { CA.memScrivi('ca_fbsess', JSON.stringify(SESS)); }
+  function sessLeggi() {
+    try {
+      var s = JSON.parse(CA.memLeggi('ca_fbsess') || 'null');
+      return (s && s.refreshToken) ? s : null;
+    } catch (e) { return null; }
+  }
+
+  function login() {
+    var email = $('fbEmail').value.trim(), pwd = $('fbPwd').value;
+    if (!email || !pwd) { erroreLogin('Scrivi email e password.'); return; }
+    var b = $('btnLogin');
+    b.disabled = true; b.textContent = '⏳ Entro…';
+    FB.signIn(email, pwd).then(function (s) {
+      SESS = { idToken: s.idToken, refreshToken: s.refreshToken, scadenza: s.scadenza, email: s.email };
+      sessSalva();
+      erroreLogin('');
+      dopoLogin();
+    }).catch(function (e) {
+      erroreLogin(messaggioFirebase(e.message));
+    }).then(function () {
+      b.disabled = false; b.textContent = 'Entra nel database';
+    });
+  }
+  function erroreLogin(m) {
+    var e = $('e_login');
+    e.textContent = m || '';
+    e.className = 'errore' + (m ? ' visibile' : '');
+  }
+  function messaggioFirebase(m) {
+    if (/INVALID_LOGIN|INVALID_PASSWORD|EMAIL_NOT_FOUND|INVALID_EMAIL/.test(m)) return 'Email o password sbagliate.';
+    if (/TOO_MANY_ATTEMPTS/.test(m)) return 'Troppi tentativi: aspetta qualche minuto.';
+    return 'Non riesco a entrare: ' + m;
+  }
+  function esci() {
+    SESS = null;
+    CA.memCancella('ca_fbsess');
+    mostraLogin();
+    ISCR = [];
+    disegnaTutto();
+  }
+  function mostraLogin() {
+    $('boxLogin').style.display = '';
+    $('boxConnesso').style.display = 'none';
+    testo('statoCloud', 'non collegato al database');
+  }
+  function dopoLogin() {
+    $('boxLogin').style.display = 'none';
+    $('boxConnesso').style.display = '';
+    testo('chiSono', V(SESS.email, ''));
+    testo('statoCloud', '✅ collegato');
+    ricarica(false);
+  }
+
+  /* il token dura un'ora: si rinnova da solo */
+  function token() {
+    if (!SESS) return Promise.reject(new Error('non collegato'));
+    if (SESS.idToken && SESS.scadenza && Date.now() < SESS.scadenza - 60000) {
+      return Promise.resolve(SESS.idToken);
+    }
+    return FB.refresh(SESS.refreshToken).then(function (s) {
+      SESS.idToken = s.idToken;
+      SESS.refreshToken = s.refreshToken || SESS.refreshToken;
+      SESS.scadenza = s.scadenza;
+      sessSalva();
+      return SESS.idToken;
+    });
+  }
+
+  /* ====================== LETTURA DAL DATABASE ========================= */
+  function ricarica(conAvviso) {
+    if (!SESS) { if (conAvviso) CA.toast('Prima entra nel database.', 5000); return; }
+    return token().then(function (t) {
+      return Promise.all([FB.elenco(t), FB.leggiStato(t)]);
+    }).then(function (r) {
+      ISCR = (r[0] || []).map(leggiIscrizione).filter(Boolean);
+      ISCR.sort(function (a, b) { return String(a.creatoIl) < String(b.creatoIl) ? 1 : -1; });
+      var s = r[1];
+      if (s) {
+        STATO = {
+          squadre: V(s.squadre, []), configSquadre: V(s.configSquadre, {}),
+          risultati: V(s.risultati, {}), titoli: V(s.titoli, []),
+          tornei: V(s.tornei, {}), bonus: V(s.bonus, {})
+        };
+      }
+      var d = new Date();
+      testo('quandoAgg', '· letto alle ' + due(d.getHours()) + ':' + due(d.getMinutes()));
+      disegnaTutto();
+      if (conAvviso) CA.toast('✅ Registro aggiornato: ' + ISCR.length + ' iscrizioni.', 4000);
+    }).catch(function (e) {
+      if (conAvviso) CA.toast('⚠️ ' + e.message, 8000);
+    });
+  }
+  function due(n) { return (n < 10 ? '0' : '') + n; }
+
+  function leggiIscrizione(doc) {
+    var o = {};
+    try { o = JSON.parse(doc.json || '{}'); } catch (e) { o = {}; }
+    o._id = doc._id;
+    o.stato = V(doc.stato, 'attiva');
+    o.nome = V(o.nome, doc.nome);
+    o.area = V(o.area, doc.area);
+    o.gruppo = V(o.gruppo, doc.gruppo);
+    o.codice = V(o.codice, doc.codice);
+    o.creatoIl = V(o.creatoIl, doc.creatoIl);
+    if (!o.nome) return null;
+    return o;
+  }
+
+  function attive(filtro) {
+    return ISCR.filter(function (p) {
+      if (p.stato === 'cestino') return false;
+      if (!filtro) return true;
+      if (filtro === 'ragazzi') return p.area === 'ragazzi';
+      if (filtro === 'adulti') return p.area === 'adulti';
+      return p.gruppo === filtro;
+    });
+  }
+
+  /* =========================== SALVATAGGIO ============================= */
+  var timerSalva = null;
+  function salvaStato(conAvviso) {
+    if (!SESS) { if (conAvviso) CA.toast('⚠️ Non sei collegato: non posso salvare.', 7000); return; }
+    if (timerSalva) clearTimeout(timerSalva);
+    timerSalva = setTimeout(function () {
+      token().then(function (t) { return FB.scriviStato(t, STATO); })
+        .then(function () {
+          testo('statoCloud', '✅ salvato nel database');
+          if (conAvviso) CA.toast('💾 Salvato nel database.', 4000);
+        })
+        .catch(function (e) { CA.toast('⚠️ Non ho salvato: ' + e.message, 8000); });
+    }, conAvviso ? 0 : 700);
+  }
+
+  /* ============================== DISEGNO ============================== */
+  function disegnaTutto() {
+    disegnaCruscotto();
+    disegnaIscritti();
+    disegnaSquadre();
+    disegnaTornei();
+    disegnaPunteggi();
+  }
+
+  /* ----------------------------- cruscotto ---------------------------- */
+  function disegnaCruscotto() {
+    var el = $('numeroni');
+    el.textContent = '';
+    var rag = attive('ragazzi'), ita = attive('italiana'), bur = attive('burraco');
+    var cest = ISCR.filter(function (p) { return p.stato === 'cestino'; });
+    var q = V(DATI.quota, {});
+
+    function n(cls, numero, eti) {
+      var d = crea('div', 'numerone ' + cls);
+      d.appendChild(crea('b', null, String(numero)));
+      d.appendChild(crea('span', null, eti));
+      el.appendChild(d);
+    }
+    n('verde', rag.length, 'ragazzi in acqua');
+    n('', ita.length, 'giochi all\'italiana');
+    n('', bur.length, 'burraco');
+    n('giallo', STATO.squadre.length, 'squadre formate');
+    if (q.attiva === true) {
+      n('giallo', CA.eur((rag.length + ita.length + bur.length) * (Number(q.importo) || 0)), 'quote da incassare');
+    }
+    if (cest.length) n('grigio', cest.length, 'nel cestino');
+
+    testo('notaCruscotto', SESS
+      ? ('Ultima lettura dal database: ' + ISCR.length + ' iscrizioni in tutto.')
+      : 'Entra nel database qui sopra per vedere i numeri veri.');
+
+    /* cosa manca */
+    var lista = $('checklist');
+    lista.textContent = '';
+    var voci = [];
+    if (!SESS) voci.push('Collegati al database per vedere le iscrizioni.');
+    if (rag.length && !STATO.squadre.length) voci.push('Forma le squadre dei ragazzi (scheda 🚩 Squadre).');
+    var senzaTab = [];
+    V(DATI.tornei, []).forEach(function (t) {
+      var quanti = iscrittiTorneo(t.id).length;
+      if (quanti >= 4 && !(STATO.tornei[t.id] && (STATO.tornei[t.id].incontri || []).length)) senzaTab.push(t.nome);
+    });
+    if (senzaTab.length) voci.push('Genera il tabellone di: ' + senzaTab.join(', ') + ' (scheda 🃏 Tornei).');
+    var nonAss = daAssegnare().length;
+    if (STATO.squadre.length && nonAss) voci.push(nonAss + ' ragazzi non sono ancora in nessuna squadra.');
+    var senzaCap = STATO.squadre.filter(function (s) { return !s.capitano; });
+    if (senzaCap.length) {
+      voci.push('Manca il capitano a: ' + senzaCap.map(function (s) { return s.nome; }).join(', ') +
+        ' (tocca il ○ accanto a un nome).');
+    }
+    var senzaMotto = STATO.squadre.filter(function (s) { return !s.motto; });
+    if (STATO.squadre.length && senzaMotto.length === STATO.squadre.length) {
+      voci.push('Nessuna squadra ha ancora il suo grido di battaglia: fattelo dire dai ragazzi.');
+    }
+    if (!voci.length) voci.push('Tutto a posto: si può giocare. 🎉');
+    voci.forEach(function (v) { lista.appendChild(crea('li', null, v)); });
+  }
+
+  /* ---------------------------- iscrizioni ---------------------------- */
+  function disegnaIscritti() {
+    var el = $('elencoIscritti');
+    el.textContent = '';
+    var cerca = $('cerca').value.trim().toLowerCase();
+
+    var lista = ISCR.filter(function (p) {
+      if (FILTRO === 'cestino') return p.stato === 'cestino';
+      if (p.stato === 'cestino') return false;
+      if (FILTRO === 'ragazzi') return p.area === 'ragazzi';
+      if (FILTRO === 'italiana' || FILTRO === 'burraco') return p.gruppo === FILTRO;
+      return true;
+    }).filter(function (p) {
+      if (!cerca) return true;
+      return (String(p.nome) + ' ' + String(p.codice) + ' ' + String(p.appartamento || '') + ' ' +
+        String(p.telefono || '')).toLowerCase().indexOf(cerca) >= 0;
+    });
+
+    if (!lista.length) {
+      el.appendChild(crea('p', 'aiuto', SESS ? 'Nessuna iscrizione in questa selezione.' : 'Entra nel database per vedere le iscrizioni.'));
+      return;
+    }
+
+    var conta = crea('p', 'aiuto', lista.length + (lista.length === 1 ? ' iscrizione' : ' iscrizioni'));
+    el.appendChild(conta);
+
+    lista.forEach(function (p) {
+      var r = crea('div', 'riga-iscr' + (p.stato === 'cestino' ? ' cestinata' : ''));
+      var c = crea('div', 'cnt');
+
+      var t = crea('div');
+      t.appendChild(crea('span', 'tag ' + tagClasse(p), tagTesto(p)));
+      var nb = crea('b', null, p.nome);
+      nb.style.display = 'inline';
+      t.appendChild(nb);
+      c.appendChild(t);
+
+      c.appendChild(crea('small', null, dettaglio(p)));
+      c.appendChild(crea('small', null, '🎟️ ' + V(p.codice, '—') + ' · ☎️ ' + V(p.telefono, '—') +
+        (p.appartamento ? ' · 🏠 ' + p.appartamento : '')));
+      if (p.note) c.appendChild(crea('small', null, '📝 ' + p.note));
+      r.appendChild(c);
+
+      var az = crea('div', 'azioni-r');
+      if (p.stato === 'cestino') {
+        az.appendChild(bottone('↩️ Ripristina', 'verde', function () { cambiaStato(p, 'attiva'); }));
+        az.appendChild(bottone('🗑️ Elimina', 'rosso', function () { eliminaDavvero(p); }));
+      } else {
+        az.appendChild(bottone('✏️ Modifica', '', function () { apriModifica(p); }));
+        az.appendChild(bottone('🗑️ Cestino', 'rosso', function () { cambiaStato(p, 'cestino'); }));
+      }
+      r.appendChild(az);
+      el.appendChild(r);
+    });
+  }
+
+  function tagClasse(p) {
+    if (p.area === 'ragazzi') return 'rag';
+    return p.gruppo === 'burraco' ? 'bur' : 'ita';
+  }
+  function tagTesto(p) {
+    if (p.area === 'ragazzi') return '🤽 ragazzi';
+    return p.gruppo === 'burraco' ? '🃟 burraco' : '🂡 italiana';
+  }
+  function dettaglio(p) {
+    if (p.area === 'ragazzi') {
+      var g = V(p.gare, []).map(function (x) { return x.nome; }).join(', ');
+      return p.eta + ' anni · ' + etichettaNuoto(p.nuoto) +
+        (p.genitore ? ' · genitore: ' + p.genitore : '') +
+        (p.amico ? ' · con: ' + p.amico : '') +
+        (g ? ' · gare: ' + g : '');
+    }
+    var tt = V(p.tornei, []).map(function (x) { return x.nome; }).join(', ');
+    return tt + ' · ' + (p.inCoppia ? ('in coppia con ' + p.compagno) : 'da abbinare') +
+      (p.livello ? ' · ' + p.livello : '');
+  }
+  function etichettaNuoto(v) {
+    if (v === 'bene') return 'nuota bene';
+    if (v === 'media') return 'se la cava';
+    if (v === 'poco') return 'nuota poco';
+    return '—';
+  }
+  function bottone(txt, cls, fn) {
+    var b = crea('button', 'bottoncino ' + (cls || ''), txt);
+    b.addEventListener('click', fn);
+    return b;
+  }
+
+  function cambiaStato(p, stato) {
+    if (!SESS) { CA.toast('Non sei collegato.', 5000); return; }
+    token().then(function (t) { return FB.aggiorna(t, p._id, { stato: stato }); })
+      .then(function () {
+        p.stato = stato;
+        disegnaTutto();
+        sincronizzaContatori(true);
+        CA.toast(stato === 'cestino' ? '🗑️ Spostata nel cestino.' : '↩️ Ripristinata.', 4000);
+      }).catch(function (e) { CA.toast('⚠️ ' + e.message, 8000); });
+  }
+  function eliminaDavvero(p) {
+    if (!confirm('Elimino definitivamente ' + p.nome + '? Non si torna indietro.')) return;
+    token().then(function (t) { return FB.elimina(t, p._id); })
+      .then(function () {
+        ISCR = ISCR.filter(function (x) { return x._id !== p._id; });
+        disegnaTutto();
+        CA.toast('Eliminata.', 4000);
+      }).catch(function (e) { CA.toast('⚠️ ' + e.message, 8000); });
+  }
+
+  /* aggiunta e modifica a mano */
+  function apriFormManuale(pre) {
+    var box = $('formManuale');
+    box.style.display = '';
+    box.textContent = '';
+    var p = (pre && pre.nome) ? pre : null;
+
+    var c = crea('div', 'card');
+    c.appendChild(crea('h3', null, p ? ('✏️ Modifica: ' + p.nome) : '➕ Nuova iscrizione a mano'));
+
+    var g = crea('div', 'griglia2');
+    function campo(id, eti, valore, tipo) {
+      var d = crea('div', 'campo');
+      var l = document.createElement('label'); l.setAttribute('for', id); l.textContent = eti;
+      d.appendChild(l);
+      var i = document.createElement(tipo === 'textarea' ? 'textarea' : 'input');
+      if (tipo && tipo !== 'textarea') i.type = tipo;
+      i.id = id; i.className = 'mini'; i.value = valore || '';
+      d.appendChild(i);
+      g.appendChild(d);
+      return i;
+    }
+    var selArea = crea('div', 'campo');
+    var la = document.createElement('label'); la.textContent = 'Sezione'; selArea.appendChild(la);
+    var sa = document.createElement('select'); sa.id = 'mSezione'; sa.className = 'mini';
+    [['ragazzi', '🤽 Giochi in acqua'], ['italiana', '🂡 Giochi all\'italiana'], ['burraco', '🃟 Burraco']]
+      .forEach(function (o) {
+        var op = document.createElement('option'); op.value = o[0]; op.textContent = o[1];
+        sa.appendChild(op);
+      });
+    sa.value = p ? (p.area === 'ragazzi' ? 'ragazzi' : p.gruppo) : 'ragazzi';
+    selArea.appendChild(sa);
+    g.appendChild(selArea);
+
+    campo('mNome', 'Nome e cognome', p ? p.nome : '');
+    campo('mTel', 'Telefono', p ? p.telefono : '');
+    campo('mApp', 'Appartamento', p ? p.appartamento : '');
+    campo('mEta', 'Età (solo ragazzi)', p ? p.eta : '', 'number');
+    var sn = crea('div', 'campo');
+    var ln = document.createElement('label'); ln.textContent = 'In acqua (solo ragazzi)'; sn.appendChild(ln);
+    var ss = document.createElement('select'); ss.id = 'mNuoto'; ss.className = 'mini';
+    [['', '—'], ['bene', 'Nuota bene'], ['media', 'Se la cava'], ['poco', 'Nuota poco']].forEach(function (o) {
+      var op = document.createElement('option'); op.value = o[0]; op.textContent = o[1]; ss.appendChild(op);
+    });
+    ss.value = p ? V(p.nuoto, '') : '';
+    sn.appendChild(ss); g.appendChild(sn);
+    campo('mCompagno', 'Compagno (solo carte)', p ? p.compagno : '');
+    campo('mNote', 'Note', p ? p.note : '');
+    c.appendChild(g);
+
+    var az = crea('div', 'azioni');
+    az.style.justifyContent = 'flex-start';
+    var salva = crea('button', 'btn btn-p', p ? '💾 Salva le modifiche' : '➕ Aggiungi');
+    salva.addEventListener('click', function () { salvaManuale(p); });
+    var chiudi = crea('button', 'btn btn-chiaro', 'Annulla');
+    chiudi.addEventListener('click', function () { box.style.display = 'none'; box.textContent = ''; });
+    az.appendChild(salva); az.appendChild(chiudi);
+    c.appendChild(az);
+    box.appendChild(c);
+    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function apriModifica(p) { apriFormManuale(p); }
+
+  function salvaManuale(vecchia) {
+    if (!SESS) { CA.toast('Non sei collegato al database.', 6000); return; }
+    var sez = $('mSezione').value;
+    var nome = $('mNome').value.trim();
+    if (!nome) { CA.toast('Scrivi almeno il nome.', 5000); return; }
+
+    var p = vecchia ? JSON.parse(JSON.stringify(vecchia)) : {};
+    p.nome = nome;
+    p.area = (sez === 'ragazzi') ? 'ragazzi' : 'adulti';
+    p.gruppo = (sez === 'ragazzi') ? '' : sez;
+    p.sezione = (sez === 'ragazzi') ? 'Giochi in acqua'
+      : (sez === 'burraco' ? 'Torneo di Burraco' : 'Torneo dei giochi all\'italiana');
+    p.telefono = $('mTel').value.trim();
+    p.appartamento = $('mApp').value.trim();
+    p.note = $('mNote').value.trim();
+    if (p.area === 'ragazzi') {
+      p.eta = Number($('mEta').value) || 0;
+      p.nuoto = $('mNuoto').value;
+      p.gare = V(p.gare, []);
+    } else {
+      p.compagno = $('mCompagno').value.trim();
+      p.inCoppia = !!p.compagno;
+      if (!V(p.tornei, []).length) {
+        p.tornei = torneiDelGruppo(p.gruppo).slice(0, 1).map(function (t) {
+          return { id: t.id, nome: t.nome, blocco: t.blocco };
+        });
+      }
+    }
+    if (!p.codice) p.codice = nuovoCodice(p);
+    if (!p.creatoIl) p.creatoIl = new Date().toISOString();
+    p.aggiuntaAMano = true;
+
+    var campi = {
+      nome: p.nome, area: p.area, gruppo: p.gruppo || '', codice: p.codice,
+      stato: 'attiva', creatoIl: p.creatoIl, json: JSON.stringify(pulita(p))
+    };
+
+    var lavoro = vecchia
+      ? token().then(function (t) { return FB.aggiorna(t, vecchia._id, campi); })
+      : token().then(function (t) { return FB.creaIscrizione(campi); });
+
+    lavoro.then(function () {
+      $('formManuale').style.display = 'none';
+      $('formManuale').textContent = '';
+      return ricarica(false);
+    }).then(function () {
+      sincronizzaContatori(true);
+      CA.toast(vecchia ? '💾 Modifica salvata.' : '➕ Iscrizione aggiunta.', 4000);
+    }).catch(function (e) { CA.toast('⚠️ ' + e.message, 8000); });
+  }
+  function pulita(p) {
+    var o = JSON.parse(JSON.stringify(p));
+    delete o._id; delete o.stato;
+    return o;
+  }
+  function nuovoCodice(p) {
+    var sig = p.area === 'ragazzi' ? 'RG' : (p.gruppo === 'burraco' ? 'BU' : 'IT');
+    var lettere = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    var s = '';
+    for (var i = 0; i < 4; i++) s += lettere[Math.floor(Math.random() * lettere.length)];
+    return V(V(DATI.iscrizione, {}).prefissoCodice, 'CA') + '-' + sig + '-' + s;
+  }
+
+  function esportaCsv() {
+    var righe = [['Sezione', 'Nome', 'Codice', 'Telefono', 'Appartamento', 'Età', 'In acqua',
+      'Tornei/Gare', 'Compagno/Amico', 'Note', 'Iscritto il']];
+    attive().forEach(function (p) {
+      righe.push([
+        p.area === 'ragazzi' ? 'Ragazzi' : (p.gruppo === 'burraco' ? 'Burraco' : 'All\'italiana'),
+        p.nome, p.codice, p.telefono || '', p.appartamento || '',
+        p.eta || '', p.area === 'ragazzi' ? etichettaNuoto(p.nuoto) : (p.livello || ''),
+        p.area === 'ragazzi' ? V(p.gare, []).map(function (g) { return g.nome; }).join(' + ')
+          : V(p.tornei, []).map(function (t) { return t.nome; }).join(' + '),
+        p.area === 'ragazzi' ? V(p.amico, '') : V(p.compagno, ''),
+        (p.note || '').replace(/\n/g, ' '),
+        String(p.creatoIl || '').slice(0, 16).replace('T', ' ')
+      ]);
+    });
+    var csv = righe.map(function (r) {
+      return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(';');
+    }).join('\n');
+    scaricaFile('iscrizioni-certamen.csv', '﻿' + csv, 'text/csv');
+  }
+  function scaricaFile(nome, contenuto, tipo) {
+    var b = new Blob([contenuto], { type: (tipo || 'text/plain') + ';charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = nome;
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  }
+
+  /* i contatori pubblici si ricalcolano dal registro, che è la verità */
+  function sincronizzaContatori(zitto) {
+    if (!SESS) { if (!zitto) CA.toast('Non sei collegato.', 5000); return; }
+    var v = {
+      ragazzi: attive('ragazzi').length,
+      adulti: attive('adulti').length,
+      italiana: attive('italiana').length,
+      burraco: attive('burraco').length
+    };
+    token().then(function (t) { return FB.scriviContatori(t, v); })
+      .then(function (ok) {
+        if (!zitto) CA.toast(ok ? '🔢 Contatori pubblici aggiornati.' : '⚠️ Non sono riuscito ad aggiornarli.', 5000);
+      }).catch(function () { });
+  }
+
+  /* ======================== SQUADRE DEI RAGAZZI ======================== */
+  function ragazziIscritti() { return attive('ragazzi'); }
+
+  function assegnati() {
+    var s = {};
+    STATO.squadre.forEach(function (sq) {
+      V(sq.componenti, []).forEach(function (id) { s[id] = sq.id; });
+    });
+    return s;
+  }
+  function daAssegnare() {
+    var a = assegnati();
+    return ragazziIscritti().filter(function (p) { return !a[p._id]; });
+  }
+  function perId(id) {
+    for (var i = 0; i < ISCR.length; i++) if (ISCR[i]._id === id) return ISCR[i];
+    return null;
+  }
+
+  function consiglioNumeroSquadre(n) {
+    var r = V(V(DATI.formatiSquadre, {}).regole, []);
+    for (var i = 0; i < r.length; i++) {
+      if (n >= r[i].min && n <= r[i].max) return r[i];
+    }
+    if (n < 8) return { squadre: 2, descrizione: 'Pochissimi iscritti: due squadre e sfide dirette.' };
+    return r.length ? r[r.length - 1] : { squadre: 4, descrizione: '' };
+  }
+
+  function disegnaSquadre() {
+    var rag = ragazziIscritti();
+    var c = consiglioNumeroSquadre(rag.length);
+    var f = V(DATI.formatiSquadre, {});
+
+    testo('consiglioSquadre', rag.length
+      ? ('Ci sono ' + rag.length + ' ragazzi iscritti. Consiglio: ' + c.squadre +
+        ' squadre da circa ' + Math.round(rag.length / c.squadre) + ' componenti. ' + V(c.descrizione, ''))
+      : 'Non ci sono ancora ragazzi iscritti: appena arrivano, qui compare il consiglio sul numero di squadre.');
+
+    /* Il consiglio si aggiorna finché non lo tocco io: al primo disegno le
+       iscrizioni non sono ancora arrivate, e senza questo il campo resterebbe
+       fermo sul numero calcolato a registro vuoto. */
+    if (!sqToccato) {
+      $('sqNumero').value = V(STATO.configSquadre.numero, c.squadre);
+      $('sqPer').value = V(STATO.configSquadre.perSquadra,
+        rag.length ? Math.max(2, Math.round(rag.length / c.squadre)) : V(f.perSquadraIdeale, 6));
+    }
+    testo('sqPerNota', 'Indicativo: le squadre si riempiono comunque in modo uniforme.');
+
+    var rb = $('regoleBilanciamento');
+    if (rb && !rb.childNodes.length) {
+      V(f.criteriBilanciamento, []).forEach(function (v) { rb.appendChild(crea('li', null, v)); });
+    }
+
+    disegnaTavoloSquadre();
+    disegnaSerbatoio();
+    mostraEquilibrio();
+  }
+
+  function generaSquadre() {
+    var rag = ragazziIscritti();
+    if (!rag.length) { CA.toast('Non ci sono ragazzi iscritti.', 5000); return; }
+    var n = Math.max(2, Math.min(8, Number($('sqNumero').value) || 4));
+    var criterio = $('sqCriterio').value;
+
+    STATO.configSquadre = { numero: n, perSquadra: Number($('sqPer').value) || 0 };
+    STATO.squadre = [];
+    for (var i = 0; i < n; i++) {
+      STATO.squadre.push({
+        id: 'sq' + (i + 1),
+        nome: NOMI_SQ[i % NOMI_SQ.length],
+        motto: '',
+        colore: COLORI_SQ[i % COLORI_SQ.length],
+        capitano: '',
+        componenti: []
+      });
+    }
+
+    if (criterio === 'auto') {
+      distribuisciBilanciato(rag, STATO.squadre);
+      CA.toast('🎲 Squadre generate e bilanciate per età.', 5000);
+    } else {
+      CA.toast('Squadre vuote create: ora trascina i nomi.', 5000);
+    }
+    salvaStato();
+    disegnaSquadre();
+  }
+
+  /* Distribuzione a serpentina: si ordina per età (dal più grande al più
+     piccolo) e si assegna 1-2-3-4, poi 4-3-2-1, e così via. Le età medie
+     restano quasi identiche. Poi si sparpagliano quelli che nuotano poco e
+     si tenta qualche scambio per avvicinare ancora le medie. */
+  function distribuisciBilanciato(persone, squadre) {
+    var n = squadre.length;
+    squadre.forEach(function (s) { s.componenti = []; });
+
+    /* prima i gruppi di amici che si sono richiesti a vicenda restano uniti */
+    var coppie = amiciReciproci(persone);
+    var usati = {};
+    var blocchi = [];
+    coppie.forEach(function (c) {
+      if (usati[c[0]._id] || usati[c[1]._id]) return;
+      usati[c[0]._id] = usati[c[1]._id] = true;
+      blocchi.push({ persone: [c[0], c[1]], eta: (etaDi(c[0]) + etaDi(c[1])) / 2 });
+    });
+    persone.forEach(function (p) {
+      if (usati[p._id]) return;
+      blocchi.push({ persone: [p], eta: etaDi(p) });
+    });
+
+    blocchi.sort(function (a, b) { return b.eta - a.eta; });
+
+    var giro = 0, i = 0;
+    while (i < blocchi.length) {
+      var ordine = [];
+      for (var k = 0; k < n; k++) ordine.push(k);
+      if (giro % 2 === 1) ordine.reverse();
+      for (var j = 0; j < n && i < blocchi.length; j++) {
+        blocchi[i].persone.forEach(function (p) { squadre[ordine[j]].componenti.push(p._id); });
+        i++;
+      }
+      giro++;
+    }
+
+    sparpagliaDeboli(squadre);
+    affinaEta(squadre);
+    squadre.forEach(function (s) {
+      if (!s.capitano && s.componenti.length) {
+        /* capitano: il più grande della squadra */
+        var mig = null;
+        s.componenti.forEach(function (id) {
+          var p = perId(id);
+          if (p && (!mig || etaDi(p) > etaDi(mig))) mig = p;
+        });
+        if (mig) s.capitano = mig._id;
+      }
+    });
+  }
+
+  function etaDi(p) { return Number(p && p.eta) || 13; }
+  function nuotaPoco(p) { return p && p.nuoto === 'poco'; }
+
+  function amiciReciproci(persone) {
+    var out = [];
+    var perNome = {};
+    persone.forEach(function (p) { perNome[normalizza(p.nome)] = p; });
+    persone.forEach(function (p) {
+      if (!p.amico) return;
+      var altro = perNome[normalizza(p.amico)];
+      if (!altro || altro._id === p._id) return;
+      if (normalizza(V(altro.amico, '')) !== normalizza(p.nome)) return;   /* deve essere reciproco */
+      if (out.some(function (c) { return c[0]._id === altro._id || c[1]._id === altro._id; })) return;
+      out.push([p, altro]);
+    });
+    return out;
+  }
+  function normalizza(s) {
+    return String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  }
+
+  /* chi nuota poco non deve finire tutto nella stessa squadra */
+  function sparpagliaDeboli(squadre) {
+    var conta = squadre.map(function (s) {
+      return s.componenti.filter(function (id) { return nuotaPoco(perId(id)); }).length;
+    });
+    for (var giro = 0; giro < 20; giro++) {
+      var max = 0, min = 0;
+      for (var i = 1; i < conta.length; i++) {
+        if (conta[i] > conta[max]) max = i;
+        if (conta[i] < conta[min]) min = i;
+      }
+      if (conta[max] - conta[min] <= 1) break;
+      var debole = squadre[max].componenti.filter(function (id) { return nuotaPoco(perId(id)); })[0];
+      var forte = squadre[min].componenti.filter(function (id) { return !nuotaPoco(perId(id)); })[0];
+      if (!debole || !forte) break;
+      scambia(squadre[max], squadre[min], debole, forte);
+      conta[max]--; conta[min]++;
+    }
+  }
+  function scambia(sa, sb, ida, idb) {
+    sa.componenti = sa.componenti.filter(function (x) { return x !== ida; }).concat([idb]);
+    sb.componenti = sb.componenti.filter(function (x) { return x !== idb; }).concat([ida]);
+    if (sa.capitano === ida) sa.capitano = '';
+    if (sb.capitano === idb) sb.capitano = '';
+  }
+
+  /* qualche scambio per avvicinare le età medie */
+  function affinaEta(squadre) {
+    function media(s) {
+      if (!s.componenti.length) return 0;
+      var t = 0;
+      s.componenti.forEach(function (id) { t += etaDi(perId(id)); });
+      return t / s.componenti.length;
+    }
+    function scarto() {
+      var m = squadre.map(media);
+      return Math.max.apply(null, m) - Math.min.apply(null, m);
+    }
+    for (var giro = 0; giro < 60; giro++) {
+      var prima = scarto();
+      if (prima < 0.35) break;
+      var m = squadre.map(media);
+      var alta = 0, bassa = 0;
+      for (var i = 1; i < m.length; i++) {
+        if (m[i] > m[alta]) alta = i;
+        if (m[i] < m[bassa]) bassa = i;
+      }
+      var migliore = null;
+      squadre[alta].componenti.forEach(function (ia) {
+        squadre[bassa].componenti.forEach(function (ib) {
+          var ea = etaDi(perId(ia)), eb = etaDi(perId(ib));
+          if (ea <= eb) return;
+          if (nuotaPoco(perId(ia)) !== nuotaPoco(perId(ib))) return;
+          scambia(squadre[alta], squadre[bassa], ia, ib);
+          var dopo = scarto();
+          scambia(squadre[alta], squadre[bassa], ib, ia);   /* rimetto a posto */
+          if (dopo < prima && (!migliore || dopo < migliore.v)) migliore = { a: ia, b: ib, v: dopo };
+        });
+      });
+      if (!migliore) break;
+      scambia(squadre[alta], squadre[bassa], migliore.a, migliore.b);
+    }
+  }
+
+  function disegnaTavoloSquadre() {
+    var el = $('tavoloSquadre');
+    el.textContent = '';
+    if (!STATO.squadre.length) {
+      el.appendChild(crea('p', 'aiuto', 'Nessuna squadra: usa la procedura guidata qui sopra.'));
+      return;
+    }
+    STATO.squadre.forEach(function (sq) {
+      var col = crea('div', 'colonna-sq');
+      col.style.borderColor = sq.colore;
+
+      var h = crea('h4');
+      var pall = crea('span');
+      pall.style.cssText = 'width:16px;height:16px;border-radius:50%;display:inline-block;background:' + sq.colore;
+      h.appendChild(pall);
+      var nome = document.createElement('input');
+      nome.type = 'text'; nome.value = V(sq.nome, ''); nome.className = 'mini';
+      nome.style.cssText = 'flex:1;font-weight:bold;min-height:38px;padding:6px 9px';
+      nome.addEventListener('change', function () { sq.nome = nome.value.trim(); salvaStato(); });
+      h.appendChild(nome);
+      col.appendChild(h);
+
+      var motto = document.createElement('input');
+      motto.type = 'text'; motto.value = V(sq.motto, ''); motto.className = 'mini';
+      motto.placeholder = 'grido di battaglia…';
+      motto.style.cssText = 'min-height:36px;padding:6px 9px;font-size:.85rem;margin-bottom:8px';
+      motto.addEventListener('change', function () { sq.motto = motto.value.trim(); salvaStato(); });
+      col.appendChild(motto);
+
+      var eta = mediaEta(sq);
+      col.appendChild(crea('div', 'dati-sq',
+        sq.componenti.length + ' componenti · età media ' + (eta ? eta.toFixed(1) : '—') +
+        ' · ' + sq.componenti.filter(function (id) { return nuotaPoco(perId(id)); }).length + ' nuotano poco'));
+
+      sq.componenti.forEach(function (id) {
+        col.appendChild(pedina(id, sq));
+      });
+
+      /* zona di rilascio */
+      col.addEventListener('dragover', function (e) { e.preventDefault(); col.classList.add('sopra'); });
+      col.addEventListener('dragleave', function () { col.classList.remove('sopra'); });
+      col.addEventListener('drop', function (e) {
+        e.preventDefault();
+        col.classList.remove('sopra');
+        muovi(e.dataTransfer.getData('text/plain'), sq.id);
+      });
+      col.addEventListener('click', function (e) {
+        if (SCELTA && !e.target.closest('.pedina') && !e.target.closest('input')) {
+          muovi(SCELTA, sq.id);
+        }
+      });
+      el.appendChild(col);
+    });
+  }
+
+  function mediaEta(sq) {
+    if (!sq.componenti.length) return 0;
+    var t = 0, n = 0;
+    sq.componenti.forEach(function (id) { var p = perId(id); if (p) { t += etaDi(p); n++; } });
+    return n ? t / n : 0;
+  }
+
+  function pedina(id, sq) {
+    var p = perId(id);
+    var d = crea('div', 'pedina' + (sq && sq.capitano === id ? ' capitano' : '') + (SCELTA === id ? ' scelta' : ''));
+    d.draggable = true;
+    d.addEventListener('dragstart', function (e) { e.dataTransfer.setData('text/plain', id); });
+
+    if (sq) {
+      var cap = crea('span', 'cap', sq.capitano === id ? '🧢' : '○');
+      cap.title = 'Rendi capitano';
+      cap.addEventListener('click', function (e) {
+        e.stopPropagation();
+        sq.capitano = (sq.capitano === id) ? '' : id;
+        salvaStato();
+        disegnaTavoloSquadre();
+      });
+      d.appendChild(cap);
+    }
+    d.appendChild(crea('span', null, p ? p.nome : '(sconosciuto)'));
+    if (p && nuotaPoco(p)) d.appendChild(crea('span', null, '🛟'));
+    d.appendChild(crea('span', 'eta-p', p ? (etaDi(p) + 'a') : ''));
+
+    d.addEventListener('click', function (e) {
+      e.stopPropagation();
+      SCELTA = (SCELTA === id) ? null : id;
+      disegnaTavoloSquadre();
+      disegnaSerbatoio();
+      if (SCELTA) CA.toast('Ora tocca la squadra dove spostarlo.', 3500);
+    });
+    return d;
+  }
+
+  function disegnaSerbatoio() {
+    var el = $('serbatoio');
+    el.textContent = '';
+    var liberi = daAssegnare();
+    if (!liberi.length) {
+      el.appendChild(crea('p', 'aiuto', 'Tutti assegnati. 👍'));
+    } else {
+      liberi.forEach(function (p) { el.appendChild(pedina(p._id, null)); });
+    }
+    el.addEventListener('dragover', function (e) { e.preventDefault(); el.classList.add('sopra'); });
+    el.addEventListener('dragleave', function () { el.classList.remove('sopra'); });
+    el.addEventListener('drop', function (e) {
+      e.preventDefault(); el.classList.remove('sopra');
+      muovi(e.dataTransfer.getData('text/plain'), null);
+    });
+    el.addEventListener('click', function (e) {
+      if (SCELTA && !e.target.closest('.pedina')) muovi(SCELTA, null);
+    });
+  }
+
+  function muovi(idPersona, idSquadra) {
+    if (!idPersona) return;
+    STATO.squadre.forEach(function (s) {
+      s.componenti = s.componenti.filter(function (x) { return x !== idPersona; });
+      if (s.capitano === idPersona) s.capitano = '';
+    });
+    if (idSquadra) {
+      var sq = STATO.squadre.filter(function (s) { return s.id === idSquadra; })[0];
+      if (sq) sq.componenti.push(idPersona);
+    }
+    SCELTA = null;
+    salvaStato();
+    disegnaTavoloSquadre();
+    disegnaSerbatoio();
+    mostraEquilibrio();
+    disegnaCruscotto();
+  }
+
+  function mostraEquilibrio() {
+    var box = $('equilibrio');
+    if (!STATO.squadre.length) { box.style.display = 'none'; return; }
+    var medie = STATO.squadre.map(mediaEta).filter(function (x) { return x > 0; });
+    if (!medie.length) { box.style.display = 'none'; return; }
+    var scarto = Math.max.apply(null, medie) - Math.min.apply(null, medie);
+    var dim = STATO.squadre.map(function (s) { return s.componenti.length; });
+    var diffDim = Math.max.apply(null, dim) - Math.min.apply(null, dim);
+    box.style.display = '';
+    box.textContent = '⚖️ Età medie da ' + Math.min.apply(null, medie).toFixed(1) + ' a ' +
+      Math.max.apply(null, medie).toFixed(1) + ' anni (scarto ' + scarto.toFixed(1) + ') · ' +
+      'componenti da ' + Math.min.apply(null, dim) + ' a ' + Math.max.apply(null, dim) + '. ' +
+      (scarto <= 1 && diffDim <= 1 ? 'Squadre equilibrate. 👍' : 'Si può fare di meglio: prova a rigenerare o sposta qualcuno.');
+  }
+
+  /* ============================ TORNEI DI CARTE ======================== */
+  function torneiDelGruppo(idGruppo) {
+    var g = V(DATI.gruppiCarte, []).filter(function (x) { return x.id === idGruppo; })[0];
+    if (!g) return [];
+    return V(DATI.tornei, []).filter(function (t) { return V(g.tornei, []).indexOf(t.id) >= 0; });
+  }
+  function iscrittiTorneo(idTorneo) {
+    return attive('adulti').filter(function (p) {
+      return V(p.tornei, []).some(function (t) { return t.id === idTorneo; });
+    });
+  }
+  function torneoDati(id) {
+    return V(DATI.tornei, []).filter(function (t) { return t.id === id; })[0] || {};
+  }
+
+  function disegnaTornei() {
+    var sc = $('scegliTorneo');
+    sc.textContent = '';
+    var tornei = V(DATI.tornei, []);
+    if (!TORNEO_APERTO && tornei.length) TORNEO_APERTO = tornei[0].id;
+    tornei.forEach(function (t) {
+      var n = iscrittiTorneo(t.id).length;
+      var b = crea('button', 'btn btn-piccolo ' + (t.id === TORNEO_APERTO ? 'btn-p' : 'btn-chiaro'),
+        V(t.emoji, '🃏') + ' ' + t.nome + ' (' + n + ')');
+      b.addEventListener('click', function () { TORNEO_APERTO = t.id; disegnaTornei(); });
+      sc.appendChild(b);
+    });
+    disegnaPannelloTorneo();
+  }
+
+  function disegnaPannelloTorneo() {
+    var el = $('pannelloTorneo');
+    el.textContent = '';
+    if (!TORNEO_APERTO) return;
+    var t = torneoDati(TORNEO_APERTO);
+    var stato = STATO.tornei[TORNEO_APERTO] || {};
+    var iscritti = iscrittiTorneo(TORNEO_APERTO);
+
+    /* ---- procedura guidata ---- */
+    var g = crea('div', 'guidata');
+    g.appendChild(crea('h3', null, '🗂️ Procedura guidata: ' + V(t.nome, '')));
+    var coppie = V(stato.coppie, []);
+    g.appendChild(crea('p', 'mini',
+      'Passo 1 — le coppie. Ci sono ' + iscritti.length + ' iscritti a questo torneo: ' +
+      (coppie.length ? ('sono già formate ' + coppie.length + ' coppie.') : 'le coppie non sono ancora state formate.')));
+
+    var az1 = crea('div', 'azioni');
+    az1.style.cssText = 'justify-content:flex-start;margin:10px 0 18px';
+    var bC = crea('button', 'btn btn-p btn-piccolo', '👥 Forma le coppie');
+    bC.addEventListener('click', function () { formaCoppie(TORNEO_APERTO); });
+    az1.appendChild(bC);
+    g.appendChild(az1);
+
+    /* passo 2: formula */
+    var c = consiglioFormato(coppie.length);
+    g.appendChild(crea('p', 'mini', 'Passo 2 — la formula, in base a quante coppie ci sono.'));
+    var cons = crea('div', 'consiglio', coppie.length
+      ? ('Con ' + coppie.length + ' coppie il consiglio è: ' + V(c.nome, '') + '. ' + V(c.descrizione, ''))
+      : 'Forma prima le coppie: poi ti dico quale formula conviene.');
+    g.appendChild(cons);
+
+    var sf = crea('div', 'scelte-formato');
+    V(V(DATI.formatiTorneo, {}).regole, []).forEach(function (r) {
+      var b = crea('button', 'scelta-f' + ((stato.formato || c.formato) === r.formato ? ' presa' : ''));
+      b.appendChild(crea('b', null, r.nome));
+      b.appendChild(crea('small', null, r.descrizione));
+      b.addEventListener('click', function () {
+        STATO.tornei[TORNEO_APERTO] = STATO.tornei[TORNEO_APERTO] || {};
+        STATO.tornei[TORNEO_APERTO].formato = r.formato;
+        salvaStato();
+        disegnaPannelloTorneo();
+      });
+      sf.appendChild(b);
+    });
+    g.appendChild(sf);
+
+    var az2 = crea('div', 'azioni');
+    az2.style.cssText = 'justify-content:flex-start;margin-top:16px';
+    var bG = crea('button', 'btn btn-p', '🎲 Genera il tabellone');
+    bG.addEventListener('click', function () { generaTabellone(TORNEO_APERTO); });
+    az2.appendChild(bG);
+    var bZ = crea('button', 'btn btn-chiaro btn-piccolo', '↩️ Cancella il tabellone');
+    bZ.addEventListener('click', function () {
+      if (!confirm('Cancello il tabellone di ' + t.nome + '?')) return;
+      if (STATO.tornei[TORNEO_APERTO]) STATO.tornei[TORNEO_APERTO].incontri = [];
+      salvaStato();
+      disegnaPannelloTorneo();
+    });
+    az2.appendChild(bZ);
+    g.appendChild(az2);
+    el.appendChild(g);
+
+    /* ---- le coppie ---- */
+    if (coppie.length) {
+      var cc = crea('div', 'card');
+      cc.appendChild(crea('h2', null, '👥 Le coppie (' + coppie.length + ')'));
+      cc.appendChild(crea('p', 'aiuto', 'Puoi cambiare il nome di una coppia: è quello che finisce sul tabellone pubblico.'));
+      coppie.forEach(function (cp, i) {
+        var r = crea('div', 'riga-iscr');
+        var cnt = crea('div', 'cnt');
+        var inp = document.createElement('input');
+        inp.type = 'text'; inp.value = cp.nome; inp.className = 'mini';
+        inp.addEventListener('change', function () { cp.nome = inp.value.trim(); salvaStato(); });
+        cnt.appendChild(inp);
+        cnt.appendChild(crea('small', null, 'coppia ' + (i + 1) + (cp.spaiata ? ' · abbinata dagli organizzatori' : '')));
+        r.appendChild(cnt);
+        cc.appendChild(r);
+      });
+      el.appendChild(cc);
+    }
+
+    /* ---- il tabellone ---- */
+    var inc = V(stato.incontri, []);
+    if (inc.length) {
+      var ci = crea('div', 'card');
+      ci.appendChild(crea('h2', null, '🗓️ Tabellone e risultati'));
+      ci.appendChild(crea('p', 'aiuto', 'Scrivi i punteggi: la classifica si ricalcola da sola e si salva nel database.'));
+      var turni = {};
+      inc.forEach(function (m) {
+        var k = V(m.turno, 'Incontri');
+        (turni[k] = turni[k] || []).push(m);
+      });
+      Object.keys(turni).forEach(function (k) {
+        ci.appendChild(crea('h3', null, k));
+        turni[k].forEach(function (m) { ci.appendChild(rigaIncontroAdmin(m, coppie)); });
+      });
+      el.appendChild(ci);
+
+      var cl = crea('div', 'card');
+      cl.appendChild(crea('h2', null, '📊 Classifica di ' + V(t.nome, '')));
+      cl.appendChild(tabellaClassificaAdmin(classificaTorneo(TORNEO_APERTO)));
+      el.appendChild(cl);
+    }
+  }
+
+  function consiglioFormato(n) {
+    var r = V(V(DATI.formatiTorneo, {}).regole, []);
+    for (var i = 0; i < r.length; i++) if (n >= r[i].min && n <= r[i].max) return r[i];
+    return r.length ? r[r.length - 1] : { formato: 'italiana', nome: 'Girone all\'italiana', descrizione: '' };
+  }
+
+  /* Forma le coppie: prima quelle che si sono dichiarate a vicenda, poi
+     quelle dichiarate a senso unico, infine si abbinano i rimasti mettendo
+     insieme un esperto e un principiante quando si può. */
+  function formaCoppie(idTorneo) {
+    var iscritti = iscrittiTorneo(idTorneo);
+    if (iscritti.length < 2) { CA.toast('Servono almeno due iscritti.', 5000); return; }
+
+    var perNome = {};
+    iscritti.forEach(function (p) { perNome[normalizza(p.nome)] = p; });
+    var usati = {}, coppie = [];
+
+    function aggiungi(a, b, spaiata) {
+      usati[a._id] = true;
+      if (b) usati[b._id] = true;
+      coppie.push({
+        id: 'c' + (coppie.length + 1),
+        a: a._id, b: b ? b._id : '',
+        nome: b ? (cognomino(a.nome) + ' – ' + cognomino(b.nome)) : (cognomino(a.nome) + ' – (da abbinare)'),
+        spaiata: !!spaiata
+      });
+    }
+
+    /* 1. reciproci */
+    iscritti.forEach(function (p) {
+      if (usati[p._id] || !p.compagno) return;
+      var altro = perNome[normalizza(p.compagno)];
+      if (!altro || usati[altro._id] || altro._id === p._id) return;
+      if (normalizza(V(altro.compagno, '')) !== normalizza(p.nome)) return;
+      aggiungi(p, altro, false);
+    });
+    /* 2. a senso unico */
+    iscritti.forEach(function (p) {
+      if (usati[p._id] || !p.compagno) return;
+      var altro = perNome[normalizza(p.compagno)];
+      if (!altro || usati[altro._id] || altro._id === p._id) return;
+      aggiungi(p, altro, false);
+    });
+    /* 3. i rimasti: esperto con principiante */
+    var rimasti = iscritti.filter(function (p) { return !usati[p._id]; });
+    var peso = { esperto: 3, medio: 2, principiante: 1 };
+    rimasti.sort(function (a, b) { return (peso[b.livello] || 2) - (peso[a.livello] || 2); });
+    while (rimasti.length >= 2) {
+      aggiungi(rimasti.shift(), rimasti.pop(), true);
+    }
+    if (rimasti.length === 1) aggiungi(rimasti[0], null, true);
+
+    STATO.tornei[idTorneo] = STATO.tornei[idTorneo] || {};
+    STATO.tornei[idTorneo].coppie = coppie;
+    STATO.tornei[idTorneo].incontri = [];
+    salvaStato();
+    disegnaPannelloTorneo();
+    disegnaCruscotto();
+    CA.toast('👥 Formate ' + coppie.length + ' coppie.', 5000);
+  }
+  function cognomino(nome) {
+    var p = String(nome || '').trim().split(/\s+/);
+    return p.length > 1 ? (p[0] + ' ' + p[p.length - 1][0] + '.') : p[0];
+  }
+
+  /* --------- generazione del calendario secondo la formula scelta ------- */
+  function generaTabellone(idTorneo) {
+    var st = STATO.tornei[idTorneo] || {};
+    var coppie = V(st.coppie, []);
+    if (coppie.length < 2) { CA.toast('Forma prima le coppie.', 5000); return; }
+    var formato = st.formato || consiglioFormato(coppie.length).formato;
+
+    var incontri = [];
+    if (formato === 'sfida') incontri = calendarioSfida(coppie);
+    else if (formato === 'italiana') incontri = calendarioItaliana(coppie);
+    else if (formato === 'gironi') incontri = calendarioGironi(coppie);
+    else incontri = calendarioEliminazione(coppie);
+
+    STATO.tornei[idTorneo] = STATO.tornei[idTorneo] || {};
+    STATO.tornei[idTorneo].formato = formato;
+    STATO.tornei[idTorneo].incontri = incontri;
+    salvaStato();
+    disegnaPannelloTorneo();
+    disegnaPunteggi();
+    disegnaCruscotto();
+    CA.toast('🎲 Tabellone generato: ' + incontri.length + ' partite.', 5000);
+  }
+
+  function calendarioSfida(coppie) {
+    var out = [];
+    for (var i = 1; i <= 3; i++) {
+      out.push({ id: 'm' + i, turno: 'Partita ' + i, a: coppie[0].id, b: coppie[1].id, tavolo: 1, puntiA: '', puntiB: '' });
+    }
+    return out;
+  }
+
+  /* girone all'italiana con il metodo del cerchio: tutti contro tutti */
+  function calendarioItaliana(coppie, prefisso, tavoloBase) {
+    var ids = coppie.map(function (c) { return c.id; });
+    if (ids.length % 2) ids.push(null);           /* chi riposa */
+    var n = ids.length, turni = n - 1, meta = n / 2;
+    var out = [], k = 0;
+    for (var t = 0; t < turni; t++) {
+      var tavolo = tavoloBase || 1;
+      for (var i = 0; i < meta; i++) {
+        var a = ids[i], b = ids[n - 1 - i];
+        if (a === null || b === null) continue;
+        k++;
+        out.push({
+          id: 'm' + (prefisso || '') + k,
+          turno: (prefisso ? ('Girone ' + prefisso + ' — turno ') : 'Turno ') + (t + 1),
+          a: a, b: b, tavolo: tavolo++, puntiA: '', puntiB: ''
+        });
+      }
+      ids.splice(1, 0, ids.pop());                /* si ruota tenendo fermo il primo */
+    }
+    return out;
+  }
+
+  /* due gironi, poi semifinali incrociate e finale */
+  function calendarioGironi(coppie) {
+    var a = [], b = [];
+    coppie.forEach(function (c, i) { (i % 2 ? b : a).push(c); });
+    var out = calendarioItaliana(a, 'A', 1).concat(calendarioItaliana(b, 'B', 3));
+    out.push({ id: 'sf1', turno: 'Semifinali', a: '1A', b: '2B', tavolo: 1, puntiA: '', puntiB: '', segnaposto: true });
+    out.push({ id: 'sf2', turno: 'Semifinali', a: '1B', b: '2A', tavolo: 2, puntiA: '', puntiB: '', segnaposto: true });
+    out.push({ id: 'fin', turno: 'Finale', a: 'Vincente semifinale 1', b: 'Vincente semifinale 2', tavolo: 1, puntiA: '', puntiB: '', segnaposto: true });
+    out.push({ id: 'fin3', turno: 'Finale 3º posto', a: 'Perdente semifinale 1', b: 'Perdente semifinale 2', tavolo: 2, puntiA: '', puntiB: '', segnaposto: true });
+    return out;
+  }
+
+  /* tabellone a eliminazione: le coppie in eccesso riposano al primo turno */
+  function calendarioEliminazione(coppie) {
+    var n = coppie.length;
+    var pot = 1;
+    while (pot * 2 <= n) pot *= 2;
+    var quanteSfide = n - pot;                    /* chi gioca il turno preliminare */
+    var out = [], k = 0, tavolo = 1;
+    var i = 0;
+    for (var s = 0; s < quanteSfide; s++) {
+      k++;
+      out.push({
+        id: 'p' + k, turno: 'Turno preliminare',
+        a: coppie[i].id, b: coppie[i + 1].id, tavolo: tavolo++, puntiA: '', puntiB: ''
+      });
+      i += 2;
+    }
+    var restano = coppie.slice(i).map(function (c) { return c.id; });
+    for (var q = 0; q < quanteSfide; q++) restano.push('Vincente preliminare ' + (q + 1));
+
+    var turno = 1;
+    while (restano.length > 1) {
+      var prossimi = [], tav = 1;
+      var nomeTurno = restano.length === 2 ? 'Finale' : (restano.length === 4 ? 'Semifinali' : 'Turno ' + turno);
+      /* al singolare, per scrivere «Vincente semifinale 1» e non «semifinali 1» */
+      var singolare = restano.length === 4 ? 'semifinale' : (restano.length === 2 ? 'finale' : 'turno ' + turno);
+      for (var j = 0; j < restano.length; j += 2) {
+        k++;
+        var idm = 't' + turno + '_' + j;
+        out.push({
+          id: idm, turno: nomeTurno, a: restano[j], b: restano[j + 1],
+          tavolo: tav++, puntiA: '', puntiB: '',
+          segnaposto: String(restano[j]).indexOf('Vincente') === 0 || String(restano[j + 1]).indexOf('Vincente') === 0
+        });
+        prossimi.push('Vincente ' + singolare + ' ' + (prossimi.length + 1));
+      }
+      restano = prossimi;
+      turno++;
+      if (turno > 8) break;
+    }
+    return out;
+  }
+
+  function nomeCoppia(id, coppie) {
+    var c = coppie.filter(function (x) { return x.id === id; })[0];
+    if (c) return c.nome;
+    return String(id || '—');
+  }
+
+  function rigaIncontroAdmin(m, coppie) {
+    var d = crea('div', 'incontro-adm');
+    d.appendChild(crea('b', null, nomeCoppia(m.a, coppie)));
+
+    var cc = crea('div', 'cc');
+    var ia = document.createElement('input');
+    ia.type = 'number'; ia.value = V(m.puntiA, ''); ia.inputMode = 'numeric';
+    var ib = document.createElement('input');
+    ib.type = 'number'; ib.value = V(m.puntiB, ''); ib.inputMode = 'numeric';
+    function cambia() {
+      m.puntiA = ia.value === '' ? '' : Number(ia.value);
+      m.puntiB = ib.value === '' ? '' : Number(ib.value);
+      salvaStato();
+      var cl = document.querySelector('#pannelloTorneo .card:last-child');
+      disegnaPannelloTorneo();
+    }
+    ia.addEventListener('change', cambia);
+    ib.addEventListener('change', cambia);
+    cc.appendChild(ia);
+    cc.appendChild(crea('span', null, '–'));
+    cc.appendChild(ib);
+    d.appendChild(cc);
+
+    var b = crea('b', 'dx', nomeCoppia(m.b, coppie));
+    d.appendChild(b);
+    return d;
+  }
+
+  function classificaTorneo(idTorneo) {
+    var st = STATO.tornei[idTorneo] || {};
+    var coppie = V(st.coppie, []);
+    var pun = V(V(V(DATI.aree, {}).adulti, {}).punteggio, {});
+    var vv = V(pun.vittoria, 3), pp = V(pun.pareggio, 1);
+    var tab = {};
+    coppie.forEach(function (c) {
+      tab[c.id] = { coppia: c.nome, id: c.id, g: 0, v: 0, n: 0, p: 0, punti: 0, fatti: 0, subiti: 0 };
+    });
+    V(st.incontri, []).forEach(function (m) {
+      if (m.puntiA === '' || m.puntiB === '' || m.puntiA === undefined || m.puntiB === undefined) return;
+      var a = tab[m.a], b = tab[m.b];
+      if (!a || !b) return;
+      var pa = Number(m.puntiA), pb = Number(m.puntiB);
+      a.g++; b.g++;
+      a.fatti += pa; a.subiti += pb;
+      b.fatti += pb; b.subiti += pa;
+      if (pa > pb) { a.v++; b.p++; a.punti += vv; }
+      else if (pb > pa) { b.v++; a.p++; b.punti += vv; }
+      else { a.n++; b.n++; a.punti += pp; b.punti += pp; }
+    });
+    return Object.keys(tab).map(function (k) { return tab[k]; })
+      .sort(function (x, y) {
+        if (y.punti !== x.punti) return y.punti - x.punti;
+        return (y.fatti - y.subiti) - (x.fatti - x.subiti);
+      });
+  }
+
+  function tabellaClassificaAdmin(righe) {
+    var scroll = crea('div', 'tabella-scroll');
+    var t = document.createElement('table');
+    t.className = 'tab';
+    var th = document.createElement('thead');
+    var tr = document.createElement('tr');
+    ['#', 'Coppia', 'G', 'V', 'N', 'P', 'Punti'].forEach(function (x, i) {
+      var c = document.createElement('th');
+      c.textContent = x;
+      if (i >= 2) c.className = 'n';
+      tr.appendChild(c);
+    });
+    th.appendChild(tr); t.appendChild(th);
+    var tb = document.createElement('tbody');
+    righe.forEach(function (r, i) {
+      var row = document.createElement('tr');
+      if (i < 3) row.className = 'podio' + (i + 1);
+      [String(i + 1), r.coppia, r.g, r.v, r.n, r.p, r.punti].forEach(function (v, k) {
+        var td = document.createElement('td');
+        td.textContent = String(v);
+        if (k >= 2) td.className = 'n';
+        row.appendChild(td);
+      });
+      tb.appendChild(row);
+    });
+    t.appendChild(tb);
+    scroll.appendChild(t);
+    return scroll;
+  }
+
+  /* ============================== PUNTEGGI ============================= */
+  function disegnaPunteggi() {
+    disegnaPuntiRagazzi();
+    disegnaPuntiCarte();
+    disegnaTitoli();
+  }
+
+  function disegnaPuntiRagazzi() {
+    var el = $('puntiRagazzi');
+    el.textContent = '';
+    if (!STATO.squadre.length) {
+      var c0 = crea('div', 'card');
+      c0.appendChild(crea('p', 'aiuto', 'Prima forma le squadre nella scheda 🚩 Squadre.'));
+      el.appendChild(c0);
+      return;
+    }
+    var pun = V(V(V(DATI.aree, {}).ragazzi, {}).punteggio, {});
+    var scala = [V(pun.primo, 5), V(pun.secondo, 3), V(pun.terzo, 2), V(pun.quarto, 1)];
+
+    /* classifica generale in cima, così si vede sempre come sta andando */
+    var cc = crea('div', 'card');
+    cc.appendChild(crea('h2', null, '🏆 Classifica generale'));
+    var gen = classificaRagazzi();
+    var ul = crea('div');
+    gen.forEach(function (r, i) {
+      var d = crea('div', 'riga-iscr');
+      var s = crea('div', 'cnt');
+      var b = crea('b', null, (['🥇', '🥈', '🥉'][i] || (i + 1) + '°') + ' ' + r.nome);
+      s.appendChild(b);
+      s.appendChild(crea('small', null, r.dettaglio));
+      d.appendChild(s);
+      d.appendChild(crea('span', 'tondo-punti', String(r.punti)));
+      ul.appendChild(d);
+    });
+    cc.appendChild(ul);
+
+    /* bonus fair play */
+    cc.appendChild(crea('h3', null, '🤝 Punti bonus (fair play)'));
+    STATO.squadre.forEach(function (sq) {
+      var d = crea('div', 'posto-riga');
+      d.style.marginBottom = '8px';
+      d.appendChild(crea('span', null, sq.nome));
+      var i = document.createElement('input');
+      i.type = 'number'; i.className = 'mini'; i.style.width = '90px';
+      i.value = V(STATO.bonus[sq.id], '');
+      i.addEventListener('change', function () {
+        STATO.bonus[sq.id] = Number(i.value) || 0;
+        salvaStato();
+        disegnaPuntiRagazzi();
+      });
+      d.appendChild(i);
+      cc.appendChild(d);
+    });
+    el.appendChild(cc);
+
+    /* una scheda per gioco */
+    V(DATI.giochi, []).forEach(function (g) {
+      if (g.tipo === 'riscaldamento') return;
+      if (g.tipo === 'individuale') return;
+      var c = crea('div', 'gioco-punti');
+      var doppio = (g.tipo === 'finale');
+      var h = crea('h3', null, V(g.emoji, '🎯') + ' ' + g.nome + (doppio ? '  (punti doppi)' : ''));
+      c.appendChild(h);
+
+      var ordine = V(STATO.risultati[g.id], []);
+      var box = crea('div', 'ordine-sq');
+      for (var pos = 0; pos < STATO.squadre.length; pos++) {
+        (function (pos) {
+          var riga = crea('div', 'posto-riga');
+          riga.appendChild(crea('span', 'medaglia', ['🥇', '🥈', '🥉'][pos] || (pos + 1) + '°'));
+          var sel = document.createElement('select');
+          var vuota = document.createElement('option');
+          vuota.value = ''; vuota.textContent = '— chi è arrivato ' + (pos + 1) + '° —';
+          sel.appendChild(vuota);
+          STATO.squadre.forEach(function (sq) {
+            var op = document.createElement('option');
+            op.value = sq.id; op.textContent = sq.nome;
+            sel.appendChild(op);
+          });
+          var gia = ordine[pos];
+          sel.value = gia ? gia.squadra : '';
+          sel.addEventListener('change', function () {
+            var nuovo = V(STATO.risultati[g.id], []).slice();
+            nuovo[pos] = sel.value ? {
+              squadra: sel.value, posizione: pos + 1,
+              punti: (scala[pos] !== undefined ? scala[pos] : 1) * (doppio ? 2 : 1)
+            } : null;
+            STATO.risultati[g.id] = nuovo.filter(function (x, k) { return x || k < nuovo.length; });
+            salvaStato();
+            disegnaPuntiRagazzi();
+          });
+          riga.appendChild(sel);
+          riga.appendChild(crea('span', 'tondo-punti',
+            String((scala[pos] !== undefined ? scala[pos] : 1) * (doppio ? 2 : 1))));
+          box.appendChild(riga);
+        })(pos);
+      }
+      c.appendChild(box);
+      el.appendChild(c);
+    });
+  }
+
+  function classificaRagazzi() {
+    var tot = {};
+    STATO.squadre.forEach(function (s) { tot[s.id] = { nome: s.nome, id: s.id, punti: Number(STATO.bonus[s.id]) || 0, gare: 0 }; });
+    Object.keys(STATO.risultati).forEach(function (idGioco) {
+      V(STATO.risultati[idGioco], []).forEach(function (r) {
+        if (!r || !tot[r.squadra]) return;
+        tot[r.squadra].punti += Number(r.punti) || 0;
+        tot[r.squadra].gare++;
+      });
+    });
+    return Object.keys(tot).map(function (k) {
+      var x = tot[k];
+      x.dettaglio = x.gare + (x.gare === 1 ? ' gara' : ' gare') +
+        (Number(STATO.bonus[k]) ? ' · ' + STATO.bonus[k] + ' punti bonus' : '');
+      return x;
+    }).sort(function (a, b) { return b.punti - a.punti; });
+  }
+
+  function disegnaPuntiCarte() {
+    var el = $('puntiCarte');
+    el.textContent = '';
+    var qualcosa = false;
+    V(DATI.tornei, []).forEach(function (t) {
+      var st = STATO.tornei[t.id] || {};
+      var inc = V(st.incontri, []);
+      if (!inc.length) return;
+      qualcosa = true;
+      var c = crea('div', 'card');
+      c.appendChild(crea('h2', null, V(t.emoji, '🃏') + ' ' + t.nome));
+      var turni = {};
+      inc.forEach(function (m) { (turni[V(m.turno, 'Incontri')] = turni[V(m.turno, 'Incontri')] || []).push(m); });
+      Object.keys(turni).forEach(function (k) {
+        c.appendChild(crea('h3', null, k));
+        turni[k].forEach(function (m) { c.appendChild(rigaIncontroAdmin(m, V(st.coppie, []))); });
+      });
+      el.appendChild(c);
+    });
+    if (!qualcosa) {
+      var v = crea('div', 'card');
+      v.appendChild(crea('p', 'aiuto', 'Nessun tabellone generato: vai nella scheda 🃏 Tornei.'));
+      el.appendChild(v);
+    }
+  }
+
+  function disegnaTitoli() {
+    var el = $('puntiTitoli');
+    el.textContent = '';
+    var c = crea('div', 'card');
+    c.appendChild(crea('h2', null, '⭐ Titoli e premi'));
+    c.appendChild(crea('p', 'aiuto', 'Chi ha vinto cosa. Compare nella pagina pubblica delle classifiche.'));
+
+    V(DATI.premi, []).forEach(function (p) {
+      var riga = crea('div', 'posto-riga');
+      riga.style.marginBottom = '10px';
+      riga.appendChild(crea('span', 'medaglia', V(p.emoji, '🏅')));
+      var eti = crea('span', null, p.nome);
+      eti.style.cssText = 'flex:0 0 190px;font-weight:bold;font-size:.92rem';
+      riga.appendChild(eti);
+      var i = document.createElement('input');
+      i.type = 'text'; i.className = 'mini'; i.placeholder = 'chi ha vinto…';
+      i.style.flex = '1';
+      var gia = STATO.titoli.filter(function (x) { return x.premio === p.nome; })[0];
+      i.value = gia ? gia.chi : '';
+      i.addEventListener('change', function () {
+        STATO.titoli = STATO.titoli.filter(function (x) { return x.premio !== p.nome; });
+        if (i.value.trim()) STATO.titoli.push({ premio: p.nome, chi: i.value.trim(), emoji: V(p.emoji, '🏅'), area: p.area });
+        salvaStato();
+      });
+      riga.appendChild(i);
+      c.appendChild(riga);
+    });
+    el.appendChild(c);
+  }
+
+  /* ====================== PUBBLICAZIONE CLASSIFICHE =================== */
+  function nomePubblico(p, modo) {
+    if (!p) return '';
+    var parti = String(p.nome || '').trim().split(/\s+/);
+    if (modo === 'nome') return parti[0];
+    if (modo === 'intero') return p.nome;
+    if (parti.length > 1) return parti[0] + ' ' + parti[parti.length - 1][0] + '.';
+    return parti[0];
+  }
+
+  function costruisciPubblico() {
+    var modo = $('pubNomi').value;
+    var out = { aggiornato: new Date().toISOString() };
+
+    /* ragazzi */
+    var gen = classificaRagazzi();
+    var mappaPunti = {};
+    gen.forEach(function (g) { mappaPunti[g.id] = g.punti; });
+    out.ragazzi = {
+      squadre: STATO.squadre.map(function (s) {
+        return {
+          nome: s.nome, motto: s.motto, colore: s.colore,
+          capitano: modo === 'niente' ? '' : nomePubblico(perId(s.capitano), modo),
+          punti: V(mappaPunti[s.id], 0),
+          componenti: modo === 'niente' ? [] : s.componenti.map(function (id) {
+            return nomePubblico(perId(id), modo);
+          }).filter(Boolean)
+        };
+      }),
+      gare: [],
+      titoli: STATO.titoli.filter(function (t) { return t.area === 'ragazzi'; })
+    };
+    V(DATI.giochi, []).forEach(function (g) {
+      var r = V(STATO.risultati[g.id], []).filter(Boolean);
+      if (!r.length) return;
+      out.ragazzi.gare.push({
+        nome: g.nome, emoji: g.emoji,
+        ordine: r.map(function (x) {
+          var sq = STATO.squadre.filter(function (s) { return s.id === x.squadra; })[0];
+          return { squadra: sq ? sq.nome : '—', punti: x.punti };
+        })
+      });
+    });
+
+    /* carte */
+    var tornei = [], generale = {};
+    V(DATI.tornei, []).forEach(function (t) {
+      var st = STATO.tornei[t.id] || {};
+      if (!V(st.coppie, []).length) return;
+      var cl = classificaTorneo(t.id);
+      tornei.push({
+        id: t.id, nome: t.nome, emoji: t.emoji,
+        formato: V(st.formato, ''),
+        stato: V(st.incontri, []).some(function (m) { return m.puntiA === '' || m.puntiA === undefined; })
+          ? 'in corso' : 'concluso',
+        classifica: cl.map(function (r) {
+          return { coppia: r.coppia, g: r.g, v: r.v, n: r.n, p: r.p, punti: r.punti };
+        }),
+        incontri: V(st.incontri, []).map(function (m) {
+          return {
+            turno: m.turno, tavolo: m.tavolo,
+            a: nomeCoppia(m.a, V(st.coppie, [])), b: nomeCoppia(m.b, V(st.coppie, [])),
+            puntiA: m.puntiA, puntiB: m.puntiB
+          };
+        })
+      });
+      if (t.gruppo === 'italiana') {
+        cl.forEach(function (r) {
+          generale[r.coppia] = (generale[r.coppia] || 0) + r.punti;
+        });
+      }
+    });
+    out.carte = {
+      tornei: tornei,
+      generale: Object.keys(generale).map(function (k) { return { coppia: k, punti: generale[k] }; })
+        .sort(function (a, b) { return b.punti - a.punti; }),
+      titoli: STATO.titoli.filter(function (t) { return t.area === 'adulti'; })
+    };
+    return out;
+  }
+
+  function pubblicaClassifiche() {
+    if (!SESS) { CA.toast('Prima entra nel database.', 6000); return; }
+    var doc = costruisciPubblico();
+    CA.toast('Pubblico…', 20000);
+    token().then(function (t) { return FB.scriviClassifica(t, doc); })
+      .then(function (ok) {
+        testo('statoPubblicazione', ok
+          ? ('✅ Pubblicate alle ' + new Date().toLocaleTimeString('it-IT').slice(0, 5) + '. Chi apre la pagina classifiche le vede subito.')
+          : '⚠️ Non sono riuscito a pubblicarle.');
+        CA.toast(ok ? '📣 Classifiche pubblicate!' : '⚠️ Pubblicazione non riuscita.', 6000);
+      }).catch(function (e) { CA.toast('⚠️ ' + e.message, 8000); });
+  }
+
+  /* ======================= CONTENUTI E GITHUB ========================= */
+  function riempiContenuti() {
+    var t = V(DATI.tema, {}), ev = V(DATI.evento, {}), con = V(DATI.contatti, {});
+    var aree = V(DATI.aree, {}), q = V(DATI.quota, {});
+    $('c_titolo').value = V(t.titolo, '');
+    $('c_sotto').value = V(t.sottotitolo, '');
+    $('c_data').value = V(ev.data, '');
+    $('c_chiusura').value = V(ev.chiusuraIscrizioni, '');
+    $('c_ora').value = V(ev.orario, '');
+    $('c_oraFine').value = V(ev.orarioFine, '');
+    $('c_luogo').value = V(ev.luogo, '');
+    $('c_tel').value = V(con.telefono, '');
+    $('c_desc').value = V(ev.descrizione, '');
+    $('c_col1').value = V(t.colorePrimario, '');
+    $('c_col2').value = V(t.coloreSecondario, '');
+    $('c_col3').value = V(t.coloreAccento, '');
+    $('c_postiRag').value = V((aree.ragazzi || {}).postiTotali, '');
+    $('c_postiAdu').value = V((aree.adulti || {}).postiTotali, '');
+    $('c_quotaAttiva').checked = (q.attiva === true);
+    $('c_quotaImporto').value = V(q.importo, '');
+    $('c_quotaEtichetta').value = V(q.etichetta, '');
+    $('c_quotaSpiega').value = V(q.spiegazione, '');
+    $('c_musicaAttiva').checked = (DATI.musicaAttiva !== false);
+    $('c_sicurezza').value = V(DATI.sicurezza, []).join('\n');
+    $('c_regolamento').value = V(DATI.regolamento, []).join('\n');
+    $('c_foto').value = V(DATI.foto, []).join('\n');
+    $('c_programma').value = V(DATI.programma, []).map(function (r) {
+      return [V(r.ora, ''), V(r.area, 'tutti'), V(r.titolo, ''), V(r.nota, '')].join(' | ');
+    }).join('\n');
+
+    disegnaEditMusica();
+    disegnaEditGiochi();
+    disegnaEditTornei();
+  }
+
+  function disegnaEditMusica() {
+    var el = $('editMusica');
+    el.textContent = '';
+    V(DATI.giochi, []).forEach(function (g) {
+      g.musica = g.musica || { titolo: '', artista: '', url: '', ricerca: '' };
+      var d = crea('div', 'voce-edit');
+      var h = crea('div');
+      h.style.cssText = 'font-weight:bold;margin-bottom:8px';
+      h.textContent = V(g.emoji, '🎯') + ' ' + g.nome;
+      d.appendChild(h);
+      var gr = crea('div', 'griglia3');
+      gr.appendChild(campoMini('Titolo', g.musica.titolo, function (v) { g.musica.titolo = v; aggiornaRicerca(g); }));
+      gr.appendChild(campoMini('Artista', g.musica.artista, function (v) { g.musica.artista = v; aggiornaRicerca(g); }));
+      gr.appendChild(campoMini('Collegamento YouTube (facoltativo)', g.musica.url, function (v) { g.musica.url = v.trim(); }));
+      d.appendChild(gr);
+      var prova = crea('a', 'bottoncino', '▶ Prova il collegamento');
+      prova.target = '_blank'; prova.rel = 'noopener';
+      prova.href = CA.linkMusica(g.musica) || '#';
+      prova.style.display = 'inline-block';
+      d.appendChild(prova);
+      el.appendChild(d);
+    });
+  }
+  function aggiornaRicerca(g) {
+    g.musica.ricerca = (V(g.musica.titolo, '') + ' ' + V(g.musica.artista, '')).trim();
+  }
+
+  function campoMini(eti, valore, alCambio) {
+    var d = crea('div', 'campo');
+    var l = document.createElement('label');
+    l.textContent = eti;
+    d.appendChild(l);
+    var i = document.createElement('input');
+    i.type = 'text'; i.className = 'mini'; i.value = V(valore, '');
+    i.addEventListener('change', function () { alCambio(i.value); });
+    d.appendChild(i);
+    return d;
+  }
+  function areaMini(eti, valore, alCambio) {
+    var d = crea('div', 'campo');
+    var l = document.createElement('label');
+    l.textContent = eti;
+    d.appendChild(l);
+    var i = document.createElement('textarea');
+    i.value = V(valore, '');
+    i.addEventListener('change', function () { alCambio(i.value); });
+    d.appendChild(i);
+    return d;
+  }
+
+  function disegnaEditGiochi() {
+    var el = $('editGiochi');
+    el.textContent = '';
+    V(DATI.giochi, []).forEach(function (g) {
+      var d = document.createElement('details');
+      d.className = 'voce-edit';
+      var s = document.createElement('summary');
+      s.textContent = V(g.emoji, '🎯') + ' ' + g.nome;
+      d.appendChild(s);
+      var gr = crea('div', 'griglia3');
+      gr.appendChild(campoMini('Nome', g.nome, function (v) { g.nome = v; }));
+      gr.appendChild(campoMini('Orario', g.orario, function (v) { g.orario = v; }));
+      gr.appendChild(campoMini('Durata (minuti)', g.durata, function (v) { g.durata = Number(v) || 0; }));
+      d.appendChild(gr);
+      var sp = crea('label', 'spunta');
+      var ck = document.createElement('input');
+      ck.type = 'checkbox'; ck.checked = !!g.riserva;
+      ck.addEventListener('change', function () { g.riserva = ck.checked; });
+      sp.appendChild(ck);
+      sp.appendChild(crea('span', null, 'Di riserva (non entra nel programma)'));
+      d.appendChild(sp);
+      d.appendChild(areaMini('Descrizione', g.descrizione, function (v) { g.descrizione = v; }));
+      d.appendChild(areaMini('Regole (una per riga)', V(g.regole, []).join('\n'), function (v) { g.regole = righe(v); }));
+      d.appendChild(areaMini('Varianti (una per riga)', V(g.varianti, []).join('\n'), function (v) { g.varianti = righe(v); }));
+      el.appendChild(d);
+    });
+  }
+
+  function disegnaEditTornei() {
+    var el = $('editTornei');
+    el.textContent = '';
+    V(DATI.tornei, []).forEach(function (t) {
+      var d = document.createElement('details');
+      d.className = 'voce-edit';
+      var s = document.createElement('summary');
+      s.textContent = V(t.emoji, '🃏') + ' ' + t.nome;
+      d.appendChild(s);
+      var gr = crea('div', 'griglia3');
+      gr.appendChild(campoMini('Nome', t.nome, function (v) { t.nome = v; }));
+      gr.appendChild(campoMini('Blocco (A o B)', t.blocco, function (v) { t.blocco = v.toUpperCase(); }));
+      gr.appendChild(campoMini('Orario', t.orario, function (v) { t.orario = v; }));
+      gr.appendChild(campoMini('Posti', t.postiTotali, function (v) { t.postiTotali = Number(v) || 0; }));
+      gr.appendChild(campoMini('Minuti a partita', t.durataPartita, function (v) { t.durataPartita = Number(v) || 0; }));
+      d.appendChild(gr);
+      d.appendChild(areaMini('Descrizione', t.descrizione, function (v) { t.descrizione = v; }));
+      d.appendChild(areaMini('Come si gioca la partita', t.partita, function (v) { t.partita = v; }));
+      d.appendChild(areaMini('Regole (una per riga)', V(t.regole, []).join('\n'), function (v) { t.regole = righe(v); }));
+      d.appendChild(areaMini('Varianti (una per riga)', V(t.varianti, []).join('\n'), function (v) { t.varianti = righe(v); }));
+      el.appendChild(d);
+    });
+  }
+
+  function righe(v) {
+    return String(v || '').split('\n').map(function (x) { return x.trim(); }).filter(Boolean);
+  }
+
+  /* raccoglie i contenuti leggendo PRIMA dai campi del modulo */
+  function raccogli() {
+    var d = JSON.parse(JSON.stringify(DATI));
+    d.tema = d.tema || {};
+    d.tema.titolo = $('c_titolo').value.trim();
+    d.tema.sottotitolo = $('c_sotto').value.trim();
+    d.tema.colorePrimario = $('c_col1').value.trim();
+    d.tema.coloreSecondario = $('c_col2').value.trim();
+    d.tema.coloreAccento = $('c_col3').value.trim();
+    d.evento = d.evento || {};
+    d.evento.data = $('c_data').value;
+    d.evento.chiusuraIscrizioni = $('c_chiusura').value;
+    d.evento.orario = $('c_ora').value.trim();
+    d.evento.orarioFine = $('c_oraFine').value.trim();
+    d.evento.luogo = $('c_luogo').value.trim();
+    d.evento.descrizione = $('c_desc').value.trim();
+    d.contatti = d.contatti || {};
+    d.contatti.telefono = $('c_tel').value.trim();
+    d.aree = d.aree || {};
+    d.aree.ragazzi = d.aree.ragazzi || {};
+    d.aree.adulti = d.aree.adulti || {};
+    d.aree.ragazzi.postiTotali = Number($('c_postiRag').value) || 0;
+    d.aree.adulti.postiTotali = Number($('c_postiAdu').value) || 0;
+    d.quota = d.quota || {};
+    d.quota.attiva = $('c_quotaAttiva').checked;
+    d.quota.importo = Number($('c_quotaImporto').value) || 0;
+    d.quota.etichetta = $('c_quotaEtichetta').value.trim();
+    d.quota.spiegazione = $('c_quotaSpiega').value.trim();
+    d.musicaAttiva = $('c_musicaAttiva').checked;
+    d.sicurezza = righe($('c_sicurezza').value);
+    d.regolamento = righe($('c_regolamento').value);
+    d.foto = righe($('c_foto').value);
+    d.programma = righe($('c_programma').value).map(function (r) {
+      var p = r.split('|').map(function (x) { return x.trim(); });
+      return { ora: p[0] || '', area: p[1] || 'tutti', titolo: p[2] || '', nota: p[3] || '' };
+    }).filter(function (r) { return r.titolo; });
+    /* giochi e tornei sono già stati modificati in DATI dai campi */
+    d.giochi = DATI.giochi;
+    d.tornei = DATI.tornei;
+    return d;
+  }
+
+  function scaricaContenuti() {
+    scaricaFile('contenuti.json', JSON.stringify(raccogli(), null, 2), 'application/json');
+  }
+
+  /* ---- GitHub ---- */
+  function gh() {
+    var s = {};
+    try { s = JSON.parse(CA.memLeggi('ca_gh') || '{}'); } catch (e) { s = {}; }
+    function campo(id) { var e = $(id); return e ? String(e.value || '').trim() : ''; }
+    return {
+      owner: campo('gh_owner') || s.owner || 'Johannes1979I',
+      repo: campo('gh_repo') || s.repo || 'certamen-aquaticum',
+      branch: campo('gh_branch') || s.branch || 'main',
+      token: campo('gh_token') || s.token || ''
+    };
+  }
+  function salvaGh() {
+    CA.memScrivi('ca_gh', JSON.stringify(gh()));
+    CA.toast('Impostazioni GitHub salvate in questo browser.', 4000);
+  }
+  function caricaGh() {
+    try {
+      var s = JSON.parse(CA.memLeggi('ca_gh') || '{}');
+      if (s.owner) $('gh_owner').value = s.owner;
+      if (s.repo) $('gh_repo').value = s.repo;
+      if (s.branch) $('gh_branch').value = s.branch;
+      if (s.token) $('gh_token').value = s.token;
+    } catch (e) { }
+  }
+  function b64(str) {
+    var bytes = new TextEncoder().encode(str);
+    var bin = '';
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+
+  function ghPut(path, contenutoB64, messaggio) {
+    var s = gh();
+    if (!s.owner || !s.repo || !s.token) {
+      return Promise.reject(new Error('Manca il token di GitHub: incollalo qui sopra, nella sezione «Collegamento a GitHub».'));
+    }
+    var api = 'https://api.github.com/repos/' + s.owner + '/' + s.repo + '/contents/' + path;
+    /* niente intestazione Cache-Control: GitHub non la accetta nel CORS e la
+       chiamata fallirebbe con «Failed to fetch». Basta il parametro _=… */
+    var headers = { 'Authorization': 'Bearer ' + s.token, 'Accept': 'application/vnd.github+json' };
+
+    function sha() {
+      return fetch(api + '?ref=' + encodeURIComponent(s.branch) + '&_=' + Date.now(),
+        { headers: headers, cache: 'no-store' })
+        .then(function (r) {
+          if (r.ok) return r.json().then(function (j) { return j.sha; });
+          if (r.status === 404) return undefined;
+          return r.text().then(function (t) { throw new Error('GitHub ' + r.status + ': ' + t); });
+        });
+    }
+    function invia(sh) {
+      return fetch(api, {
+        method: 'PUT', headers: headers,
+        body: JSON.stringify({ message: messaggio, content: contenutoB64, branch: s.branch, sha: sh })
+      });
+    }
+    /* il 409 vuol dire che qualcun altro ha scritto nel frattempo:
+       si rilegge lo sha e si riprova, fino a quattro volte */
+    return sha().then(function (sh) {
+      return invia(sh).then(function tentativo(res) {
+        var giri = 0;
+        function riprova(r) {
+          if (r.status !== 409 || giri >= 4) return r;
+          giri++;
+          return new Promise(function (ok) { setTimeout(ok, 400); })
+            .then(sha).then(invia).then(riprova);
+        }
+        return riprova(res);
+      });
+    }).then(function (res) {
+      if (!res.ok) return res.text().then(function (t) { throw new Error('GitHub ' + res.status + ': ' + t); });
+      return res.json();
+    });
+  }
+
+  function pubblicaContenuti() {
+    if (!CARICATO) {
+      CA.toast('⚠️ Non ho letto i contenuti attuali: non pubblico, rischierei di svuotare il sito.', 9000);
+      return;
+    }
+    var d = raccogli();
+    CA.toast('Pubblicazione in corso…', 30000);
+    ghPut('contenuti.json', b64(JSON.stringify(d, null, 2)), 'Aggiorna contenuti Certamen Aquaticum')
+      .then(function () {
+        DATI = d;
+        CA.toast('✅ Pubblicato! Il sito si aggiorna fra 30-60 secondi. Ricordati di premere ⌘⇧R.', 9000);
+      })
+      .catch(function (e) { CA.toast('⚠️ ' + e.message, 10000); });
+  }
+
+  /* =============================== STAMPE ============================= */
+  function apriFoglio(titolo, nodo) {
+    var c = $('foglioCorpo');
+    c.textContent = '';
+    var h = crea('h1', null, titolo);
+    h.style.cssText = 'font-size:1.5rem;margin-bottom:4px';
+    c.appendChild(h);
+    var s = crea('p', null, V(V(DATI.tema, {}).titolo, '') + ' — ' +
+      CA.dataIt(V(DATI.evento, {}).data, true));
+    s.style.cssText = 'color:#5a7583;margin-bottom:16px';
+    c.appendChild(s);
+    c.appendChild(nodo);
+    $('foglio').classList.add('aperto');
+  }
+  function chiudiFoglio() { $('foglio').classList.remove('aperto'); }
+
+  function tabella(intestazioni, righeDati) {
+    var t = document.createElement('table');
+    var th = document.createElement('thead');
+    var tr = document.createElement('tr');
+    intestazioni.forEach(function (x) {
+      var c = document.createElement('th'); c.textContent = x; tr.appendChild(c);
+    });
+    th.appendChild(tr); t.appendChild(th);
+    var tb = document.createElement('tbody');
+    righeDati.forEach(function (r) {
+      var row = document.createElement('tr');
+      r.forEach(function (v) {
+        var td = document.createElement('td'); td.textContent = String(v == null ? '' : v); row.appendChild(td);
+      });
+      tb.appendChild(row);
+    });
+    t.appendChild(tb);
+    return t;
+  }
+
+  function stampa(quale) {
+    if (quale === 'accoglienza') {
+      var righeA = attive().sort(function (a, b) { return a.nome.localeCompare(b.nome); })
+        .map(function (p) {
+          return [p.nome, p.area === 'ragazzi' ? 'Ragazzi' : (p.gruppo === 'burraco' ? 'Burraco' : 'All\'italiana'),
+            p.codice, p.telefono || '', p.appartamento || '', '☐'];
+        });
+      apriFoglio('Elenco iscritti — accoglienza',
+        tabella(['Nome', 'Sezione', 'Pass', 'Telefono', 'Appartamento', 'Presente'], righeA));
+      return;
+    }
+    if (quale === 'squadre') {
+      var box = crea('div');
+      if (!STATO.squadre.length) box.appendChild(crea('p', null, 'Nessuna squadra formata.'));
+      STATO.squadre.forEach(function (s) {
+        var h = crea('h2', null, s.nome + (s.motto ? ' — « ' + s.motto + ' »' : ''));
+        h.style.cssText = 'margin-top:18px;font-size:1.15rem';
+        box.appendChild(h);
+        box.appendChild(tabella(['Componente', 'Età', 'In acqua', 'Ruolo'],
+          s.componenti.map(function (id) {
+            var p = perId(id);
+            return [p ? p.nome : '—', p ? p.eta : '', p ? etichettaNuoto(p.nuoto) : '',
+              s.capitano === id ? 'CAPITANO' : ''];
+          })));
+      });
+      apriFoglio('Le squadre', box);
+      return;
+    }
+    if (quale === 'tabelloni') {
+      var b2 = crea('div');
+      var trovato = false;
+      V(DATI.tornei, []).forEach(function (t) {
+        var st = STATO.tornei[t.id] || {};
+        if (!V(st.incontri, []).length) return;
+        trovato = true;
+        var h = crea('h2', null, t.nome);
+        h.style.cssText = 'margin-top:18px;font-size:1.15rem';
+        b2.appendChild(h);
+        b2.appendChild(tabella(['Turno', 'Tavolo', 'Coppia', 'Punti', 'Punti', 'Coppia'],
+          V(st.incontri, []).map(function (m) {
+            return [m.turno, m.tavolo, nomeCoppia(m.a, V(st.coppie, [])),
+              V(m.puntiA, '____'), V(m.puntiB, '____'), nomeCoppia(m.b, V(st.coppie, []))];
+          })));
+      });
+      if (!trovato) b2.appendChild(crea('p', null, 'Nessun tabellone generato.'));
+      apriFoglio('Tabelloni dei tornei', b2);
+      return;
+    }
+    if (quale === 'classifiche') {
+      var b3 = crea('div');
+      var h1 = crea('h2', null, 'Giochi in acqua — classifica generale');
+      h1.style.cssText = 'font-size:1.15rem;margin-top:10px';
+      b3.appendChild(h1);
+      b3.appendChild(tabella(['#', 'Squadra', 'Capitano', 'Punti'],
+        classificaRagazzi().map(function (r, i) {
+          var sq = STATO.squadre.filter(function (s) { return s.id === r.id; })[0];
+          var cap = sq ? perId(sq.capitano) : null;
+          return [i + 1, r.nome, cap ? cap.nome : '', r.punti];
+        })));
+      V(DATI.tornei, []).forEach(function (t) {
+        var cl = classificaTorneo(t.id);
+        if (!cl.length) return;
+        var h = crea('h2', null, t.nome);
+        h.style.cssText = 'margin-top:18px;font-size:1.15rem';
+        b3.appendChild(h);
+        b3.appendChild(tabella(['#', 'Coppia', 'G', 'V', 'N', 'P', 'Punti'],
+          cl.map(function (r, i) { return [i + 1, r.coppia, r.g, r.v, r.n, r.p, r.punti]; })));
+      });
+      apriFoglio('Classifiche', b3);
+      return;
+    }
+    if (quale === 'programma') {
+      apriFoglio('Programma del pomeriggio',
+        tabella(['Ora', 'Chi', 'Cosa', 'Nota'],
+          V(DATI.programma, []).map(function (r) {
+            return [r.ora, r.area === 'ragazzi' ? 'Ragazzi' : (r.area === 'adulti' ? 'Adulti' : 'Tutti'),
+              r.titolo, r.nota || ''];
+          })));
+    }
+  }
+})();

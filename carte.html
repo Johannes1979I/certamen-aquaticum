@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tornei di carte — Certamen Aquaticum</title>
+<meta name="description" content="I tornei di carte di Ferragosto al Residence Holiday: scopone, briscola, tresette e burraco. Formula, regole e iscrizione a coppie." />
+<meta name="theme-color" content="#0b7fd4" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>" />
+<link rel="stylesheet" href="stile.css" />
+<script src="firebase.js"></script>
+<script src="comune.js"></script>
+<script src="illustrazioni.js"></script>
+<style>
+.hero.area .velo{ background:linear-gradient(160deg, rgba(6,50,92,.88), rgba(11,127,212,.74) 55%, rgba(31,138,91,.6)); }
+.blocchi{ display:grid; gap:20px; grid-template-columns:1fr; max-width:960px; margin:0 auto; }
+@media(min-width:760px){ .blocchi{ grid-template-columns:1fr 1fr; } }
+.blocco-orario{
+  background:#fff; border:1px solid var(--linea); border-left:6px solid var(--c1);
+  border-radius:18px; padding:20px 22px; box-shadow:var(--shadow-s);
+}
+.blocco-orario.b{ border-left-color:var(--c2); }
+.blocco-orario h3{ font-size:1.2rem; }
+.blocco-orario .quando{ color:var(--muted); font-size:.94rem; margin-top:4px; }
+.blocco-orario ul{ margin:12px 0 0 4px; padding-left:18px; }
+.blocco-orario li{ margin-bottom:6px; }
+.tab-coppie{ max-width:560px; margin:0 auto; }
+</style>
+</head>
+<body>
+
+<nav class="barra no-stampa">
+  <div class="wrap barra-dentro">
+    <a class="marchio" href="index.html">
+      <span class="goccia">🏊</span><span id="marchioNome">Certamen Aquaticum</span>
+    </a>
+    <div class="menu">
+      <a href="index.html">Home</a>
+      <a href="ragazzi.html">🤽 Ragazzi</a>
+      <a href="carte.html">🃏 Adulti</a>
+      <a href="programma.html">🕓 Programma</a>
+      <a href="classifiche.html">🏆 Classifiche</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+<header class="hero area">
+  <div class="sfondo" id="heroSfondo"></div>
+  <div class="velo"></div>
+  <div class="hero-dentro wrap">
+    <span class="targhetta" id="heroEta">dai 18 anni</span>
+    <h1 id="heroTitolo">Tornei di carte</h1>
+    <p class="sottotitolo" id="heroSottotitolo"></p>
+    <div class="conto" style="margin-top:22px">
+      <div class="cella"><span class="n" id="nTornei">4</span><span class="u">tornei</span></div>
+      <div class="cella"><span class="n" id="nIscritti">—</span><span class="u">iscritti</span></div>
+      <div class="cella"><span class="n">4</span><span class="u">al tavolo</span></div>
+    </div>
+    <div class="azioni" style="margin-top:26px">
+      <a href="#iscrizioni" class="btn btn-a btn-grande">🎟️ Iscriviti</a>
+      <a href="#elenco" class="btn btn-fantasma">🂡 Vedi i tornei</a>
+    </div>
+  </div>
+  <svg class="onde" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#f7fbff" d="M0,64L60,58.7C120,53,240,43,360,48C480,53,600,75,720,74.7C840,75,960,53,1080,45.3C1200,37,1320,43,1380,45.3L1440,48L1440,120L0,120Z"></path>
+  </svg>
+</header>
+
+<!-- ========================= LE DUE ISCRIZIONI ========================== -->
+<section id="iscrizioni">
+  <div class="wrap">
+    <h2 class="titolo-sez">Due <span class="em">iscrizioni</span> separate</h2>
+    <p class="occhiello">I giochi all'italiana e il burraco sono due tornei distinti, con il loro tavolo, la loro classifica e la loro coppa. Scegli quello che fa per te: se vuoi, puoi fare tutti e due.</p>
+    <div class="porte" id="gruppi"></div>
+  </div>
+</section>
+
+<!-- ============================ COME FUNZIONA ============================ -->
+<section id="come" style="background:#fff;border-top:1px solid var(--linea);border-bottom:1px solid var(--linea)">
+  <div class="wrap">
+    <h2 class="titolo-sez">Come <span class="em">funziona</span></h2>
+    <p class="occhiello" id="comeDesc"></p>
+
+    <div class="nota-box info" style="margin-bottom:30px">
+      <h3 style="font-size:1.06rem;margin-bottom:6px">👥 Da soli o in coppia?</h3>
+      <p id="notaCoppia"></p>
+    </div>
+
+    <h3 style="text-align:center;margin-bottom:16px;font-size:1.15rem">🕓 I due blocchi di gioco</h3>
+    <div class="blocchi" id="blocchi"></div>
+
+    <h3 style="text-align:center;margin:38px 0 10px;font-size:1.15rem">🗂️ Come si decide la formula</h3>
+    <p class="occhiello" id="formatiNota" style="margin-bottom:22px"></p>
+    <div class="tabella-scroll" style="max-width:860px;margin:0 auto">
+      <table class="tab">
+        <thead><tr><th>Quante coppie</th><th>Formula</th><th>Come funziona</th></tr></thead>
+        <tbody id="tabFormati"></tbody>
+      </table>
+    </div>
+    <p class="centro" style="margin-top:16px">
+      <a href="classifiche.html" class="btn btn-chiaro btn-piccolo">🏆 Il tabellone compare qui appena è pronto</a>
+    </p>
+
+    <h3 style="text-align:center;margin:38px 0 14px;font-size:1.15rem">🏅 Come si fanno i punti</h3>
+    <div class="tabella-scroll tab-coppie">
+      <table class="tab">
+        <thead><tr><th>Risultato della partita</th><th class="n">Punti</th></tr></thead>
+        <tbody id="tabPunti"></tbody>
+      </table>
+    </div>
+    <p class="centro" style="margin-top:14px;color:var(--muted);max-width:640px;margin-left:auto;margin-right:auto" id="notaPunti"></p>
+  </div>
+</section>
+
+<!-- ============================== I TORNEI =============================== -->
+<section id="elenco">
+  <div class="wrap">
+    <h2 class="titolo-sez">I quattro <span class="em">tornei</span></h2>
+    <p class="occhiello">Per ognuno trovi la formula del torneo, le regole con cui si gioca qui e qualche variante, se al tavolo vi mettete d'accordo diversamente.</p>
+    <div class="giochi" id="tornei"></div>
+  </div>
+</section>
+
+<!-- ============================ DOVE ANDARE ============================== -->
+<section id="altro" style="background:#fff;border-top:1px solid var(--linea)">
+  <div class="wrap">
+    <h2 class="titolo-sez">E adesso?</h2>
+    <div class="tessere" style="max-width:1000px;margin:0 auto">
+      <a class="tessera" href="#iscrizioni" style="--tc:#ffc233">
+        <div class="tico">🎟️</div><h3>Iscriviti</h3>
+        <p>Due minuti: nome, un recapito e il compagno di gioco, se ce l'hai già.</p>
+        <span class="vai">Torna alle iscrizioni →</span>
+      </a>
+      <a class="tessera" href="programma.html" style="--tc:#7c4dff">
+        <div class="tico">🕓</div><h3>Programma</h3>
+        <p>Gli orari dei due blocchi, turno per turno, fino alla premiazione.</p>
+        <span class="vai">Vedi il programma →</span>
+      </a>
+      <a class="tessera" href="regole.html" style="--tc:#ff6b6b">
+        <div class="tico">📋</div><h3>Regolamento</h3>
+        <p>Le regole delle iscrizioni e cosa succede se qualcuno non si presenta.</p>
+        <span class="vai">Leggi il regolamento →</span>
+      </a>
+      <a class="tessera" href="classifiche.html" style="--tc:#0b7fd4">
+        <div class="tico">🏆</div><h3>Classifiche e tabellone</h3>
+        <p>Chi gioca contro chi, i turni e la classifica di ogni torneo.</p>
+        <span class="vai">Vedi il tabellone →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="piede"><div class="wrap" id="piede"></div></footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =========================================================================
+   Pagina dei tornei di carte. Formula, regole e varianti arrivano da
+   contenuti.json; l'illustrazione la disegna illustrazioni.js.
+   ========================================================================= */
+var $ = CA.$, V = CA.V, testo = CA.testo, crea = CA.crea;
+var DATI = {};
+
+CA.carica().then(function(d){
+  DATI = d;
+  disegna();
+  CA.segnaPagina();
+  CA.disegnaPiede('piede');
+  CA.avviaContatori(function(c){
+    testo('nIscritti', String(c.adulti || 0));
+    V(DATI.gruppiCarte, []).forEach(function(g){
+      CA.mostraContatore('g_' + g.id, c[g.id], V(g.postiTotali, 0));
+    });
+  });
+}).catch(function(e){
+  CA.toast('Non riesco a leggere i contenuti: ' + e.message, 9000);
+});
+
+function disegna(){
+  var t = V(DATI.tema, {});
+  var area = V(V(DATI.aree, {}).adulti, {});
+  var tornei = V(DATI.tornei, []);
+
+  testo('marchioNome', V(t.titolo, 'Certamen Aquaticum'));
+  testo('heroTitolo', V(area.titoloLungo, V(area.nome, 'Tornei di carte')));
+  testo('heroSottotitolo', V(area.sottotitolo, ''));
+  testo('heroEta', V(area.eta, ''));
+  testo('nTornei', String(tornei.length));
+  var foto = V(DATI.fotoHero, (V(DATI.foto, [])[0] || ''));
+  if(foto) $('heroSfondo').style.backgroundImage = 'url("' + encodeURI(foto) + '")';
+
+  testo('comeDesc', V(area.descrizione, ''));
+  testo('notaCoppia', V(V(DATI.iscrizione, {}).notaAdulti, '') + ' ' + V(area.avvisoTornei, ''));
+
+  disegnaGruppi(tornei);
+  disegnaBlocchi(tornei);
+  disegnaFormati();
+  disegnaPunti(V(area.punteggio, {}));
+  disegnaTornei(tornei);
+}
+
+/* le DUE iscrizioni: giochi all'italiana e burraco, ognuna con il suo
+   contatore in tempo reale e il suo pulsante */
+function disegnaGruppi(tornei){
+  var el = $('gruppi');
+  el.textContent = '';
+  var chiuse = CA.iscrizioniChiuse();
+
+  V(DATI.gruppiCarte, []).forEach(function(g){
+    var art = crea('article', 'porta');
+    art.style.setProperty('--pc1', CA.colore(g.colore, '#0b7fd4'));
+    art.style.setProperty('--pc2', '#14c4b4');
+
+    var tst = crea('div', 'testata');
+    tst.appendChild(crea('div', 'emoji', V(g.emoji, '🃏')));
+    tst.appendChild(crea('h3', null, V(g.nome, '')));
+    tst.appendChild(crea('p', 'sotto', V(g.sottotitolo, '')));
+    art.appendChild(tst);
+
+    var corpo = crea('div', 'corpo');
+    corpo.appendChild(crea('p', null, V(g.descrizione, '')));
+
+    /* quali tornei comprende */
+    var eti = crea('div', 'etichette');
+    V(g.tornei, []).forEach(function(id){
+      var t = tornei.filter(function(x){ return x.id === id; })[0];
+      if(t) eti.appendChild(crea('span', 'eti', V(t.emoji,'') + ' ' + V(t.nome,'')));
+    });
+    if(g.premio) eti.appendChild(crea('span', 'eti gialla', '🏆 ' + g.premio));
+    corpo.appendChild(eti);
+
+    /* contatore in tempo reale */
+    var box = crea('div', 'contatore');
+    box.id = 'g_' + g.id + 'Box';
+    var sx = crea('div');
+    var n = crea('div', 'grosso', '—'); n.id = 'g_' + g.id + 'Num';
+    var e2 = crea('div', 'dida', 'iscritti finora'); e2.id = 'g_' + g.id + 'Eti';
+    sx.appendChild(n); sx.appendChild(e2);
+    box.appendChild(sx);
+    var bp = crea('div', 'barra-posti');
+    var i = document.createElement('i'); i.id = 'g_' + g.id + 'Barra';
+    bp.appendChild(i); box.appendChild(bp);
+    box.appendChild(crea('span', 'vivo', 'in tempo reale'));
+    corpo.appendChild(box);
+
+    if(g.nota){
+      var nn = crea('p', null, 'ℹ️ ' + g.nota);
+      nn.style.cssText = 'font-size:.88rem;color:var(--muted)';
+      corpo.appendChild(nn);
+    }
+
+    var fondo = crea('div', 'fondo');
+    var b = crea('a', 'btn btn-largo btn-grande ' + (g.id === 'burraco' ? 'btn-p' : 'btn-g'));
+    if(chiuse){
+      b.className = 'btn btn-chiaro btn-largo btn-grande';
+      b.textContent = '⛔ Iscrizioni chiuse';
+    }else{
+      b.href = 'iscrizione-' + g.id + '.html';
+      b.textContent = '🎟️ Iscriviti — ' + V(g.nomeBreve, V(g.nome, ''));
+    }
+    fondo.appendChild(b);
+    corpo.appendChild(fondo);
+
+    art.appendChild(corpo);
+    el.appendChild(art);
+  });
+}
+
+/* i due blocchi orari: quali tornei si giocano insieme */
+function disegnaBlocchi(tornei){
+  var el = $('blocchi');
+  el.textContent = '';
+  ['A','B'].forEach(function(lettera){
+    var dentro = tornei.filter(function(x){ return String(x.blocco).toUpperCase() === lettera; });
+    if(!dentro.length) return;
+    var d = crea('div', 'blocco-orario' + (lettera === 'B' ? ' b' : ''));
+    d.appendChild(crea('h3', null, 'Blocco ' + lettera));
+    d.appendChild(crea('div', 'quando', 'si comincia alle ' + V(dentro[0].orario, '')));
+    var ul = document.createElement('ul');
+    dentro.forEach(function(x){
+      ul.appendChild(crea('li', null, V(x.emoji,'') + ' ' + V(x.nome,'') + ' — ' + V(x.postiTotali, 0) + ' posti'));
+    });
+    d.appendChild(ul);
+    var p = crea('p', null, 'Questi tornei si giocano in contemporanea: puoi sceglierne uno solo di questo blocco.');
+    p.style.cssText = 'margin-top:12px;font-size:.88rem;color:var(--muted)';
+    d.appendChild(p);
+    el.appendChild(d);
+  });
+}
+
+/* i criteri con cui gli organizzatori scelgono la formula del torneo */
+function disegnaFormati(){
+  var f = V(DATI.formatiTorneo, {});
+  testo('formatiNota', V(f.nota, ''));
+  var t = $('tabFormati');
+  t.textContent = '';
+  V(f.regole, []).forEach(function(r){
+    var tr = document.createElement('tr');
+    var quante = (r.min === r.max) ? (r.min + ' coppie')
+      : (r.max >= 100 ? ('da ' + r.min + ' coppie in su') : (r.min + ' – ' + r.max + ' coppie'));
+    [quante, V(r.nome, ''), V(r.descrizione, '')].forEach(function(v, i){
+      var td = document.createElement('td');
+      td.textContent = v;
+      if(i === 1) td.style.fontWeight = 'bold';
+      tr.appendChild(td);
+    });
+    t.appendChild(tr);
+  });
+}
+
+function disegnaPunti(p){
+  var t = $('tabPunti');
+  t.textContent = '';
+  [['🏆 Partita vinta', p.vittoria], ['🤝 Partita pari', p.pareggio], ['➖ Partita persa', p.sconfitta]].forEach(function(r){
+    var tr = document.createElement('tr');
+    var a = document.createElement('td'); a.textContent = r[0];
+    var b = document.createElement('td'); b.className = 'n'; b.textContent = String(V(r[1], 0));
+    tr.appendChild(a); tr.appendChild(b); t.appendChild(tr);
+  });
+  testo('notaPunti', V(p.nota, ''));
+}
+
+/* ------------------------------- i tornei ------------------------------- */
+function disegnaTornei(tornei){
+  var el = $('tornei');
+  el.textContent = '';
+  tornei.forEach(function(x, i){ el.appendChild(cartaTorneo(x, i+1)); });
+}
+
+function cartaTorneo(x, numero){
+  var art = crea('article', 'gioco');
+
+  var dis = crea('div', 'disegno');
+  ILL.disegna(dis, V(x.illustrazione, 'generica'), 'Illustrazione: ' + V(x.nome, ''));
+  dis.appendChild(crea('span', 'num', String(numero)));
+  art.appendChild(dis);
+
+  var dentro = crea('div', 'dentro');
+  var h = crea('h3');
+  h.appendChild(crea('span', null, V(x.emoji, '🃏')));
+  h.appendChild(crea('span', null, V(x.nome, '')));
+  dentro.appendChild(h);
+
+  var eti = crea('div', 'etichette');
+  if(x.blocco) eti.appendChild(crea('span', 'eti', '🕓 blocco ' + x.blocco + (x.orario ? ' · ' + x.orario : '')));
+  eti.appendChild(crea('span', 'eti verde', x.coppiaObbligatoria ? '👥 solo a coppie' : '👥 a coppie (o da solo)'));
+  if(x.giocatoriTavolo) eti.appendChild(crea('span', 'eti grigia', '🪑 ' + x.giocatoriTavolo + ' al tavolo'));
+  if(x.postiTotali) eti.appendChild(crea('span', 'eti grigia', '🎟️ ' + x.postiTotali + ' posti'));
+  if(x.durataPartita) eti.appendChild(crea('span', 'eti gialla', '⏱️ ' + x.durataPartita + ' min a partita'));
+  dentro.appendChild(eti);
+
+  dentro.appendChild(crea('p', 'desc', V(x.descrizione, '')));
+
+  if(x.partita){
+    var f = crea('div');
+    f.style.cssText = 'background:rgba(11,127,212,.07);border-radius:14px;padding:12px 14px;font-size:.94rem';
+    f.appendChild(crea('b', null, 'La singola partita: '));
+    f.appendChild(document.createTextNode(x.partita));
+    var s = crea('div', null, '🗂️ La formula del torneo (girone all\'italiana, gironi con finale o tabellone) si decide in base a quante coppie si iscrivono.');
+    s.style.cssText = 'margin-top:8px;font-size:.87rem;color:var(--muted)';
+    f.appendChild(s);
+    dentro.appendChild(f);
+  }
+
+  if((x.regole || []).length) dentro.appendChild(blocco('📋 Come si gioca', x.regole));
+  if((x.varianti || []).length) dentro.appendChild(blocco('✨ Varianti', x.varianti));
+
+  if(x.premio){
+    var pr = crea('p', null, '🏆 In palio: ' + x.premio);
+    pr.style.cssText = 'font-weight:bold;font-size:.94rem';
+    dentro.appendChild(pr);
+  }
+
+  art.appendChild(dentro);
+  return art;
+}
+
+function blocco(titolo, voci){
+  var d = document.createElement('details');
+  d.className = 'blocco';
+  var s = document.createElement('summary');
+  s.textContent = titolo + ' (' + voci.length + ')';
+  d.appendChild(s);
+  var ul = document.createElement('ul');
+  voci.forEach(function(v){ ul.appendChild(crea('li', null, v)); });
+  d.appendChild(ul);
+  return d;
+}
+
+</script>
+</body>
+</html>

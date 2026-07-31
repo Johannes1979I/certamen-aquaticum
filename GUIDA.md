@@ -1,0 +1,145 @@
+# Certamen Aquaticum — guida per l'organizzatore
+
+Il torneo di Ferragosto del Residence Holiday: giochi in acqua per i ragazzi,
+tornei di carte per gli adulti.
+
+- **Sito pubblico**: <https://johannes1979i.github.io/certamen-aquaticum/>
+- **Area organizzatori**: <https://johannes1979i.github.io/certamen-aquaticum/admin.html>
+  (password `holiday2026`, poi email e password Firebase)
+
+Dopo ogni pubblicazione premi **⌘⇧R** per vedere davvero le modifiche.
+
+---
+
+## Le pagine del sito
+
+| Pagina | Cosa contiene |
+|---|---|
+| `index.html` | Ingresso: informazioni generali, contatori in tempo reale, riquadri verso le sezioni |
+| `ragazzi.html` | I giochi in acqua, con regole, varianti, illustrazione e canzone |
+| `carte.html` | I tornei di carte e **le due iscrizioni separate** (all'italiana / burraco) |
+| `iscrizione-ragazzi.html` | Iscrizione ai giochi in acqua |
+| `iscrizione-italiana.html` | Iscrizione a scopone, briscola e tresette |
+| `iscrizione-burraco.html` | Iscrizione al burraco |
+| `programma.html` | Il programma ora per ora |
+| `classifiche.html` | Classifiche e tabellone, aggiornati dal vivo |
+| `regole.html` | Sicurezza in acqua, regolamento, premi |
+| `piscina.html` | Le foto della piscina |
+| `admin.html` | Area organizzatori |
+| `locandina.html` | Locandina A4 con QR, da stampare |
+
+## Dove stanno i dati
+
+Tutto quello che conta vive nel **database Firebase** del progetto
+`residence-holiday-ef6e9`, in collezioni nuove e separate da quelle della festa:
+
+| Dove | Cosa | Chi lo legge |
+|---|---|---|
+| `iscrizioni` | Un documento per iscritto, con nome e recapiti | solo con password |
+| `stato_certamen/gara` | Squadre, punteggi, coppie, tabelloni | solo con password |
+| `pubblico_certamen/contatore` | Solo numeri: ragazzi, adulti, italiana, burraco | chiunque |
+| `pubblico_certamen/classifica` | Classifiche e tabellone da appendere in bacheca | chiunque |
+
+**Regola d'oro**: nomi e recapiti si leggono solo con la password. Nei documenti
+pubblici finiscono numeri, nomi di squadra e — se lo decidi tu — i nomi dei
+ragazzi accorciati (`Giulia B.`).
+
+I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
+`contenuti.json`, che si modifica dall'admin e si pubblica su GitHub.
+
+## Come si lavora il giorno della festa
+
+1. **Accoglienza** — stampa l'elenco da `🖨️ Stampe → Elenco per l'accoglienza`
+   e spunta chi arriva.
+2. **Squadre** — scheda `🚩 Squadre`: la procedura guidata ti dice quante
+   squadre conviene fare, poi scegli:
+   - **automatico bilanciato**: distribuisce le età a serpentina, sparpaglia
+     chi nuota poco e tiene insieme gli amici che si sono richiesti a vicenda;
+   - **a mano**: trascini i nomi, o li tocchi e poi tocchi la squadra.
+   Il 🧢 accanto a un nome lo nomina capitano. Nome e grido si scrivono nei
+   due campi in cima a ogni colonna.
+3. **Tornei** — scheda `🃏 Tornei`: prima `Forma le coppie` (usa i compagni
+   dichiarati, poi abbina i rimasti mettendo insieme un esperto e un
+   principiante), poi scegli la formula e `Genera il tabellone`.
+   La formula la consiglia il sito in base a quante coppie ci sono:
+   - 2 coppie → sfida diretta al meglio delle tre
+   - 3–6 coppie → girone all'italiana
+   - 7–12 coppie → due gironi, semifinali e finale
+   - 13 e più → tabellone a eliminazione diretta
+4. **Punteggi** — scheda `🏅 Punteggi`: per i ragazzi scegli chi è arrivato
+   primo, secondo, terzo…; per le carte scrivi i punti delle partite.
+   Si salva tutto da solo nel database.
+5. **Pubblica** — scheda `📣 Pubblica` → `Pubblica adesso`: le classifiche
+   compaiono nella pagina pubblica. Rifallo ogni volta che vuoi aggiornarle.
+
+## La musica dei giochi
+
+Ogni gioco dei ragazzi ha la sua canzone, modificabile in
+`⚙️ Contenuti → 🎵 Musica dei giochi`. Se il campo del collegamento è vuoto il
+sito apre la **ricerca su YouTube** del titolo: funziona sempre e non scade.
+Se preferisci un video preciso, incolla il suo indirizzo.
+
+## Regole di sicurezza di Firestore
+
+Da incollare nella console Firebase (Firestore → Regole):
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- FESTA IN PISCINA (lasciare com'era) ---
+    match /prenotazioni/{doc} {
+      allow create: if request.resource.data.nome is string;
+      allow read, update, delete: if request.auth != null;
+    }
+    match /pubblico/{doc} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // --- CERTAMEN AQUATICUM ---
+
+    // Chiunque può iscriversi; nomi e recapiti si leggono solo con il login.
+    match /iscrizioni/{doc} {
+      allow create: if request.resource.data.nome is string
+                    && request.resource.data.area in ['ragazzi', 'adulti'];
+      allow read, update, delete: if request.auth != null;
+    }
+
+    // Documenti pubblici: solo numeri e classifiche, niente recapiti.
+    // Il contatore lo scrive anche chi si iscrive (senza login);
+    // la classifica la scrive solo l'organizzatore.
+    match /pubblico_certamen/contatore {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /pubblico_certamen/classifica {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Il lavoro degli organizzatori: squadre, punteggi, tabelloni.
+    match /stato_certamen/{doc} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+
+## Vincoli tecnici
+
+- Sito statico puro: HTML, CSS e JavaScript. **Nessun CDN, nessuna libreria
+  esterna, nessun build step.**
+- Le illustrazioni dei giochi sono SVG scritti a mano dentro
+  `illustrazioni.js`: nessuna immagine da scaricare.
+- Mobile-first, ma a piena larghezza su ogni schermo.
+- Mai `innerHTML` con dati che arrivano da fuori.
+
+## Se qualcosa non va
+
+- **«Non vedo le modifiche»** → quasi sempre è la cache: **⌘⇧R**.
+- **«Non riesco a pubblicare i contenuti»** → manca il token GitHub: si
+  incolla in `📣 Pubblica → Collegamento a GitHub`.
+- **«Le iscrizioni non arrivano»** → controlla di aver incollato le regole di
+  sicurezza qui sopra: senza, Firestore rifiuta la scrittura.

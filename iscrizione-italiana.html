@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Iscrizione ai giochi all’italiana — Certamen Aquaticum</title>
+<meta name="description" content="Iscrizione al torneo di scopone, briscola e tresette del Certamen Aquaticum, Ferragosto al Residence Holiday." />
+<meta name="theme-color" content="#1f8a5b" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎟️</text></svg>" />
+<link rel="stylesheet" href="stile.css" />
+<script>window.ISCR = { area: 'adulti', gruppo: 'italiana' };</script>
+<script src="qr.js"></script>
+<script src="firebase.js"></script>
+<script src="comune.js"></script>
+<style>
+.hero.corta .hero-dentro{ padding:clamp(26px,4vw,48px) 0 clamp(50px,6vw,70px); }
+.hero.corta .velo{ background:linear-gradient(160deg, rgba(8,60,40,.88), rgba(31,138,91,.7) 60%, rgba(11,127,212,.6)); }
+.riga-info{ display:flex; flex-wrap:wrap; gap:9px; justify-content:center; margin-top:18px; }
+.riga-info span{ background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.3);
+  border-radius:999px; padding:7px 15px; font-size:.9rem; }
+.posti-riga{ max-width:840px; margin:0 auto 26px; }
+</style>
+</head>
+<body>
+
+<nav class="barra no-stampa">
+  <div class="wrap barra-dentro">
+    <a class="marchio" href="index.html"><span class="goccia">🏊</span><span id="marchioNome">Certamen Aquaticum</span></a>
+    <div class="menu">
+      <a href="index.html">Home</a>
+      <a href="ragazzi.html">🤽 Ragazzi</a>
+      <a href="carte.html">🃏 Adulti</a>
+      <a href="programma.html">🕓 Programma</a>
+      <a href="classifiche.html">🏆 Classifiche</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+<header class="hero corta no-stampa">
+  <div class="sfondo" id="heroSfondo"></div>
+  <div class="velo"></div>
+  <div class="hero-dentro wrap">
+    <span class="targhetta" id="heroSezione">🂡 Giochi all’italiana</span>
+    <h1 id="heroTitolo">Iscrizione</h1>
+    <p class="sottotitolo" id="heroSottotitolo"></p>
+    <div class="riga-info">
+      <span id="heroQuando">📅 —</span>
+      <span id="heroQuota">🎟️ —</span>
+    </div>
+  </div>
+  <svg class="onde" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#f7fbff" d="M0,64L60,58.7C120,53,240,43,360,48C480,53,600,75,720,74.7C840,75,960,53,1080,45.3C1200,37,1320,43,1380,45.3L1440,48L1440,120L0,120Z"></path>
+  </svg>
+</header>
+
+<section style="padding-top:26px">
+  <div class="wrap">
+
+    <!-- posti disponibili, aggiornati da soli -->
+    <div class="contatore posti-riga no-stampa" id="postiBox">
+      <div>
+        <div class="grosso" id="postiNum">—</div>
+        <div class="dida" id="postiEti">iscritti finora</div>
+      </div>
+      <div class="barra-posti"><i id="postiBarra"></i></div>
+      <span class="vivo">in tempo reale</span>
+    </div>
+
+    <!-- se c'è già un'iscrizione fatta da questo telefono -->
+    <div class="gia-fatto" id="giaFatto">
+      <b>✅ Da questo dispositivo è già stata fatta un'iscrizione</b>
+      <p style="margin-top:5px">Codice <b id="giaCodice">—</b> — intestata a <b id="giaNome">—</b>.</p>
+      <p style="margin-top:8px">
+        <button class="btn btn-chiaro btn-piccolo" id="btnRivedi">👀 Rivedi il pass</button>
+      </p>
+    </div>
+
+    <!-- iscrizioni chiuse -->
+    <div class="nota-box" id="chiuse" style="display:none;text-align:center">
+      <h3 style="margin-bottom:6px">⛔ Le iscrizioni sono chiuse</h3>
+      <p>Passa comunque all'accoglienza il giorno stesso: se resta posto ti facciamo giocare.</p>
+      <p style="margin-top:14px"><a href="index.html" class="btn btn-chiaro btn-piccolo">Torna alla home</a></p>
+    </div>
+
+    <div id="pannelloPassi">
+      <div class="passi no-stampa" id="passi"></div>
+      <div class="scatola">
+        <div class="passo" id="p1"></div>
+        <div class="passo" id="p2"></div>
+        <div class="passo" id="p3">
+          <h2 style="font-size:1.35rem;margin-bottom:8px">Controlla e conferma</h2>
+          <p style="color:var(--muted);margin-bottom:22px">Se è tutto giusto, spunta la casella e premi il pulsante verde: l'iscrizione parte subito.</p>
+          <div id="riepilogo"></div>
+          <label class="spunta" for="fConsenso" style="margin-top:18px">
+            <input type="checkbox" id="fConsenso" />
+            <span>Confermo l'iscrizione e accetto il regolamento e le regole di sicurezza. Autorizzo gli organizzatori a usare questi dati solo per organizzare la giornata.</span>
+          </label>
+          <div class="errore" id="e_fConsenso"></div>
+        </div>
+
+        <div class="nav-passi no-stampa">
+          <button class="btn btn-chiaro" id="btnIndietro">← Indietro</button>
+          <button class="btn btn-p" id="btnAvanti">Avanti →</button>
+          <button class="btn btn-p btn-grande" id="btnConferma" style="display:none">✅ Confermo l'iscrizione</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ------------------------------ il pass ------------------------------ -->
+    <div id="areaPass" style="display:none">
+      <div class="avviso-invio no-stampa" id="invioAvviso" style="display:none">
+        <h3 id="invioTitolo">—</h3>
+        <p id="invioSotto">—</p>
+      </div>
+
+      <div class="pass" id="pass">
+        <div class="testata">
+          <h3 id="passTitolo">Certamen Aquaticum</h3>
+          <p id="passSezione">—</p>
+          <span class="cod" id="passCodice">—</span>
+        </div>
+        <div class="corpo">
+          <div class="riep" style="margin-bottom:14px">
+            <h4>Il pass di</h4>
+            <div class="riga"><span>Nome</span><span class="d" id="passNome">—</span></div>
+            <div class="riga"><span>Quando</span><span class="d" id="passQuando">—</span></div>
+            <div class="riga"><span>Dove</span><span class="d" id="passDove">—</span></div>
+          </div>
+          <div class="riep" id="passDettagliBox">
+            <h4>Dettagli</h4>
+            <div id="passDettagli"></div>
+          </div>
+          <div class="qr">
+            <canvas id="passQr" width="260" height="260"></canvas>
+            <p>Mostra questo codice all'accoglienza</p>
+          </div>
+        </div>
+        <div class="esibire">🎟️ Da mostrare all'accoglienza, stampato o sul telefono</div>
+      </div>
+
+      <div class="azioni no-stampa" style="margin-top:24px">
+        <button class="btn btn-chiaro" id="btnStampa">🖨️ Stampa il pass</button>
+        <button class="btn btn-chiaro" id="btnNuova">➕ Iscrivi un'altra persona</button>
+        <a href="index.html" class="btn btn-p">🏠 Torna alla home</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<footer class="piede no-stampa"><div class="wrap" id="piede"></div></footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="iscrizione.js"></script>
+</body>
+</html>

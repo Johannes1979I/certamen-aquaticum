@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Certamen Aquaticum — Residence Holiday</title>
+<meta name="description" content="Il torneo di Ferragosto del Residence Holiday a Montalto di Castro: giochi in acqua per i ragazzi e tornei di carte per gli adulti. Programma, regole e iscrizione online." />
+<meta name="theme-color" content="#0b7fd4" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏊</text></svg>" />
+<link rel="stylesheet" href="stile.css" />
+<script src="firebase.js"></script>
+<script src="comune.js"></script>
+<style>
+/* la home è una pagina di ingresso: si vede tutta senza scorrere all'infinito */
+.hero-dentro{ padding:clamp(30px,5vw,64px) 0 clamp(56px,7vw,86px); }
+.riga-info{
+  display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:20px;
+}
+.riga-info span{
+  background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.3);
+  border-radius:999px; padding:8px 16px; font-size:.94rem; backdrop-filter:blur(6px);
+}
+</style>
+</head>
+<body>
+
+<nav class="barra no-stampa">
+  <div class="wrap barra-dentro">
+    <a class="marchio" href="index.html">
+      <span class="goccia" id="marchioEmoji">🏊</span>
+      <span id="marchioNome">Certamen Aquaticum</span>
+    </a>
+    <div class="menu">
+      <a href="index.html">Home</a>
+      <a href="ragazzi.html">🤽 Ragazzi</a>
+      <a href="carte.html">🃏 Adulti</a>
+      <a href="programma.html">🕓 Programma</a>
+      <a href="classifiche.html">🏆 Classifiche</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+<!-- ================================ HERO ================================= -->
+<header class="hero">
+  <div class="sfondo" id="heroSfondo"></div>
+  <div class="velo"></div>
+  <div class="hero-dentro wrap">
+    <span class="targhetta" id="heroOcchiello">Ferragosto 2026</span>
+    <h1 id="heroTitolo">Certamen Aquaticum</h1>
+    <p class="sottotitolo" id="heroSottotitolo"></p>
+    <div class="riga-info">
+      <span id="iData">📅 —</span>
+      <span id="iOra">🕓 —</span>
+      <span id="iLuogo">📍 —</span>
+      <span id="iQuota">🎟️ —</span>
+    </div>
+    <div class="conto" id="conto"></div>
+  </div>
+  <svg class="onde" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#f7fbff" d="M0,64L60,58.7C120,53,240,43,360,48C480,53,600,75,720,74.7C840,75,960,53,1080,45.3C1200,37,1320,43,1380,45.3L1440,48L1440,120L0,120Z"></path>
+  </svg>
+</header>
+
+<!-- ============================= ISCRIZIONI ============================== -->
+<section id="iscriviti" style="padding-bottom:26px">
+  <div class="wrap">
+    <h2 class="titolo-sez">Prima cosa: <span class="em">iscriviti</span></h2>
+    <p class="occhiello" id="occhielloIscr">Due iscrizioni diverse, una per i ragazzi e una per gli adulti. Bastano due minuti e ricevi il tuo pass con il codice.</p>
+
+    <div class="doppio-invito">
+      <div class="invito" id="invRagazzi">
+        <div style="font-size:2.4rem">🤽</div>
+        <div class="n" id="ragNum">—</div>
+        <div class="e" id="ragEti">iscritti finora</div>
+        <a href="iscrizione-ragazzi.html" class="btn btn-g btn-largo btn-grande" id="btnRag">🎟️ Iscrivi un ragazzo o una ragazza</a>
+        <p style="margin-top:8px;font-size:.86rem;color:var(--muted)" id="ragEta"></p>
+      </div>
+      <div class="invito" id="invAdulti">
+        <div style="font-size:2.4rem">🃏</div>
+        <div class="n" id="aduNum">—</div>
+        <div class="e" id="aduEti">iscritti finora</div>
+        <a href="carte.html#iscrizioni" class="btn btn-p btn-largo btn-grande" id="btnAdu">🎟️ Iscriviti a un torneo di carte</a>
+        <p style="margin-top:8px;font-size:.86rem;color:var(--muted)" id="aduEta"></p>
+      </div>
+    </div>
+    <p class="centro" style="margin-top:18px;color:var(--muted);font-size:.94rem" id="notaChiusura"></p>
+  </div>
+</section>
+
+<!-- =============================== SEZIONI =============================== -->
+<section id="sezioni">
+  <div class="wrap">
+    <h2 class="titolo-sez">Dove vuoi <span class="em">andare</span>?</h2>
+    <p class="occhiello">Ogni sezione ha la sua pagina: apri quella che ti interessa, senza dover scorrere tutto il sito.</p>
+    <div class="tessere" id="tessere"></div>
+  </div>
+</section>
+
+<!-- ============================== LA PISCINA ============================= -->
+<section id="anteprimaFoto" style="background:#fff;border-top:1px solid var(--linea);padding-top:36px;padding-bottom:44px">
+  <div class="wrap">
+    <div class="galleria" id="galleriaBreve"></div>
+    <p class="centro" style="margin-top:20px">
+      <a href="piscina.html" class="btn btn-chiaro btn-piccolo">📸 Vedi tutte le foto della piscina</a>
+    </p>
+  </div>
+</section>
+
+</main>
+
+<footer class="piede">
+  <div class="wrap" id="piede"></div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =========================================================================
+   Home del Certamen Aquaticum: è una pagina di ingresso, non un sito a
+   scorrimento. Qui ci sono solo le informazioni generali, i due contatori
+   in tempo reale e i riquadri che portano alle pagine dedicate.
+   ========================================================================= */
+var $ = CA.$, V = CA.V, testo = CA.testo, crea = CA.crea;
+var DATI = {};
+
+CA.carica().then(function(d){
+  DATI = d;
+  disegna();
+  CA.segnaPagina();
+  CA.disegnaPiede('piede');
+  CA.avviaContatori(mostraIscritti);
+}).catch(function(e){
+  CA.toast('Non riesco a leggere i contenuti del sito: ' + e.message, 9000);
+});
+
+function disegna(){
+  var t = V(DATI.tema, {}), ev = V(DATI.evento, {}), res = V(DATI.residence, {});
+  var aree = V(DATI.aree, {}), rag = V(aree.ragazzi, {}), adu = V(aree.adulti, {});
+  var q = V(DATI.quota, {});
+
+  document.title = V(t.titolo,'Certamen Aquaticum') + ' — ' + V(res.nome,'Residence Holiday');
+  testo('marchioNome', V(t.titolo, 'Certamen Aquaticum'));
+  testo('marchioEmoji', V(res.emoji, '🏊'));
+
+  testo('heroOcchiello', V(t.occhiello, 'Ferragosto'));
+  testo('heroTitolo', V(t.titolo, 'Certamen Aquaticum'));
+  testo('heroSottotitolo', V(t.sottotitolo, ''));
+  testo('iData', '📅 ' + CA.dataIt(ev.data, true));
+  testo('iOra', '🕓 ' + V(ev.orario,'') + ' – ' + V(ev.orarioFine,''));
+  testo('iLuogo', '📍 ' + V(ev.luogo,''));
+  testo('iQuota', q.attiva === true ? ('🎟️ quota ' + CA.eur(q.importo) + ' a persona') : '🎟️ iscrizione gratuita');
+
+  var foto = V(DATI.fotoHero, (V(DATI.foto,[])[0] || ''));
+  if(foto){ $('heroSfondo').style.backgroundImage = 'url("' + encodeURI(foto) + '")'; }
+  CA.avviaConto('conto', ev.data, ev.orario);
+
+  testo('ragEta', V(rag.eta, ''));
+  testo('aduEta', V(adu.eta, '') + ' · due iscrizioni: giochi all\'italiana e burraco');
+
+  var chiusura = V(ev.chiusuraIscrizioni, '');
+  if(chiusura){
+    testo('notaChiusura', CA.iscrizioniChiuse()
+      ? '⛔ Le iscrizioni si sono chiuse il ' + CA.dataIt(chiusura) + '. Passa all\'accoglienza il giorno stesso: se resta posto ti facciamo giocare.'
+      : '🗓️ Le iscrizioni si chiudono ' + CA.dataIt(chiusura) + '.');
+  }
+  if(CA.iscrizioniChiuse()){
+    ['btnRag','btnAdu'].forEach(function(id){
+      var b = $(id);
+      if(b){ b.textContent = '⛔ Iscrizioni chiuse'; b.removeAttribute('href'); b.className = 'btn btn-chiaro btn-largo btn-grande'; }
+    });
+  }
+
+  disegnaTessere();
+  disegnaFotoBrevi();
+}
+
+/* i contatori veri, che si aggiornano da soli */
+function mostraIscritti(c){
+  var aree = V(DATI.aree, {});
+  CA.mostraContatore('rag', c.ragazzi, V((aree.ragazzi||{}).postiTotali, 0));
+  CA.mostraContatore('adu', c.adulti, V((aree.adulti||{}).postiTotali, 0));
+  var t1 = $('tesRagConteggio'), t2 = $('tesAduConteggio');
+  if(t1) t1.textContent = (c.ragazzi || 0) + ' iscritti';
+  if(t2) t2.textContent = (c.adulti || 0) + ' iscritti';
+}
+
+/* ------------------------- i riquadri di ingresso ----------------------- */
+function disegnaTessere(){
+  var el = $('tessere');
+  el.textContent = '';
+  var aree = V(DATI.aree, {}), rag = V(aree.ragazzi, {}), adu = V(aree.adulti, {});
+  var giochi = V(DATI.giochi, []).length;
+  var tornei = V(DATI.tornei, []).length;
+
+  var voci = [
+    { id:'tesRag', ico:'🤽', tit:V(rag.nome,'Giochi in acqua'), col:CA.colore(rag.colore,'#14c4b4'),
+      txt: giochi + ' giochi a squadre con palloni e materassini, ognuno con le sue regole, le sue varianti e la sua canzone.',
+      vai:'ragazzi.html', etichetta:'Entra nei giochi in acqua' },
+    { id:'tesAdu', ico:'🃏', tit:V(adu.nome,'Tornei di carte'), col:CA.colore(adu.colore,'#0b7fd4'),
+      txt: tornei + ' tornei a coppie divisi in due iscrizioni: i giochi all\'italiana e il burraco.',
+      vai:'carte.html', etichetta:'Entra nei tornei di carte' },
+    { id:'tesPro', ico:'🕓', tit:'Programma', col:'#7c4dff',
+      txt:'Ora per ora, cosa succede in vasca e cosa succede ai tavoli, dalla prima gara alla premiazione.',
+      vai:'programma.html', etichetta:'Vedi il programma' },
+    { id:'tesCla', ico:'🏆', tit:'Classifiche e tabelloni', col:'#ffc233',
+      txt:'Punteggi aggiornati durante il pomeriggio, tabellone degli incontri e premi in palio.',
+      vai:'classifiche.html', etichetta:'Vedi le classifiche' },
+    { id:'tesReg', ico:'📋', tit:'Regole e sicurezza', col:'#ff6b6b',
+      txt:'Le regole di sicurezza in acqua e il regolamento delle iscrizioni: poche cose, ma da sapere.',
+      vai:'regole.html', etichetta:'Leggi le regole' },
+    { id:'tesFot', ico:'📸', tit:'La piscina', col:'#1f8a5b',
+      txt:'Il campo di gara: la vasca del Residence Holiday a Montalto di Castro.',
+      vai:'piscina.html', etichetta:'Guarda le foto' }
+  ];
+
+  voci.forEach(function(v){
+    var a = crea('a', 'tessera');
+    a.href = v.vai;
+    a.style.setProperty('--tc', v.col);
+    a.appendChild(crea('div', 'tico', v.ico));
+    a.appendChild(crea('h3', null, v.tit));
+    a.appendChild(crea('p', null, v.txt));
+    a.appendChild(crea('span', 'vai', v.etichetta + ' →'));
+    if(v.id === 'tesRag' || v.id === 'tesAdu'){
+      var c = crea('span', 'conteggio', '—');
+      c.id = v.id + 'Conteggio';
+      a.appendChild(c);
+    }
+    el.appendChild(a);
+  });
+}
+
+function disegnaFotoBrevi(){
+  var el = $('galleriaBreve');
+  el.textContent = '';
+  V(DATI.foto, []).slice(0, 4).forEach(function(src, i){
+    if(!src) return;
+    var img = document.createElement('img');
+    img.src = src;
+    img.alt = 'La piscina del Residence Holiday, foto ' + (i+1);
+    img.loading = 'lazy';
+    el.appendChild(img);
+  });
+}
+</script>
+</body>
+</html>

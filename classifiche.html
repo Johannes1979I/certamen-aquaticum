@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Classifiche e tabelloni — Certamen Aquaticum</title>
+<meta name="description" content="Classifiche aggiornate e tabellone degli incontri del Certamen Aquaticum al Residence Holiday." />
+<meta name="theme-color" content="#ffc233" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏆</text></svg>" />
+<link rel="stylesheet" href="stile.css" />
+<script src="firebase.js"></script>
+<script src="comune.js"></script>
+<style>
+.hero.corta .hero-dentro{ padding:clamp(26px,4vw,48px) 0 clamp(50px,6vw,70px); }
+.hero.corta .velo{ background:linear-gradient(160deg, rgba(92,60,6,.86), rgba(255,194,51,.62) 60%, rgba(11,127,212,.55)); }
+.linguette{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:30px; }
+.vuoto{
+  max-width:700px; margin:0 auto; text-align:center; background:#fff; border:2px dashed var(--linea);
+  border-radius:var(--radius); padding:40px 26px; color:var(--muted);
+}
+.vuoto .em{ font-size:2.6rem; display:block; margin-bottom:10px; }
+.blocco-cl{ margin-bottom:38px; }
+.blocco-cl h3{
+  font-size:1.3rem; margin-bottom:6px; display:flex; align-items:center; gap:9px; flex-wrap:wrap;
+}
+.blocco-cl .sotto{ color:var(--muted); font-size:.94rem; margin-bottom:14px; }
+.pillola{
+  display:inline-block; background:rgba(11,127,212,.12); color:#075a99; border-radius:999px;
+  padding:4px 12px; font-size:.8rem; font-weight:bold;
+}
+.pallino-sq{
+  display:inline-block; width:14px; height:14px; border-radius:50%; margin-right:8px;
+  vertical-align:-2px; border:2px solid rgba(0,0,0,.12);
+}
+.incontro{
+  display:grid; gap:8px; grid-template-columns:1fr auto 1fr; align-items:center;
+  background:#fff; border:1px solid var(--linea); border-radius:14px; padding:12px 14px; margin-bottom:9px;
+}
+.incontro .sq{ font-weight:bold; }
+.incontro .sq.dx{ text-align:right; }
+.incontro .ris{
+  background:var(--ink); color:#fff; border-radius:10px; padding:5px 12px; font-weight:bold;
+  font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+.incontro .ris.da-giocare{ background:rgba(10,37,64,.12); color:var(--muted); }
+.incontro .vinta{ color:#0f7a4a; }
+.turno-tit{
+  font-weight:bold; margin:18px 0 10px; font-size:1rem; color:var(--muted);
+  text-transform:uppercase; letter-spacing:.05em;
+}
+.aggiornato{ text-align:center; color:var(--muted); font-size:.9rem; margin-bottom:26px; }
+</style>
+</head>
+<body>
+
+<nav class="barra no-stampa">
+  <div class="wrap barra-dentro">
+    <a class="marchio" href="index.html"><span class="goccia">🏊</span><span id="marchioNome">Certamen Aquaticum</span></a>
+    <div class="menu">
+      <a href="index.html">Home</a>
+      <a href="ragazzi.html">🤽 Ragazzi</a>
+      <a href="carte.html">🃏 Adulti</a>
+      <a href="programma.html">🕓 Programma</a>
+      <a href="classifiche.html">🏆 Classifiche</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+<header class="hero corta no-stampa">
+  <div class="sfondo" id="heroSfondo"></div>
+  <div class="velo"></div>
+  <div class="hero-dentro wrap">
+    <span class="targhetta">🏆 Aggiornate dal vivo</span>
+    <h1>Classifiche e tabelloni</h1>
+    <p class="sottotitolo" id="heroSotto">I punteggi si aggiornano durante il pomeriggio, mano a mano che gli organizzatori li registrano a bordo piscina.</p>
+  </div>
+  <svg class="onde" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#f7fbff" d="M0,64L60,58.7C120,53,240,43,360,48C480,53,600,75,720,74.7C840,75,960,53,1080,45.3C1200,37,1320,43,1380,45.3L1440,48L1440,120L0,120Z"></path>
+  </svg>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="linguette no-stampa">
+      <button class="btn btn-p btn-piccolo" data-vista="ragazzi" id="lRagazzi">🤽 Giochi in acqua</button>
+      <button class="btn btn-chiaro btn-piccolo" data-vista="carte">🃏 Tornei di carte</button>
+      <button class="btn btn-chiaro btn-piccolo" data-vista="premi">🏅 Premi</button>
+    </div>
+    <p class="aggiornato" id="aggiornato"></p>
+
+    <div id="vistaRagazzi"></div>
+    <div id="vistaCarte" style="display:none"></div>
+    <div id="vistaPremi" style="display:none"></div>
+
+    <div class="azioni" style="margin-top:36px">
+      <button class="btn btn-chiaro btn-piccolo no-stampa" id="btnRicarica">🔄 Aggiorna adesso</button>
+      <button class="btn btn-chiaro btn-piccolo no-stampa" onclick="window.print()">🖨️ Stampa</button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="piede no-stampa"><div class="wrap" id="piede"></div></footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =========================================================================
+   Classifiche pubbliche. I dati arrivano dal documento pubblico scritto
+   dagli organizzatori dall'area admin: contiene solo quello che si appende
+   in bacheca (nomi di squadra, punti, turni), mai recapiti.
+   Si aggiorna da solo ogni minuto e quando si torna sulla scheda.
+   ========================================================================= */
+var $ = CA.$, V = CA.V, testo = CA.testo, crea = CA.crea;
+var DATI = {}, CL = null;
+
+CA.carica().then(function(d){
+  DATI = d;
+  testo('marchioNome', V(V(d.tema,{}).titolo, 'Certamen Aquaticum'));
+  var foto = V(d.foto, [])[1] || V(d.fotoHero, '');
+  if(foto) $('heroSfondo').style.backgroundImage = 'url("' + encodeURI(foto) + '")';
+  CA.segnaPagina();
+  CA.disegnaPiede('piede');
+  collegaLinguette();
+  disegnaPremi();
+  carica();
+  setInterval(function(){ if(!document.hidden) carica(); }, 60000);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) carica(); });
+  window.addEventListener('focus', carica);
+}).catch(function(e){ CA.toast('Non riesco a leggere i contenuti: ' + e.message, 9000); });
+
+$('btnRicarica').addEventListener('click', function(){ carica(true); });
+
+function carica(conAvviso){
+  if(!window.FB || !FB.attivo()){ disegnaTutto(); return; }
+  FB.leggiClassifica().then(function(c){
+    CL = c;
+    disegnaTutto();
+    if(conAvviso) CA.toast(c ? '✅ Classifiche aggiornate.' : 'Le classifiche non sono ancora state pubblicate.', 4000);
+  }).catch(function(){
+    disegnaTutto();
+    if(conAvviso) CA.toast('⚠️ Non riesco a leggere le classifiche adesso.', 5000);
+  });
+}
+
+function disegnaTutto(){
+  var q = CL && CL.aggiornato ? new Date(CL.aggiornato) : null;
+  testo('aggiornato', q && !isNaN(q.getTime())
+    ? ('Ultimo aggiornamento: ' + due(q.getHours()) + ':' + due(q.getMinutes()) + ' del ' + q.getDate() + '/' + (q.getMonth()+1))
+    : '');
+  disegnaRagazzi();
+  disegnaCarte();
+}
+function due(n){ return (n < 10 ? '0' : '') + n; }
+
+/* ------------------------------- ragazzi -------------------------------- */
+function disegnaRagazzi(){
+  var el = $('vistaRagazzi');
+  el.textContent = '';
+  var r = CL && CL.ragazzi ? CL.ragazzi : null;
+  var squadre = r ? V(r.squadre, []) : [];
+
+  if(!squadre.length){
+    el.appendChild(vuoto('🚩', 'Le squadre non sono ancora state formate',
+      'Le squadre si formano il giorno stesso, dopo l\'accoglienza: qui compariranno i nomi, i capitani e i punti di ogni gara.'));
+    return;
+  }
+
+  /* classifica generale */
+  var b = crea('div', 'blocco-cl');
+  var h = crea('h3');
+  h.appendChild(crea('span', null, '🏆 Classifica generale'));
+  b.appendChild(h);
+  b.appendChild(crea('div', 'sotto', 'La somma dei punti di tutte le gare del pomeriggio.'));
+
+  var ordinate = squadre.slice().sort(function(a, b2){ return V(b2.punti,0) - V(a.punti,0); });
+  var scroll = crea('div', 'tabella-scroll');
+  var t = document.createElement('table');
+  t.className = 'tab';
+  var th = document.createElement('thead');
+  th.innerHTML = '';
+  var trh = document.createElement('tr');
+  ['#', 'Squadra', 'Capitano', 'Punti'].forEach(function(x, i){
+    var c = document.createElement('th');
+    c.textContent = x;
+    if(i === 3) c.className = 'n';
+    trh.appendChild(c);
+  });
+  th.appendChild(trh); t.appendChild(th);
+  var tb = document.createElement('tbody');
+  ordinate.forEach(function(s, i){
+    var tr = document.createElement('tr');
+    if(i < 3) tr.className = 'podio' + (i+1);
+    var c0 = document.createElement('td'); c0.textContent = String(i+1);
+    var c1 = document.createElement('td');
+    var pall = crea('span', 'pallino-sq');
+    pall.style.background = CA.colore(s.colore, '#0b7fd4');
+    c1.appendChild(pall);
+    c1.appendChild(document.createTextNode(V(s.nome, 'Squadra')));
+    if(s.motto){
+      var m = crea('div', null, '« ' + s.motto + ' »');
+      m.style.cssText = 'font-size:.84rem;color:var(--muted);font-weight:normal;margin-left:22px';
+      c1.appendChild(m);
+    }
+    var c2 = document.createElement('td'); c2.textContent = V(s.capitano, '—');
+    var c3 = document.createElement('td'); c3.className = 'n'; c3.textContent = String(V(s.punti, 0));
+    [c0,c1,c2,c3].forEach(function(c){ tr.appendChild(c); });
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);
+  scroll.appendChild(t);
+  b.appendChild(scroll);
+  el.appendChild(b);
+
+  /* i risultati gara per gara */
+  var gare = r ? V(r.gare, []) : [];
+  if(gare.length){
+    var bg = crea('div', 'blocco-cl');
+    bg.appendChild(crea('h3', null, '📋 Gara per gara'));
+    bg.appendChild(crea('div', 'sotto', 'Come è andata ogni singola prova.'));
+    gare.forEach(function(g){
+      var d = document.createElement('details');
+      d.className = 'blocco';
+      var s = document.createElement('summary');
+      s.textContent = V(g.emoji, '🎯') + ' ' + V(g.nome, '');
+      d.appendChild(s);
+      var ul = document.createElement('ul');
+      V(g.ordine, []).forEach(function(o, i){
+        var medaglia = ['🥇','🥈','🥉'][i] || (i+1) + '°';
+        ul.appendChild(crea('li', null, medaglia + ' ' + V(o.squadra, '') + ' — ' + V(o.punti, 0) + ' punti'));
+      });
+      if(!V(g.ordine, []).length) ul.appendChild(crea('li', null, 'non ancora disputata'));
+      d.appendChild(ul);
+      bg.appendChild(d);
+    });
+    el.appendChild(bg);
+  }
+
+  /* le rose delle squadre */
+  var conRosa = squadre.filter(function(s){ return V(s.componenti, []).length; });
+  if(conRosa.length){
+    var br = crea('div', 'blocco-cl');
+    br.appendChild(crea('h3', null, '👥 Le squadre'));
+    br.appendChild(crea('div', 'sotto', 'Chi gioca con chi.'));
+    var gr = crea('div', 'schede');
+    conRosa.forEach(function(s){
+      var c = crea('div', 'scheda');
+      c.style.borderTop = '5px solid ' + CA.colore(s.colore, '#0b7fd4');
+      c.appendChild(crea('h3', null, V(s.nome, 'Squadra')));
+      if(s.motto) c.appendChild(crea('p', null, '« ' + s.motto + ' »'));
+      var ul = document.createElement('ul');
+      ul.style.cssText = 'list-style:none;margin-top:10px;font-size:.92rem';
+      V(s.componenti, []).forEach(function(n){
+        ul.appendChild(crea('li', null, (n === V(s.capitano,'') ? '🧢 ' : '• ') + n));
+      });
+      c.appendChild(ul);
+      gr.appendChild(c);
+    });
+    br.appendChild(gr);
+    el.appendChild(br);
+  }
+
+  /* titoli individuali */
+  var titoli = r ? V(r.titoli, []) : [];
+  if(titoli.length){
+    var bt = crea('div', 'blocco-cl');
+    bt.appendChild(crea('h3', null, '⭐ Titoli individuali'));
+    var gt = crea('div', 'schede');
+    titoli.forEach(function(x){
+      var c = crea('div', 'scheda');
+      c.appendChild(crea('div', 'ico', V(x.emoji, '🏅')));
+      c.appendChild(crea('h3', null, V(x.premio, '')));
+      c.appendChild(crea('p', null, V(x.chi, '—')));
+      gt.appendChild(c);
+    });
+    bt.appendChild(gt);
+    el.appendChild(bt);
+  }
+}
+
+/* -------------------------------- carte --------------------------------- */
+function disegnaCarte(){
+  var el = $('vistaCarte');
+  el.textContent = '';
+  var c = CL && CL.carte ? CL.carte : null;
+  var tornei = c ? V(c.tornei, []) : [];
+
+  if(!tornei.length){
+    el.appendChild(vuoto('🃏', 'I tabelloni non sono ancora stati sorteggiati',
+      'La formula di ogni torneo si decide in base a quante coppie si iscrivono: appena i tavoli sono composti, qui compaiono il tabellone degli incontri e la classifica.'));
+    return;
+  }
+
+  /* classifica combinata dei giochi all'italiana */
+  var gen = c ? V(c.generale, []) : [];
+  if(gen.length){
+    var bg = crea('div', 'blocco-cl');
+    bg.appendChild(crea('h3', null, '🏆 Classifica generale dei giochi all\'italiana'));
+    bg.appendChild(crea('div', 'sotto', 'La somma dei punti fatti da ogni coppia nei tornei di scopone, briscola e tresette.'));
+    bg.appendChild(tabellaClassifica(gen, true));
+    el.appendChild(bg);
+  }
+
+  tornei.forEach(function(t){
+    var b = crea('div', 'blocco-cl');
+    var h = crea('h3');
+    h.appendChild(crea('span', null, V(t.emoji, '🃏') + ' ' + V(t.nome, '')));
+    if(t.formato) h.appendChild(crea('span', 'pillola', etichettaFormato(t.formato)));
+    if(t.stato) h.appendChild(crea('span', 'pillola', t.stato));
+    b.appendChild(h);
+    if(t.nota) b.appendChild(crea('div', 'sotto', t.nota));
+
+    var cl = V(t.classifica, []);
+    if(cl.length){
+      b.appendChild(tabellaClassifica(cl, false));
+    }
+
+    var inc = V(t.incontri, []);
+    if(inc.length){
+      var turni = {};
+      inc.forEach(function(m){
+        var k = V(m.turno, 'Incontri');
+        if(!turni[k]) turni[k] = [];
+        turni[k].push(m);
+      });
+      Object.keys(turni).forEach(function(k){
+        b.appendChild(crea('div', 'turno-tit', k));
+        turni[k].forEach(function(m){ b.appendChild(rigaIncontro(m)); });
+      });
+    }else if(!cl.length){
+      b.appendChild(crea('p', 'sotto', 'Tabellone in preparazione.'));
+    }
+    el.appendChild(b);
+  });
+}
+
+function etichettaFormato(f){
+  if(f === 'italiana') return 'girone all\'italiana';
+  if(f === 'gironi') return 'gironi e finale';
+  if(f === 'eliminazione') return 'eliminazione diretta';
+  if(f === 'sfida') return 'sfida diretta';
+  return String(f);
+}
+
+function tabellaClassifica(righe, semplice){
+  var scroll = crea('div', 'tabella-scroll');
+  var t = document.createElement('table');
+  t.className = 'tab';
+  var th = document.createElement('thead');
+  var trh = document.createElement('tr');
+  var col = semplice ? ['#','Coppia','Punti'] : ['#','Coppia','G','V','N','P','Punti'];
+  col.forEach(function(x, i){
+    var c = document.createElement('th');
+    c.textContent = x;
+    if(i >= 2) c.className = 'n';
+    trh.appendChild(c);
+  });
+  th.appendChild(trh); t.appendChild(th);
+  var tb = document.createElement('tbody');
+  righe.slice().sort(function(a,b){ return V(b.punti,0) - V(a.punti,0); }).forEach(function(r, i){
+    var tr = document.createElement('tr');
+    if(i < 3) tr.className = 'podio' + (i+1);
+    var celle = semplice
+      ? [String(i+1), V(r.coppia,''), String(V(r.punti,0))]
+      : [String(i+1), V(r.coppia,''), String(V(r.g,0)), String(V(r.v,0)), String(V(r.n,0)), String(V(r.p,0)), String(V(r.punti,0))];
+    celle.forEach(function(v, k){
+      var td = document.createElement('td');
+      td.textContent = v;
+      if(k >= 2) td.className = 'n';
+      tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);
+  scroll.appendChild(t);
+  return scroll;
+}
+
+function rigaIncontro(m){
+  var d = crea('div', 'incontro');
+  var giocato = (m.puntiA !== undefined && m.puntiA !== null && m.puntiA !== '') ||
+                (m.puntiB !== undefined && m.puntiB !== null && m.puntiB !== '');
+  var a = crea('div', 'sq', V(m.a, '—'));
+  var b = crea('div', 'sq dx', V(m.b, '—'));
+  if(giocato){
+    if(Number(m.puntiA) > Number(m.puntiB)) a.classList.add('vinta');
+    if(Number(m.puntiB) > Number(m.puntiA)) b.classList.add('vinta');
+  }
+  var r = crea('div', 'ris' + (giocato ? '' : ' da-giocare'),
+    giocato ? (V(m.puntiA,0) + ' – ' + V(m.puntiB,0)) : (m.tavolo ? ('tavolo ' + m.tavolo) : 'da giocare'));
+  d.appendChild(a); d.appendChild(r); d.appendChild(b);
+  return d;
+}
+
+/* -------------------------------- premi --------------------------------- */
+function disegnaPremi(){
+  var el = $('vistaPremi');
+  el.textContent = '';
+  var g = crea('div', 'schede');
+  V(DATI.premi, []).forEach(function(p){
+    var c = crea('div', 'scheda');
+    c.appendChild(crea('div', 'ico', V(p.emoji, '🏅')));
+    c.appendChild(crea('h3', null, V(p.nome, '')));
+    c.appendChild(crea('p', null, p.area === 'ragazzi' ? 'Giochi in acqua' : 'Tornei di carte'));
+    g.appendChild(c);
+  });
+  el.appendChild(g);
+}
+
+/* ------------------------------- linguette ------------------------------ */
+function collegaLinguette(){
+  var b = document.querySelectorAll('[data-vista]');
+  for(var i=0;i<b.length;i++){
+    b[i].addEventListener('click', function(){
+      var v = this.getAttribute('data-vista');
+      for(var j=0;j<b.length;j++){ b[j].className = 'btn btn-chiaro btn-piccolo'; }
+      this.className = 'btn btn-p btn-piccolo';
+      $('vistaRagazzi').style.display = (v === 'ragazzi') ? '' : 'none';
+      $('vistaCarte').style.display   = (v === 'carte')   ? '' : 'none';
+      $('vistaPremi').style.display   = (v === 'premi')   ? '' : 'none';
+    });
+  }
+}
+
+function vuoto(em, titolo, sotto){
+  var d = crea('div', 'vuoto');
+  d.appendChild(crea('span', 'em', em));
+  var h = crea('h3', null, titolo);
+  h.style.cssText = 'color:var(--ink);margin-bottom:8px';
+  d.appendChild(h);
+  d.appendChild(crea('p', null, sotto));
+  return d;
+}
+</script>
+</body>
+</html>

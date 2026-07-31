@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>La piscina — Certamen Aquaticum</title>
+<meta name="description" content="La piscina del Residence Holiday a Montalto di Castro: il campo di gara del Certamen Aquaticum." />
+<meta name="theme-color" content="#1f8a5b" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📸</text></svg>" />
+<link rel="stylesheet" href="stile.css" />
+<script src="firebase.js"></script>
+<script src="comune.js"></script>
+<style>
+.hero.corta .hero-dentro{ padding:clamp(28px,4vw,52px) 0 clamp(52px,6vw,74px); }
+.hero.corta .velo{ background:linear-gradient(160deg, rgba(6,60,50,.82), rgba(31,138,91,.6) 60%, rgba(20,196,180,.55)); }
+.galleria-grande img{ height:clamp(220px,26vw,340px); }
+</style>
+</head>
+<body>
+
+<nav class="barra no-stampa">
+  <div class="wrap barra-dentro">
+    <a class="marchio" href="index.html"><span class="goccia">🏊</span><span id="marchioNome">Certamen Aquaticum</span></a>
+    <div class="menu">
+      <a href="index.html">Home</a>
+      <a href="ragazzi.html">🤽 Ragazzi</a>
+      <a href="carte.html">🃏 Adulti</a>
+      <a href="programma.html">🕓 Programma</a>
+      <a href="classifiche.html">🏆 Classifiche</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+<header class="hero corta">
+  <div class="sfondo" id="heroSfondo"></div>
+  <div class="velo"></div>
+  <div class="hero-dentro wrap">
+    <span class="targhetta">📸 Il campo di gara</span>
+    <h1>La nostra piscina</h1>
+    <p class="sottotitolo" id="sotto"></p>
+  </div>
+  <svg class="onde" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#f7fbff" d="M0,64L60,58.7C120,53,240,43,360,48C480,53,600,75,720,74.7C840,75,960,53,1080,45.3C1200,37,1320,43,1380,45.3L1440,48L1440,120L0,120Z"></path>
+  </svg>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="galleria galleria-grande" id="galleria"></div>
+    <div class="azioni" style="margin-top:36px">
+      <a href="ragazzi.html" class="btn btn-g">🤽 I giochi in acqua</a>
+      <a href="carte.html" class="btn btn-p">🃏 I tornei di carte</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="piede"><div class="wrap" id="piede"></div></footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+var $ = CA.$, V = CA.V, testo = CA.testo;
+
+CA.carica().then(function(d){
+  testo('marchioNome', V(V(d.tema,{}).titolo, 'Certamen Aquaticum'));
+  var res = V(d.residence, {}), ev = V(d.evento, {});
+  testo('sotto', V(ev.luogo,'') + (res.localita ? ' — ' + res.localita : ''));
+  var foto = V(d.foto, []);
+  var hero = V(d.fotoHero, foto[0] || '');
+  if(hero) $('heroSfondo').style.backgroundImage = 'url("' + encodeURI(hero) + '")';
+
+  var el = $('galleria');
+  el.textContent = '';
+  foto.forEach(function(src, i){
+    if(!src) return;
+    var img = document.createElement('img');
+    img.src = src;
+    img.alt = 'La piscina del Residence Holiday, foto ' + (i+1);
+    img.loading = 'lazy';
+    el.appendChild(img);
+  });
+
+  CA.segnaPagina();
+  CA.disegnaPiede('piede');
+}).catch(function(e){ CA.toast('Non riesco a leggere i contenuti: ' + e.message, 9000); });
+</script>
+</body>
+</html>
