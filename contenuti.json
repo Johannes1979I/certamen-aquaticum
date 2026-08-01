@@ -131,7 +131,8 @@
           "url": "",
           "ricerca": "Sarà perché ti amo Ricchi e Poveri"
         }
-      ]
+      ],
+      "escluso": false
     },
     {
       "id": "staffetta-materassino",
@@ -196,7 +197,8 @@
           "url": "",
           "ricerca": "Rock Lobster The B-52's"
         }
-      ]
+      ],
+      "escluso": false
     },
     {
       "id": "staffetta-pallone",
@@ -261,7 +263,8 @@
           "url": "",
           "ricerca": "Freed from Desire Gala"
         }
-      ]
+      ],
+      "escluso": false
     },
     {
       "id": "trasporto-compagno",
@@ -271,7 +274,7 @@
       "tipo": "squadre",
       "durata": 15,
       "orario": "16:55",
-      "riserva": true,
+      "riserva": false,
       "formazione": "a squadre",
       "partecipanti": "Tre alla volta: uno trasportato, due che spingono",
       "descrizione": "Un ragazzo si sistema sopra il materassino e due compagni lo trasportano fino al punto stabilito e ritorno. Al turno successivo cambia il ragazzo trasportato, così passano tutti.",
@@ -390,7 +393,8 @@
           "url": "",
           "ricerca": "Maracaibo Lu Colombo"
         }
-      ]
+      ],
+      "escluso": false
     },
     {
       "id": "palla-capitano",
@@ -461,7 +465,8 @@
           "url": "",
           "ricerca": "I Gotta Feeling The Black Eyed Peas"
         }
-      ]
+      ],
+      "escluso": false
     },
     {
       "id": "catena",
@@ -513,7 +518,8 @@
           "url": "",
           "ricerca": "Vamos a bailar Paola e Chiara"
         }
-      ]
+      ],
+      "escluso": false
     },
     {
       "id": "pallanuoto",
@@ -521,12 +527,12 @@
       "emoji": "🥅",
       "illustrazione": "pallanuoto",
       "tipo": "squadre",
-      "durata": 25,
+      "durata": 10,
       "orario": "18:05",
       "riserva": false,
       "formazione": "sfide tra due squadre",
       "partecipanti": "4 o 5 giocatori per squadra, partite da 5 minuti",
-      "descrizione": "Il torneo vero e proprio del pomeriggio: mini partite da cinque minuti, quattro o cinque giocatori per squadra. Le porte si ricavano da una porzione del bordo della piscina o dallo spazio fra due riferimenti già presenti.",
+      "descrizione": "Due mini partite da cinque minuti, quattro o cinque giocatori per squadra. Le porte si ricavano da una porzione del bordo della piscina o dallo spazio fra due riferimenti già presenti. Se avanza tempo se ne gioca qualcuna in più.",
       "regole": [
         "Vietato spingere o trattenere gli avversari.",
         "Vietato strappare la palla dalle mani: si può solo intercettarla.",
@@ -596,7 +602,8 @@
           "url": "",
           "ricerca": "Sandstorm Darude"
         }
-      ]
+      ],
+      "escluso": false
     },
     {
       "id": "passaggi-materassino",
@@ -839,7 +846,7 @@
       "tipo": "individuale",
       "durata": 20,
       "orario": "",
-      "riserva": false,
+      "riserva": true,
       "formazione": "torneo 1 contro 1",
       "partecipanti": "Sfide uno contro uno a eliminazione diretta",
       "descrizione": "Il duello del pomeriggio. Due ragazzi salgono insieme sul materassino al centro della piscina e al via cercano di far cadere l'avversario spingendo solo con le mani. Torneo a eliminazione diretta fino alla finale, per incoronare il Re o la Regina del materassino.",
@@ -911,8 +918,8 @@
       "illustrazione": "super-staffetta",
       "tipo": "finale",
       "durata": 20,
-      "orario": "18:30",
-      "riserva": true,
+      "orario": "18:35",
+      "riserva": false,
       "formazione": "a squadre",
       "partecipanti": "Tutta la squadra, sei frazioni",
       "descrizione": "Il gran finale che può ribaltare la classifica: sei frazioni, una dietro l'altra, che riassumono tutto il pomeriggio. I punti valgono il doppio.",
@@ -985,7 +992,7 @@
       "illustrazione": "baseball-acqua",
       "tipo": "squadre",
       "durata": 20,
-      "orario": "",
+      "orario": "18:15",
       "riserva": false,
       "formazione": "a squadre",
       "partecipanti": "Due squadre che si alternano: una batte, l'altra sta in campo",
@@ -1274,7 +1281,7 @@
       "ora": "18:05",
       "area": "ragazzi",
       "titolo": "Pallanuoto semplificata",
-      "nota": "Mini partite da cinque minuti"
+      "nota": "Due mini partite da cinque minuti"
     },
     {
       "ora": "18:05",
@@ -1283,7 +1290,13 @@
       "nota": ""
     },
     {
-      "ora": "18:30",
+      "ora": "18:15",
+      "area": "ragazzi",
+      "titolo": "Baseball in acqua",
+      "nota": "Si batte con la mazza di gommapiuma, si corre alle ciambelle che galleggiano"
+    },
+    {
+      "ora": "18:35",
       "area": "ragazzi",
       "titolo": "Super staffetta di Ferragosto",
       "nota": "Punti doppi: qui si decide tutto"
@@ -1295,7 +1308,7 @@
       "nota": ""
     },
     {
-      "ora": "18:50",
+      "ora": "18:55",
       "area": "tutti",
       "titolo": "Premiazione",
       "nota": "Coppe, medaglie e foto di gruppo"
