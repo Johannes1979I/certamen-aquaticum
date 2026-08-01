@@ -544,7 +544,7 @@
       "tipo": "squadre",
       "durata": 20,
       "orario": "",
-      "riserva": true,
+      "riserva": false,
       "formazione": "a squadre",
       "partecipanti": "Due squadre che si alternano: una batte, l'altra sta in campo",
       "descrizione": "Il baseball portato dentro la vasca: una squadra batte, l'altra recupera la palla e prova a fermare la corsa. Si gioca con una palla morbida e una mazza di gommapiuma, e le basi sono ciambelle che galleggiano. Le regole della nostra versione le scriviamo qui sotto.",
@@ -552,12 +552,13 @@
       "varianti": [],
       "punti": "5 / 3 / 2 / 1",
       "musica": {
-        "titolo": "Centerfield",
-        "artista": "John Fogerty",
+        "titolo": "Welcome to the Jungle",
+        "artista": "Guns N' Roses",
         "perche": "È la canzone del baseball per eccellenza: quella che negli stadi americani parte appena si comincia.",
-        "url": "https://www.youtube.com/watch?v=oQBW__nrmJU",
-        "ricerca": "Centerfield John Fogerty"
-      }
+        "url": "https://www.youtube.com/watch?v=0CNPR2qNzxk&list=PLfAx4pvUskUrPCz_7TeiTYlk1T5wwPqf6",
+        "ricerca": "Welcome to the Jungle Guns N' Roses"
+      },
+      "escluso": false
     }
   ],
   "tornei": [
@@ -1054,7 +1055,7 @@
     "testo": ""
   },
   "album": {
-    "attivo": false,
+    "attivo": true,
     "titolo": "Le foto della giornata",
     "sottotitolo": "Come è andata: i giochi, le squadre, le facce di chi ha vinto e di chi ci ha provato.",
     "nota": "Se in una foto c'è tuo figlio e non vuoi che resti qui, scrivilo agli organizzatori: la togliamo subito.",
