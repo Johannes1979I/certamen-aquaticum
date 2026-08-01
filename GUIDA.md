@@ -53,13 +53,21 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
    e spunta chi arriva.
 2. **Squadre** — scheda `🚩 Squadre`: la procedura guidata ti dice quante
    squadre conviene fare, poi scegli:
-   - **automatico bilanciato**: tiene conto di tutte e tre le cose chieste
-     all'iscrizione — la **preferenza** («vorrei stare con…»), l'**età** e la
-     **capacità in acqua**. Prima mette insieme chi si è scelto (chi si è
-     scelto a vicenda ha la precedenza, e riconosce anche i nomi scritti a
-     metà, tipo «Sofia» per «Sofia Greco»), poi distribuisce le età a
-     serpentina e sparpaglia chi nuota poco. Alla fine ti dice quante
-     preferenze ha rispettato e quali no, con il motivo;
+   - **automatico bilanciato**: l'equilibrio viene prima di tutto, e le
+     preferenze vengono per ultime. Nell'ordine:
+     1. a ogni ragazzo si dà un **peso in acqua** = età + capacità
+        (nuota bene +2, nuota poco −3): è quello che si pareggia, non l'età
+        media, che nasconde gli sbilanciamenti;
+     2. si mettono tutti in fila dal più forte al più debole e si dividono a
+        **scaglioni**: dai primi due uno per squadra, dai secondi due uno per
+        squadra, e così via — nessuno può prendersi la fascia alta;
+     3. si pareggiano le **fasce**: i ragazzi dai 15 in su, i più piccoli
+        fino a 10 anni e chi nuota poco, mai più di uno di differenza;
+     4. **solo alla fine** le preferenze, e solo se non rovinano niente.
+     Con il menù *«Quanto contano le preferenze»* decidi tu quanto pesano:
+     di serie sta su *Prima l'equilibrio* (solo chi si è scelto a vicenda,
+     e a coppie). Alla fine ti dice quante preferenze ha rispettato e quali
+     no, con il motivo;
    - **a mano**: trascini i nomi, o li tocchi e poi tocchi la squadra.
    Il 🧢 accanto a un nome lo nomina capitano. Nome e grido si scrivono nei
    due campi in cima a ogni colonna.

@@ -40,7 +40,7 @@
         "nota": "I punti valgono così quando le squadre sono quattro; con più squadre si continua a scendere di un punto per posizione, fino a un minimo di 1. Nella Super staffetta finale i punti valgono il doppio. A fine giornata la giuria assegna 3 punti bonus alla squadra che si è comportata meglio (premio fair play)."
       },
       "squadre": 0,
-      "squadreNota": "Quante squadre fare lo decidiamo in base a quanti vi iscrivete. L'importante è che siano equilibrate: le squadre si formano mescolando le età e la capacità in acqua, così i più piccoli non si trovano tutti insieme contro i più grandi.",
+      "squadreNota": "Quante squadre fare lo decidiamo in base a quanti vi iscrivete. Le formiamo mescolando età e capacità in acqua, in modo che nessuna squadra si prenda tutti i più grandi: chi si è scelto come compagno viene tenuto insieme solo se le squadre restano equilibrate.",
       "etaMin": 8,
       "etichetta": "ragazzi"
     },
@@ -1016,11 +1016,12 @@
       }
     ],
     "criteriBilanciamento": [
-      "Le età vengono distribuite a serpentina: dal più grande al più piccolo e poi al contrario, così l'età media delle squadre resta quasi identica.",
-      "Chi ha dichiarato di non nuotare bene viene sparpagliato: mai tutti nella stessa squadra.",
-      "Maschi e femmine vengono distribuiti in modo uniforme.",
-      "Fratelli, sorelle e amici inseparabili si possono bloccare insieme prima del sorteggio.",
-      "Dopo il sorteggio la procedura fa qualche scambio per avvicinare ancora di più le età medie."
+      "Ogni ragazzo ha un suo peso in acqua, che mette insieme l'età e quanto se la cava a nuotare: è quello che si cerca di pareggiare fra le squadre, non la semplice età media.",
+      "Si mettono tutti in fila dal più forte al più debole e si dividono a scaglioni: dai primi due, una squadra ciascuno; dai secondi due, una ciascuno; e così via. Nessuna squadra può prendersi la fascia alta.",
+      "I ragazzi dai 15 anni in su vengono spartiti: al massimo uno di differenza fra una squadra e l'altra.",
+      "Lo stesso vale per i più piccoli, fino a 10 anni, e per chi ha detto di nuotare poco: mai tutti nella stessa squadra.",
+      "Solo alla fine si guardano le preferenze: chi si è scelto a vicenda resta insieme, ma senza sbilanciare le squadre. L'equilibrio viene prima.",
+      "Le squadre restano dello stesso numero, al massimo uno di differenza."
     ]
   }
 }

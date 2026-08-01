@@ -364,9 +364,17 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
       <div class="campo"><label for="sqPer">Componenti per squadra</label><input type="number" id="sqPer" min="2" max="12" class="mini" /><div class="aiuto" id="sqPerNota"></div></div>
       <div class="campo"><label for="sqCriterio">Come le formo</label>
         <select id="sqCriterio" class="mini">
-          <option value="auto">Automatico bilanciato per età</option>
+          <option value="auto">Automatico, bilanciato</option>
           <option value="manuale">A mano, sposto io i nomi</option>
         </select>
+      </div>
+      <div class="campo"><label for="sqPreferenze">Quanto contano le preferenze</label>
+        <select id="sqPreferenze" class="mini">
+          <option value="poco">Prima l'equilibrio (consigliato)</option>
+          <option value="medio">Equilibrio, ma tengo insieme gli amici</option>
+          <option value="molto">Prima le preferenze</option>
+        </select>
+        <div class="aiuto" id="sqPrefNota"></div>
       </div>
     </div>
     <div class="azioni" style="justify-content:flex-start">

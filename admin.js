@@ -134,6 +134,14 @@
     ['sqNumero', 'sqPer'].forEach(function (id) {
       $(id).addEventListener('input', function () { sqToccato = true; });
     });
+    var NOTE_PREF = {
+      poco: 'Tengo insieme solo chi si è scelto a vicenda, e a coppie. Le richieste a senso unico cedono il passo all\'equilibrio.',
+      medio: 'Rispetto anche le richieste a senso unico, con gruppetti fino a tre, purché le squadre restino equilibrate.',
+      molto: 'Rispetto tutte le richieste e lascio crescere i gruppi: le squadre possono venire meno equilibrate.'
+    };
+    function notaPref() { testo('sqPrefNota', NOTE_PREF[$('sqPreferenze').value] || ''); }
+    $('sqPreferenze').addEventListener('change', notaPref);
+    notaPref();
     $('btnGeneraSquadre').addEventListener('click', generaSquadre);
     $('btnSvuotaSquadre').addEventListener('click', function () {
       if (!confirm('Sicuro? Cancello le squadre e ricomincio da capo.')) return;
@@ -1014,8 +1022,8 @@
 
     if (criterio === 'auto') {
       distribuisciBilanciato(rag, STATO.squadre);
-      CA.toast('🎲 Squadre generate: età bilanciate, chi nuota poco sparpagliato, ' +
-        ESITO_PREFERENZE.fatte.length + ' preferenze rispettate.', 7000);
+      CA.toast('🎲 Squadre generate: prima l\'equilibrio fra età e capacità in acqua, ' +
+        'poi le preferenze (' + ESITO_PREFERENZE.fatte.length + ' rispettate).', 7000);
     } else {
       CA.toast('Squadre vuote create: ora trascina i nomi.', 5000);
     }
@@ -1036,52 +1044,195 @@
   var ESITO_PREFERENZE = { fatte: [], saltate: [] };
   var LEGATI = {};          /* chi non va separato dai riequilibri */
 
+  /* ---------------------- quanto "pesa" un ragazzo ---------------------
+     In acqua non conta l'età da sola: un diciassettenne che nuota bene vale
+     molto più di un diciassettenne impacciato, e un bambino di otto anni in
+     una staffetta pesa poco comunque sia. Questo numero mette insieme le due
+     cose ed è quello che si cerca di pareggiare fra le squadre. */
+  function forza(p) {
+    var e = etaDi(p);
+    var n = (p && p.nuoto === 'bene') ? 2 : ((p && p.nuoto === 'poco') ? -3 : 0);
+    return e + n;
+  }
+  function forzaSquadra(s) {
+    var t = 0;
+    s.componenti.forEach(function (id) { t += forza(perId(id)); });
+    return t;
+  }
+  function mediaForza(s) {
+    return s.componenti.length ? forzaSquadra(s) / s.componenti.length : 0;
+  }
+  /* le due fasce che sbilanciano davvero una gara in piscina */
+  function eGrande(p) { return etaDi(p) >= 15; }
+  function ePiccolo(p) { return etaDi(p) <= 10; }
+
   function distribuisciBilanciato(persone, squadre) {
     var n = squadre.length;
     squadre.forEach(function (s) { s.componenti = []; });
 
     var perSquadra = Math.ceil(persone.length / n);
-    var maxGruppo = Math.max(2, Math.floor(perSquadra / 2) + 1);
-    var blocchi = gruppiDiPreferenza(persone, maxGruppo);
+    var livello = ($('sqPreferenze') || {}).value || 'poco';
+    /* Quanto si lascia crescere un gruppo di amici. Più è grande, più vincola
+       la distribuzione e più le squadre rischiano di sbilanciarsi: per questo
+       di serie si sta stretti. */
+    var maxGruppo = (livello === 'molto') ? Math.max(2, Math.floor(perSquadra / 2))
+      : (livello === 'medio') ? 3 : 2;
+    var blocchi = gruppiDiPreferenza(persone, maxGruppo, livello);
 
-    /* i gruppi più numerosi si piazzano per primi: sono i più difficili */
+    /* Si parte dai blocchi più pesanti e ognuno va nella squadra che finora
+       pesa di meno. È il modo più semplice per non far finire due ragazzoni
+       nella stessa squadra: prima si piazzano loro, poi i piccoli riempiono.
+       (Prima invece mettevo per primi i gruppi di amici, nella squadra più
+       vuota, senza guardare l'età: da lì nascevano gli sbilanciamenti.) */
+    blocchi.forEach(function (b) {
+      b.forza = 0;
+      b.persone.forEach(function (p) { b.forza += forza(p); });
+    });
     blocchi.sort(function (a, b) {
-      if (b.persone.length !== a.persone.length) return b.persone.length - a.persone.length;
-      return b.eta - a.eta;
-    });
-    var grossi = blocchi.filter(function (b) { return b.persone.length > 1; });
-    var singoli = blocchi.filter(function (b) { return b.persone.length === 1; })
-      .sort(function (a, b) { return b.eta - a.eta; });
-
-    /* i gruppi vanno dove c'è più posto, per non gonfiare una squadra sola */
-    grossi.forEach(function (b) {
-      var meno = 0;
-      for (var k = 1; k < n; k++) {
-        if (squadre[k].componenti.length < squadre[meno].componenti.length) meno = k;
-      }
-      b.persone.forEach(function (p) { squadre[meno].componenti.push(p._id); });
+      if (b.forza !== a.forza) return b.forza - a.forza;
+      return b.persone.length - a.persone.length;
     });
 
-    /* i singoli a serpentina sull'età: 1-2-3-4, poi 4-3-2-1 */
-    var giro = 0, i = 0;
-    while (i < singoli.length) {
-      var ordine = [];
-      for (var k2 = 0; k2 < n; k2++) ordine.push(k2);
-      if (giro % 2 === 1) ordine.reverse();
-      /* si salta chi è già pieno per colpa di un gruppo */
-      ordine = ordine.filter(function (idx) { return squadre[idx].componenti.length < perSquadra; });
-      if (!ordine.length) { ordine = [0]; for (var k3 = 1; k3 < n; k3++) ordine.push(k3); }
-      for (var j = 0; j < ordine.length && i < singoli.length; j++) {
-        squadre[ordine[j]].componenti.push(singoli[i].persone[0]._id);
-        i++;
+    blocchi.forEach(function (b) {
+      var scelta = -1, minimo = Infinity;
+      for (var k = 0; k < n; k++) {
+        if (squadre[k].componenti.length + b.persone.length > perSquadra) continue;
+        var f = forzaSquadra(squadre[k]);
+        if (f < minimo) { minimo = f; scelta = k; }
       }
-      giro++;
-    }
+      if (scelta < 0) {                       /* nessuna ha posto: la più leggera */
+        scelta = 0;
+        for (var k2 = 1; k2 < n; k2++) {
+          if (forzaSquadra(squadre[k2]) < forzaSquadra(squadre[scelta])) scelta = k2;
+        }
+      }
+      b.persone.forEach(function (p) { squadre[scelta].componenti.push(p._id); });
+    });
 
     pareggiaDimensioni(squadre);
+    /* le fasce prima di tutto: i grandi e i piccoli vanno spartiti, altrimenti
+       una squadra parte già vinta anche se le medie tornano */
+    pareggiaFascia(squadre, eGrande);
+    pareggiaFascia(squadre, ePiccolo);
+    pareggiaScaglioni(squadre);
     sparpagliaDeboli(squadre);
-    affinaEta(squadre);
+    affinaForza(squadre);
     scegliCapitani(squadre);
+  }
+
+  /* Controllo di equità sulla fascia alta: mettendo tutti in fila dal più
+     forte al più debole, fra i primi due deve essercene uno per squadra, fra
+     i primi quattro due per squadra, e così via. È il modo per dire «nessuna
+     squadra si prende i più forti»: senza, l'equilibrio dei totali si può
+     ottenere anche caricando una squadra in cima e compensando in fondo. */
+  function prefissiOk(squadre) {
+    var n = squadre.length;
+    if (n < 2) return true;
+    var tutti = [];
+    squadre.forEach(function (s, idx) {
+      s.componenti.forEach(function (id) { tutti.push({ sq: idx, f: forza(perId(id)) }); });
+    });
+    tutti.sort(function (a, b) { return b.f - a.f; });
+    var conta = [];
+    for (var k = 0; k < n; k++) conta.push(0);
+    /* si controlla solo la metà alta: chi si prende i più forti conta, come
+       sono spartiti gli ultimi no, e pretenderlo bloccherebbe scambi utili */
+    var finoA = Math.ceil(tutti.length / 2);
+    for (var i = 0; i < tutti.length; i++) {
+      conta[tutti[i].sq]++;
+      if (i + 1 > finoA) break;
+      if ((i + 1) % n === 0) {
+        if (Math.max.apply(null, conta) - Math.min.apply(null, conta) > 1) return false;
+      }
+    }
+    return true;
+  }
+
+  /* La regola che conta più di tutte.
+     Si mettono tutti in fila dal più forte al più debole e li si divide in
+     scaglioni grandi quanto il numero delle squadre: i primi due, i secondi
+     due, e così via. Da ogni scaglione ogni squadra ne prende uno.
+     Così i due ragazzi più forti non possono finire insieme, e nessuna
+     squadra si prende tutta la fascia alta compensandola con un bambino
+     piccolo — che è esattamente quello che era successo. */
+  function pareggiaScaglioni(squadre) {
+    var n = squadre.length;
+    if (n < 2) return;
+
+    var ordine = [];
+    squadre.forEach(function (s, idx) {
+      s.componenti.forEach(function (id) { ordine.push({ id: id, sq: idx, f: forza(perId(id)) }); });
+    });
+    ordine.sort(function (a, b) { return b.f - a.f; });
+    var scaglione = {};
+    ordine.forEach(function (x, i) { scaglione[x.id] = Math.floor(i / n); });
+
+    function quanti(sc) {
+      var c = [];
+      for (var k = 0; k < n; k++) c.push(0);
+      squadre.forEach(function (s, idx) {
+        s.componenti.forEach(function (id) { if (scaglione[id] === sc) c[idx]++; });
+      });
+      return c;
+    }
+
+    var scaglioni = Math.ceil(ordine.length / n);
+    for (var giro = 0; giro < 60; giro++) {
+      var mosso = false;
+      for (var sc = 0; sc < scaglioni; sc++) {
+        var c = quanti(sc);
+        var max = 0, min = 0;
+        for (var i = 1; i < n; i++) {
+          if (c[i] > c[max]) max = i;
+          if (c[i] < c[min]) min = i;
+        }
+        if (c[max] - c[min] <= 1) continue;
+
+        var daSpostare = squadre[max].componenti.filter(function (id) {
+          return scaglione[id] === sc && !LEGATI[id];
+        })[0];
+        if (!daSpostare) continue;
+
+        /* in cambio prendo qualcuno di uno scaglione dove è la squadra
+           ricevente ad averne in eccesso: così si sistemano due cose insieme */
+        var inCambio = null;
+        squadre[min].componenti.forEach(function (id) {
+          if (inCambio || LEGATI[id] || scaglione[id] === sc) return;
+          var c2 = quanti(scaglione[id]);
+          if (c2[min] > c2[max]) inCambio = id;
+        });
+        if (!inCambio) continue;
+
+        scambia(squadre[max], squadre[min], daSpostare, inCambio);
+        mosso = true;
+      }
+      if (!mosso) break;
+    }
+  }
+
+  /* Fa in modo che ogni squadra abbia lo stesso numero di ragazzi di una
+     fascia (i grandi, i piccoli): al massimo uno di scarto. Si scambia con
+     qualcuno che NON è di quella fascia, così le dimensioni non cambiano. */
+  function pareggiaFascia(squadre, appartiene) {
+    for (var giro = 0; giro < 40; giro++) {
+      var conta = squadre.map(function (s) {
+        return s.componenti.filter(function (id) { return appartiene(perId(id)); }).length;
+      });
+      var max = 0, min = 0;
+      for (var i = 1; i < conta.length; i++) {
+        if (conta[i] > conta[max]) max = i;
+        if (conta[i] < conta[min]) min = i;
+      }
+      if (conta[max] - conta[min] <= 1) return;
+      var daSpostare = squadre[max].componenti.filter(function (id) {
+        return appartiene(perId(id)) && !LEGATI[id];
+      })[0];
+      var inCambio = squadre[min].componenti.filter(function (id) {
+        return !appartiene(perId(id)) && !LEGATI[id];
+      })[0];
+      if (!daSpostare || !inCambio) return;   /* solo gente legata: non si tocca */
+      scambia(squadre[max], squadre[min], daSpostare, inCambio);
+    }
   }
 
   /* I gruppi di amici entrano tutti insieme e possono gonfiare una squadra.
@@ -1146,8 +1297,12 @@
     return null;
   }
 
-  /* Mette insieme chi si è scelto, senza far crescere troppo i gruppi. */
-  function gruppiDiPreferenza(persone, maxGruppo) {
+  /* Mette insieme chi si è scelto, senza far crescere troppo i gruppi.
+     Il livello dice quanto si va per il sottile:
+       poco  → solo chi si è scelto a vicenda, a coppie (l'equilibrio comanda)
+       medio → anche le richieste a senso unico, gruppi fino a tre
+       molto → tutte le richieste, gruppi fino a mezza squadra              */
+  function gruppiDiPreferenza(persone, maxGruppo, livello) {
     var padre = {}, quanti = {};
     persone.forEach(function (p) { padre[p._id] = p._id; quanti[p._id] = 1; });
     function radice(x) {
@@ -1174,6 +1329,13 @@
     desideri.forEach(function (d) {
       if (d.sconosciuto) {
         ESITO_PREFERENZE.saltate.push(d.a.nome + ' → «' + d.testo + '»: non l\'ho trovato fra gli iscritti');
+        return;
+      }
+      /* col livello più prudente si tiene insieme solo chi si è scelto a
+         vicenda: una richiesta a senso unico non vale quanto l'equilibrio */
+      if (livello === 'poco' && !d.reciproco) {
+        ESITO_PREFERENZE.saltate.push(d.a.nome + ' → ' + d.b.nome +
+          ': richiesta a senso unico, e ho tenuto l\'equilibrio delle squadre');
         return;
       }
       var ra = radice(d.a._id), rb = radice(d.b._id);
@@ -1239,22 +1401,28 @@
     if (sb.capitano === idb) sb.capitano = '';
   }
 
-  /* qualche scambio per avvicinare le età medie */
-  function affinaEta(squadre) {
-    function media(s) {
-      if (!s.componenti.length) return 0;
-      var t = 0;
-      s.componenti.forEach(function (id) { t += etaDi(perId(id)); });
-      return t / s.componenti.length;
-    }
+  /* Ultima rifinitura: qualche scambio per avvicinare la forza media, senza
+     però rovinare quello che si è appena sistemato. Uno scambio viene fatto
+     solo se il divario cala e le fasce restano pari. */
+  function affinaForza(squadre) {
     function scarto() {
-      var m = squadre.map(media);
+      var m = squadre.map(mediaForza);
       return Math.max.apply(null, m) - Math.min.apply(null, m);
     }
-    for (var giro = 0; giro < 60; giro++) {
+    function fasceOk() {
+      return [eGrande, ePiccolo].every(function (test) {
+        var c = squadre.map(function (s) {
+          return s.componenti.filter(function (id) { return test(perId(id)); }).length;
+        });
+        return Math.max.apply(null, c) - Math.min.apply(null, c) <= 1;
+      });
+    }
+    for (var giro = 0; giro < 120; giro++) {
       var prima = scarto();
-      if (prima < 0.35) break;
-      var m = squadre.map(media);
+      /* si insiste finché c'è margine: spesso esiste una divisione perfetta
+         e fermarsi a mezzo punto vuol dire lasciarla lì */
+      if (prima < 0.05) break;
+      var m = squadre.map(mediaForza);
       var alta = 0, bassa = 0;
       for (var i = 1; i < m.length; i++) {
         if (m[i] > m[alta]) alta = i;
@@ -1265,13 +1433,13 @@
         if (LEGATI[ia]) return;                       /* è con un amico: fermo lì */
         squadre[bassa].componenti.forEach(function (ib) {
           if (LEGATI[ib]) return;
-          var ea = etaDi(perId(ia)), eb = etaDi(perId(ib));
-          if (ea <= eb) return;
-          if (nuotaPoco(perId(ia)) !== nuotaPoco(perId(ib))) return;
+          if (forza(perId(ia)) <= forza(perId(ib))) return;
           scambia(squadre[alta], squadre[bassa], ia, ib);
-          var dopo = scarto();
+          var dopo = scarto(), ok = fasceOk() && prefissiOk(squadre);
           scambia(squadre[alta], squadre[bassa], ib, ia);   /* rimetto a posto */
-          if (dopo < prima && (!migliore || dopo < migliore.v)) migliore = { a: ia, b: ib, v: dopo };
+          if (ok && dopo < prima && (!migliore || dopo < migliore.v)) {
+            migliore = { a: ia, b: ib, v: dopo };
+          }
         });
       });
       if (!migliore) break;
@@ -1309,9 +1477,16 @@
       col.appendChild(motto);
 
       var eta = mediaEta(sq);
+      /* i numeri che contano davvero: quanti grandi, quanti piccoli e quanto
+         pesa la squadra. La media dell'età da sola nasconde gli sbilanciamenti */
+      var grandi = sq.componenti.filter(function (id) { return eGrande(perId(id)); }).length;
+      var piccoli = sq.componenti.filter(function (id) { return ePiccolo(perId(id)); }).length;
+      var deboli = sq.componenti.filter(function (id) { return nuotaPoco(perId(id)); }).length;
       col.appendChild(crea('div', 'dati-sq',
-        sq.componenti.length + ' componenti · età media ' + (eta ? eta.toFixed(1) : '—') +
-        ' · ' + sq.componenti.filter(function (id) { return nuotaPoco(perId(id)); }).length + ' nuotano poco'));
+        sq.componenti.length + ' componenti · forza ' + mediaForza(sq).toFixed(1) +
+        ' · età media ' + (eta ? eta.toFixed(1) : '—')));
+      col.appendChild(crea('div', 'dati-sq',
+        '💪 ' + grandi + ' dai 15 in su · 🧒 ' + piccoli + ' fino a 10 anni · 🛟 ' + deboli + ' nuotano poco'));
 
       sq.componenti.forEach(function (id) {
         col.appendChild(pedina(id, sq));
@@ -1431,10 +1606,28 @@
       box.appendChild(d);
       return d;
     }
+    var forze = STATO.squadre.map(mediaForza);
+    var scartoForza = Math.max.apply(null, forze) - Math.min.apply(null, forze);
+    var grandi = STATO.squadre.map(function (s) {
+      return s.componenti.filter(function (id) { return eGrande(perId(id)); }).length;
+    });
+    var piccoli = STATO.squadre.map(function (s) {
+      return s.componenti.filter(function (id) { return ePiccolo(perId(id)); }).length;
+    });
+    function divario(v) { return Math.max.apply(null, v) - Math.min.apply(null, v); }
+
+    riga('💪 Forza media da ' + Math.min.apply(null, forze).toFixed(1) + ' a ' +
+      Math.max.apply(null, forze).toFixed(1) + ' (scarto ' + scartoForza.toFixed(1) +
+      ') — è il numero che conta: età e capacità in acqua insieme');
+    riga('🧑 Ragazzi dai 15 in su: ' + grandi.join(', ') + ' per squadra' +
+      (divario(grandi) <= 1 ? ' ✅' : ' ⚠️ sbilanciati'));
+    riga('🧒 Fino a 10 anni: ' + piccoli.join(', ') + ' per squadra' +
+      (divario(piccoli) <= 1 ? ' ✅' : ' ⚠️ sbilanciati'));
+    riga('🛟 Nuotano poco: ' + deboli.join(', ') + ' per squadra' +
+      (divario(deboli) <= 1 ? ' ✅' : ' ⚠️ sbilanciati'));
     riga('⚖️ Età medie da ' + Math.min.apply(null, medie).toFixed(1) + ' a ' +
-      Math.max.apply(null, medie).toFixed(1) + ' anni (scarto ' + scarto.toFixed(1) + ')');
-    riga('👥 Componenti da ' + Math.min.apply(null, dim) + ' a ' + Math.max.apply(null, dim) +
-      ' · chi nuota poco: ' + deboli.join(', ') + ' per squadra');
+      Math.max.apply(null, medie).toFixed(1) + ' anni · componenti da ' +
+      Math.min.apply(null, dim) + ' a ' + Math.max.apply(null, dim));
 
     /* come sono andate le preferenze espresse all'iscrizione */
     var fatte = ESITO_PREFERENZE.fatte, saltate = ESITO_PREFERENZE.saltate;
@@ -1468,10 +1661,12 @@
       }
     }
 
-    var esito = riga(scarto <= 1 && diffDim <= 1
-      ? '👍 Squadre equilibrate.'
-      : '💡 Si può fare di meglio: prova a rigenerare o sposta qualcuno a mano.');
-    esito.style.marginTop = '6px';
+    var equilibrate = scartoForza <= 1.5 && diffDim <= 1 &&
+      divario(grandi) <= 1 && divario(piccoli) <= 1 && divario(deboli) <= 1;
+    var esito = riga(equilibrate
+      ? '👍 Squadre equilibrate: forza, fasce d\'età e capacità sono spartite bene.'
+      : '💡 Qualcosa non torna: rigenera, oppure sposta a mano qualcuno delle fasce segnate con ⚠️.');
+    esito.style.cssText = 'margin-top:8px;font-weight:bold';
   }
 
   /* ============================ TORNEI DI CARTE ======================== */
