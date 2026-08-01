@@ -22,7 +22,7 @@ Dopo ogni pubblicazione premi **⌘⇧R** per vedere davvero le modifiche.
 | `iscrizione-italiana.html` | Iscrizione a scopone, briscola e tresette |
 | `iscrizione-burraco.html` | Iscrizione al burraco |
 | `programma.html` | Il programma ora per ora |
-| `classifiche.html` | Classifiche e tabellone, aggiornati dal vivo |
+| `classifiche.html` | Classifiche, tabellone e **il tempo della gara in corso**, dal vivo |
 | `regole.html` | Sicurezza in acqua, regolamento, premi |
 | `piscina.html` | Le foto della piscina |
 | `admin.html` | Area organizzatori |
@@ -36,9 +36,10 @@ Tutto quello che conta vive nel **database Firebase** del progetto
 | Dove | Cosa | Chi lo legge |
 |---|---|---|
 | `iscrizioni` | Un documento per iscritto, con nome e recapiti | solo con password |
-| `stato_certamen/gara` | Squadre, punteggi, coppie, tabelloni | solo con password |
 | `pubblico_certamen/contatore` | Solo numeri: ragazzi, adulti, italiana, burraco | chiunque |
-| `pubblico_certamen/classifica` | Classifiche e tabellone da appendere in bacheca | chiunque |
+| `pubblico_certamen/classifica` | Classifiche, tabellone e cronometro della gara | chiunque |
+| `pubblico_certamen/album` | Le foto scattate durante la festa | chiunque |
+| `stato_certamen/<pezzo>` | Squadre, punteggi, tabelloni, cronometro: uno per operatore | solo con password |
 
 **Regola d'oro**: nomi e recapiti si leggono solo con la password. Nei documenti
 pubblici finiscono numeri, nomi di squadra e — se lo decidi tu — i nomi dei
@@ -148,6 +149,12 @@ cronometro sta in cima alla scheda `🏅 Punteggi`.
   browser mette in pausa i conti e la sirena può arrivare in ritardo. Il
   tempo resta giusto — appena riguardi lo schermo si rimette in pari da
   solo — ma se vuoi la sirena puntuale tieni la pagina davanti.
+- **Lo vedono anche i ragazzi**: in cima alla pagina delle classifiche
+  compare una striscia con la gara in corso e il tempo che manca, verde
+  mentre scorre, arancione nell'ultimo minuto, rossa a tempo scaduto. È in
+  sola lettura: i comandi restano solo qui nell'admin. Un tablet appoggiato
+  al bordo vasca su quella pagina fa da tabellone. Sparisce da sola tre
+  minuti dopo la fine della gara.
 
 ### La scaletta di ogni gioco
 

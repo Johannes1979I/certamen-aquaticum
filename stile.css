@@ -301,6 +301,27 @@ section{ padding:clamp(40px,6vw,72px) 0; }
 @keyframes battito{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.045); } }
 @media (prefers-reduced-motion:reduce){ .orologio{ animation:none !important; } }
 
+/* ------------------ la gara in corso, sulle classifiche ------------------
+   Striscia in cima: si legge da lontano, con il telefono in mano bagnata o
+   un tablet appoggiato al bordo vasca. */
+.gara-in-corso{
+  display:flex; flex-wrap:wrap; align-items:baseline; justify-content:center;
+  gap:8px 16px; margin:0 0 18px; padding:12px 20px; border-radius:18px;
+  background:#eef6ff; border:2px solid #cfe4ff;
+}
+.gara-in-corso .che-gara{ font-weight:bold; font-size:1.02rem; }
+.gara-in-corso .tempo-gara{
+  font-variant-numeric:tabular-nums; font-weight:800; letter-spacing:-.02em;
+  font-size:clamp(2rem,7vw,2.9rem); line-height:1;
+}
+.gara-in-corso .dida-gara{ font-size:.9rem; color:var(--muted); }
+.gara-in-corso.corre{ background:#e9f9f0; border-color:#a9e6c4; }
+.gara-in-corso.corre .tempo-gara{ color:#0f7a4a; }
+.gara-in-corso.sgoccioli{ background:#fff5e6; border-color:#ffd9a0; }
+.gara-in-corso.sgoccioli .tempo-gara{ color:#c9740f; animation:battito 1s ease-in-out infinite; }
+.gara-in-corso.finita{ background:#ffecec; border-color:#ffc4c4; }
+.gara-in-corso.finita .tempo-gara{ color:#a30f1a; }
+
 /* --------------------------- scaletta dei brani ------------------------- */
 .testa-scaletta{ display:flex; flex-wrap:wrap; align-items:baseline; gap:10px; margin-bottom:10px; }
 .dida-scaletta{ font-size:.86rem; color:var(--muted); }

@@ -3065,6 +3065,20 @@
     var modo = $('pubNomi').value;
     var out = { aggiornato: new Date().toISOString() };
 
+    /* Il cronometro va in bacheca in sola lettura: chi guarda le classifiche
+       vede scorrere il tempo della gara in corso. Si manda solo l'ora di
+       partenza, non i secondi che mancano — così ogni telefono conta per
+       conto suo e resta preciso anche se la bacheca arriva in ritardo. */
+    var c = cron();
+    var gc = giocoCron();
+    if (gc && Number(c.minuti) > 0) {
+      out.cronometro = {
+        gioco: gc.nome, emoji: V(gc.emoji, '⏱️'),
+        minuti: c.minuti, avvio: V(c.avvio, 0),
+        consumato: V(c.consumato, 0), scaduto: !!c.suonato
+      };
+    }
+
     /* ragazzi */
     var gen = classificaRagazzi();
     var mappaPunti = {};

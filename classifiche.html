@@ -96,6 +96,12 @@
 
 <section>
   <div class="wrap">
+    <div class="gara-in-corso no-stampa" id="garaInCorso" style="display:none">
+      <span class="che-gara" id="cheGara"></span>
+      <span class="tempo-gara" id="tempoGara">--:--</span>
+      <span class="dida-gara" id="didaGara"></span>
+    </div>
+
     <div class="linguette no-stampa">
       <button class="btn btn-p btn-piccolo" data-vista="ragazzi" id="lRagazzi">🤽 Giochi in acqua</button>
       <button class="btn btn-chiaro btn-piccolo" data-vista="carte">🃏 Tornei di carte</button>
@@ -169,7 +175,40 @@ function carica(conAvviso){
   });
 }
 
+/* ------------------------- la gara in corso adesso ----------------------
+   Gli organizzatori fanno partire il cronometro dall'area riservata; qui si
+   vede soltanto, non si tocca. Dalla bacheca arriva l'ORA DI PARTENZA, non i
+   secondi che mancano: così ogni telefono conta per conto suo e il numero
+   resta preciso al secondo anche se la bacheca si aggiorna ogni quindici. */
+function orologioGara(){
+  var box = $('garaInCorso');
+  if(!box) return;
+  var c = CL && CL.cronometro;
+  if(!c || !(Number(c.minuti) > 0)){ box.style.display = 'none'; return; }
+
+  var totale = Number(c.minuti) * 60000;
+  var passato = Number(c.consumato || 0) + (c.avvio ? (Date.now() - Number(c.avvio)) : 0);
+  var manca = totale - passato;
+
+  /* una gara finita da un pezzo non resta appesa lì tutto il pomeriggio */
+  if(manca < -3 * 60000){ box.style.display = 'none'; return; }
+
+  box.style.display = '';
+  testo('cheGara', V(c.emoji, '⏱️') + ' ' + V(c.gioco, ''));
+  var s = Math.max(0, Math.floor(manca / 1000));
+  testo('tempoGara', due(Math.floor(s / 60)) + ':' + due(s % 60));
+
+  var stato = manca <= 0 ? 'finita' : (manca <= 60000 ? 'sgoccioli' : (c.avvio ? 'corre' : 'ferma'));
+  box.className = 'gara-in-corso no-stampa ' + stato;
+  testo('didaGara',
+    stato === 'finita' ? 'tempo scaduto' :
+    stato === 'sgoccioli' ? 'ultimo minuto!' :
+    stato === 'ferma' ? 'in pausa' : 'alla fine della gara');
+}
+setInterval(orologioGara, 500);
+
 function disegnaTutto(){
+  orologioGara();
   var q = CL && CL.aggiornato ? new Date(CL.aggiornato) : null;
   testo('aggiornato', q && !isNaN(q.getTime())
     ? ('Ultimo aggiornamento: ' + due(q.getHours()) + ':' + due(q.getMinutes()) + ' del ' + q.getDate() + '/' + (q.getMonth()+1))
