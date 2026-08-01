@@ -287,6 +287,11 @@ section{ padding:clamp(40px,6vw,72px) 0; }
 .eti.gialla{ background:rgba(255,194,51,.24); color:#7a5300; }
 .eti.grigia{ background:rgba(10,37,64,.08); color:var(--muted); }
 .eti.rossa{ background:rgba(193,18,31,.12); color:#a30f1a; }
+/* gioco senza regole ancora scritte: si dice, invece di lasciare il vuoto */
+.in-arrivo{
+  border-top:1px solid var(--linea); padding-top:12px; margin-top:2px;
+  color:var(--muted); font-size:.93rem; font-style:italic;
+}
 details.blocco{ border-top:1px solid var(--linea); padding-top:12px; }
 details.blocco+details.blocco{ padding-top:10px; }
 details.blocco>summary{

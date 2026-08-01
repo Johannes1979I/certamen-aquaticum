@@ -301,6 +301,9 @@ function cartaGioco(g, numero){
   }
 
   if((g.regole || []).length) dentro.appendChild(blocco('📋 Regole', g.regole, true));
+  else dentro.appendChild(crea('p', 'in-arrivo',
+    '📋 Le regole di questo gioco arrivano presto: le stiamo scrivendo. ' +
+    'Il giorno della festa le spiega comunque l\'animatore a bordo vasca.'));
   if((g.varianti || []).length) dentro.appendChild(blocco('✨ Varianti da provare', g.varianti, false));
 
   art.appendChild(dentro);

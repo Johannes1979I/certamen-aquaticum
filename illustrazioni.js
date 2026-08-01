@@ -530,6 +530,43 @@
     return s;
   };
 
+  /* mazza di gommapiuma, con l'impugnatura scura: rot e' l'inclinazione */
+  function mazza(x, y, k, rot) {
+    var s = k || 1;
+    return '<g transform="translate(' + x + ',' + y + ') rotate(' + (rot || 0) + ') scale(' + s + ')">' +
+      '<path d="M-3.4 4 L3.4 4 L2.4 -22 q0 -3.4 -2.4 -3.4 q-2.4 0 -2.4 3.4 Z" fill="#ffc233"/>' +
+      '<path d="M-3.4 4 L3.4 4 L3.6 12 q0 2.4 -3.6 2.4 q-3.6 0 -3.6 -2.4 Z" fill="#0a2540"/>' +
+      '<circle cy="15" r="2" fill="#0a2540"/></g>';
+  }
+
+  SCENE['baseball-acqua'] = function (id) {
+    var s = cielo(id) + acqua(id, 98);
+    /* le basi galleggianti, tre cerchi gialli sull'acqua */
+    s += '<g fill="none" stroke="#ffc233" stroke-width="3.2" opacity=".9">' +
+      '<ellipse cx="60" cy="158" rx="18" ry="6"/>' +
+      '<ellipse cx="150" cy="146" rx="17" ry="5.6"/>' +
+      '<ellipse cx="228" cy="158" rx="18" ry="6"/></g>';
+    /* il battitore, con l'acqua alla vita: la mazza parte dalle mani alzate
+       e va verso l'alto a destra, senza passare davanti alla faccia */
+    s += figura(92, 126, 1, { posa: 'inpiedi', dir: 1, braccia: 'alto' });
+    s += mazza(116, 84, 1.15, 34);
+    /* la palla appena colpita, con la scia */
+    s += '<path d="M136 70 q38 -22 76 -14" stroke="#ffffff" stroke-width="3" fill="none" ' +
+      'stroke-linecap="round" stroke-dasharray="7 7" opacity=".8"/>';
+    s += pallone(224, 52, 11, '#ffffff');
+    /* le righe di velocita' stanno dietro la palla, non sopra */
+    s += '<g stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".9">' +
+      '<path d="M204 44 h11"/><path d="M200 52 h9"/><path d="M204 60 h11"/></g>';
+    /* chi cerca di prenderla al volo, e chi guarda */
+    s += '<path d="M264 102 q12 -14 22 -18" stroke="#c98d5f" stroke-width="5" fill="none" stroke-linecap="round"/>';
+    s += testa(254, 114, 2, { dir: -1, bocca: 'o' });
+    s += testa(294, 130, 3, { dir: -1, r: 11 });
+    s += testa(44, 140, 4, { dir: 1, r: 10 });
+    s += spruzzo(72, 136, .9);
+    s += spruzzo(248, 132, .7);
+    return s;
+  };
+
   /* figura di riserva, se un gioco non ha ancora la sua */
   SCENE['generica'] = function (id) {
     var s = cielo(id) + acqua(id, 94);
