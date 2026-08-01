@@ -236,6 +236,7 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
     <button data-vista="squadre">🚩 Squadre</button>
     <button data-vista="tornei">🃏 Tornei</button>
     <button data-vista="punteggi">🏅 Punteggi</button>
+    <button data-vista="album">📷 Album</button>
     <button data-vista="pubblica">📣 Pubblica</button>
     <button data-vista="contenuti">⚙️ Contenuti</button>
     <button data-vista="stampe">🖨️ Stampe</button>
@@ -440,6 +441,57 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
   <div id="puntiTitoli" style="display:none"></div>
 </section>
 
+<!-- ------------------------------- ALBUM ------------------------------- -->
+<section class="vista" id="v-album">
+  <div class="card" id="sec-album">
+    <h2>📷 Album della giornata</h2>
+    <p class="aiuto">Premi <b>Scatta</b>: si apre la fotocamera del telefono, fai la foto e
+      quella <b>compare subito nell'album</b> del sito, senza dover pubblicare niente.
+      La didascalia se la scrive da sola guardando l'ora e il programma — poi la correggi
+      come vuoi.</p>
+    <div class="azioni" style="justify-content:flex-start;margin-bottom:14px">
+      <button class="btn btn-p btn-grande" id="btnScatta">📸 Scatta una foto</button>
+      <input type="file" id="fileScatto" accept="image/*" capture="environment" style="display:none" />
+      <button class="btn btn-chiaro" id="btnCaricaFoto">🖼️ Scegli dalla galleria</button>
+      <input type="file" id="fileFoto" accept="image/*" multiple style="display:none" />
+      <a class="btn btn-chiaro btn-piccolo" href="album.html" target="_blank">👀 Vedi l'album</a>
+    </div>
+    <p class="aiuto" id="statoFoto"></p>
+    <label class="spunta" for="c_albumAttivo" style="margin-top:6px">
+      <input type="checkbox" id="c_albumAttivo" />
+      <span>Mostra l'album sul sito <small class="aiuto">(vale subito; si accende
+        da sola alla prima foto)</small></span>
+    </label>
+
+    <div class="nota-box" style="font-size:.92rem;margin-top:16px">
+      ⚠️ Nelle foto ci sono dei ragazzi: pubblica solo quelle per cui i genitori sono
+      d'accordo, e se qualcuno chiede di togliere una foto, toglila subito — c'è il
+      cestino accanto a ognuna.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🖼️ Le foto già nell'album</h2>
+    <p class="aiuto">Scrivi sopra la didascalia per cambiarla: si salva da sola. Il cestino
+      toglie la foto dal sito.</p>
+    <div id="elencoAlbum"></div>
+
+    <details style="margin-top:18px">
+      <summary style="cursor:pointer;font-weight:bold;padding:6px 0">Modificare l'elenco a mano</summary>
+      <p class="aiuto" style="margin-top:8px">Una riga per foto: indirizzo, poi la
+        didascalia dopo una barra verticale.<br>
+        <code>images/album/foto1.jpg | La staffetta dei Delfini</code></p>
+      <div class="campo">
+        <textarea id="c_albumFoto" style="min-height:140px"></textarea>
+      </div>
+      <p class="aiuto">Queste sono le foto messe nei contenuti del sito, che restano anche
+        dopo la festa. Quelle scattate durante la giornata vivono invece nel database e si
+        vedono subito: con il pulsante qui sotto le si travasa qui, per conservarle.</p>
+      <button class="btn btn-chiaro btn-piccolo" id="btnConsolidaAlbum">📥 Porta le foto della giornata nei contenuti</button>
+    </details>
+  </div>
+</section>
+
 <!-- ------------------------------ PUBBLICA ----------------------------- -->
 <section class="vista" id="v-pubblica">
   <div class="card">
@@ -541,7 +593,14 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
         <div class="campo"><label for="gh_branch">Ramo</label><input type="text" id="gh_branch" value="main" class="mini" /></div>
         <div class="campo"><label for="gh_token">Token</label><input type="password" id="gh_token" class="mini" placeholder="ghp_…" /></div>
       </div>
-      <button class="btn btn-chiaro btn-piccolo" id="btnSalvaGh">Salva in questo browser</button>
+      <div class="azioni" style="justify-content:flex-start">
+        <button class="btn btn-chiaro btn-piccolo" id="btnSalvaGh">Salva in questo browser</button>
+        <button class="btn btn-chiaro btn-piccolo" id="btnVediToken">👁️ Mostra</button>
+        <button class="btn btn-chiaro btn-piccolo" id="btnCopiaToken">📋 Copia</button>
+      </div>
+      <p class="aiuto" style="margin-top:8px">Il token vale <b>per un browser solo</b>: se
+        usi anche il telefono va incollato pure lì. Copialo da qui e mandatelo con un
+        messaggio a te stesso, oppure rifai i tre passi direttamente dal telefono.</p>
     </details>
 
     <div class="nota-box" id="avvisoBozza" style="display:none;margin-top:14px">
@@ -656,50 +715,6 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
     <p class="aiuto">Stessa cosa per i tornei: ordine, quali si fanno e quali no.</p>
     <div class="conteggi-ord" id="conteggiTornei"></div>
     <div id="editTornei"></div>
-  </div>
-
-  <div class="card" id="sec-album">
-    <h2>📷 Album della giornata</h2>
-    <p class="aiuto">Dal telefono premi <b>Scatta</b>: si apre la fotocamera, fai la foto e
-      quella <b>compare subito nell'album</b> del sito, senza dover pubblicare niente.
-      La didascalia se la scrive da sola guardando l'ora e il programma — poi la correggi
-      come vuoi.</p>
-    <label class="spunta" for="c_albumAttivo" style="margin-bottom:12px">
-      <input type="checkbox" id="c_albumAttivo" />
-      <span>Mostra l'album sul sito <small class="aiuto">(vale subito; si accende
-        da sola alla prima foto)</small></span>
-    </label>
-    <div class="azioni" style="justify-content:flex-start;margin-bottom:12px">
-      <button class="btn btn-p btn-grande" id="btnScatta">📸 Scatta una foto</button>
-      <input type="file" id="fileScatto" accept="image/*" capture="environment" style="display:none" />
-      <button class="btn btn-chiaro" id="btnCaricaFoto">🖼️ Scegli dalla galleria</button>
-      <input type="file" id="fileFoto" accept="image/*" multiple style="display:none" />
-      <a class="btn btn-chiaro btn-piccolo" href="album.html" target="_blank">👀 Vedi l'album</a>
-    </div>
-    <p class="aiuto" id="statoFoto"></p>
-
-    <h3>Le foto già nell'album</h3>
-    <div id="elencoAlbum"></div>
-
-    <details style="margin-top:14px">
-      <summary style="cursor:pointer;font-weight:bold;padding:6px 0">Modificare l'elenco a mano</summary>
-      <p class="aiuto" style="margin-top:8px">Una riga per foto: indirizzo, poi la
-        didascalia dopo una barra verticale.<br>
-        <code>images/album/foto1.jpg | La staffetta dei Delfini</code></p>
-      <div class="campo">
-        <textarea id="c_albumFoto" style="min-height:140px"></textarea>
-      </div>
-      <p class="aiuto">Queste sono le foto messe nei contenuti del sito, che restano anche
-        dopo la festa. Quelle scattate durante la giornata vivono invece nel database e si
-        vedono subito: con il pulsante qui sotto le si travasa qui, per conservarle.</p>
-      <button class="btn btn-chiaro btn-piccolo" id="btnConsolidaAlbum">📥 Porta le foto della giornata nei contenuti</button>
-    </details>
-
-    <div class="nota-box" style="font-size:.92rem;margin-top:14px">
-      ⚠️ Nelle foto ci sono dei ragazzi: pubblica solo quelle per cui i genitori sono
-      d'accordo, e se qualcuno chiede di togliere una foto, toglila subito — c'è il
-      cestino accanto a ognuna.
-    </div>
   </div>
 
   <div class="card">

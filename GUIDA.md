@@ -96,7 +96,7 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
    dal telefono le vede cambiare da sole ogni quindici secondi, con un lampo
    verde quando arrivano dati nuovi. Il pulsante `Pubblica adesso` serve solo
    se hai spento l'automatismo o vuoi forzare l'aggiornamento.
-6. **Foto** — scheda `⚙️ Contenuti → 📷 Album`, pulsante `📸 Scatta una foto`:
+6. **Foto** — scheda `📷 Album`, pulsante `📸 Scatta una foto`:
    dal telefono si apre la fotocamera e la foto è **subito** nell'album del
    sito. Vedi sotto.
 
@@ -124,7 +124,7 @@ la spunta verde.
 
 ## L'album della giornata
 
-`⚙️ Contenuti → 📷 Album`. Dal telefono premi **📸 Scatta una foto**: si apre
+Scheda **`📷 Album`**, nel menù in cima alla pagina. Dal telefono premi **📸 Scatta una foto**: si apre
 la fotocamera, scatti, e la foto compare nell'album del sito **subito**, senza
 pubblicare niente. Con `🖼️ Scegli dalla galleria` ne mandi anche parecchie in
 una volta.
@@ -136,8 +136,14 @@ una volta.
   vale immediatamente, sia per accendere che per spegnere.
 - Le foto vengono rimpicciolite prima di partire (lato lungo 1600 px), così
   anche con la rete del cellulare partono in un attimo.
-- Servono le impostazioni di GitHub in `📤 Pubblica` (le stesse che usi per
+- Servono le impostazioni di GitHub in `📣 Pubblica` (le stesse che usi per
   pubblicare): la foto vera finisce nel sito, il suo indirizzo nel database.
+  **Il token vale per un browser solo**: la prima volta che scatti dal telefono
+  ti dirà che manca e ti porterà nel riquadro giusto. Lì lo incolli una volta e
+  non ci pensi più. Per averlo sul telefono: dal computer, in `📣 Pubblica →
+  🔑 Collegamento a GitHub`, premi `📋 Copia` e mandatelo con un messaggio a te
+  stesso (poi cancella il messaggio); oppure rifai i tre passi di GitHub
+  direttamente dal telefono, che è altrettanto veloce.
 - Le foto stanno nel database, che è più veloce ma non è per sempre: quando la
   festa è finita premi **`📥 Porta le foto nei contenuti`** e poi
   `Pubblica contenuti.json`. Da quel momento l'album è dentro al sito e resta
@@ -270,46 +276,53 @@ e alla riapertura l'admin ti chiede se vuoi riprenderla.
 
 ## Regole di sicurezza di Firestore
 
-Da incollare nella console Firebase (Firestore → Regole):
+Queste sono le regole **davvero in vigore** nella console Firebase
+(Firestore → Regole), pubblicate il 1 agosto 2026. Il blocco della festa in
+piscina è copiato parola per parola da quello che c'era prima: non va toccato.
 
 ```
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- FESTA IN PISCINA (lasciare com'era) ---
-    match /prenotazioni/{doc} {
-      allow create: if request.resource.data.nome is string;
+    // ============ FESTA IN PISCINA — identiche a prima ============
+    match /prenotazioni/{id} {
+      allow create: if request.resource.data.nome is string
+                    && request.resource.data.nome.size() < 200;
       allow read, update, delete: if request.auth != null;
     }
     match /pubblico/{doc} {
       allow read: if true;
-      allow write: if true;
+      allow write: if request.resource.data.partecipanti is int
+                   && request.resource.data.partecipanti >= 0
+                   && request.resource.data.partecipanti <= 100000;
     }
 
-    // --- CERTAMEN AQUATICUM ---
+    // ================ CERTAMEN AQUATICUM — nuove =================
 
-    // Chiunque può iscriversi; nomi e recapiti si leggono solo con il login.
-    match /iscrizioni/{doc} {
+    // Chiunque puo iscriversi; nomi e recapiti si leggono solo col login.
+    match /iscrizioni/{id} {
       allow create: if request.resource.data.nome is string
+                    && request.resource.data.nome.size() < 200
                     && request.resource.data.area in ['ragazzi', 'adulti'];
       allow read, update, delete: if request.auth != null;
     }
 
-    // Documenti pubblici: solo numeri e classifiche, niente recapiti.
-    // Il contatore lo scrive anche chi si iscrive (senza login);
-    // la classifica la scrive solo l'organizzatore.
+    // Solo quattro numeri: quanti iscritti per sezione.
     match /pubblico_certamen/contatore {
       allow read: if true;
-      allow write: if true;
+      allow write: if request.auth != null
+                   || request.resource.data.keys().hasOnly(['ragazzi', 'adulti', 'italiana', 'burraco']);
     }
-    // classifica e album: li legge chiunque, li scrive solo l'organizzatore
+
+    // Classifiche, tabellone e album fotografico: li legge chiunque,
+    // li scrive solo l'organizzatore dopo il login.
     match /pubblico_certamen/{doc} {
       allow read: if true;
       allow write: if request.auth != null;
     }
 
-    // Il lavoro degli organizzatori: squadre, punteggi, tabelloni.
+    // Squadre, punteggi e tabelloni: contengono i nomi veri.
     match /stato_certamen/{doc} {
       allow read, write: if request.auth != null;
     }

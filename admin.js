@@ -182,6 +182,24 @@
     $('btnPubblicaContenuti').addEventListener('click', pubblicaContenuti);
     $('btnScarica').addEventListener('click', scaricaContenuti);
     $('btnSalvaGh').addEventListener('click', salvaGh);
+    /* il token si scrive una volta e non si rilegge più: ma per passarlo al
+       telefono bisogna poterlo vedere e copiare */
+    $('btnVediToken').addEventListener('click', function () {
+      var c = $('gh_token'), nascosto = c.type === 'password';
+      c.type = nascosto ? 'text' : 'password';
+      $('btnVediToken').textContent = nascosto ? '🙈 Nascondi' : '👁️ Mostra';
+    });
+    $('btnCopiaToken').addEventListener('click', function () {
+      var c = $('gh_token');
+      if (!c.value) { CA.toast('Non c\'è nessun token da copiare in questo browser.', 5000); return; }
+      var prima = c.type; c.type = 'text';
+      c.select(); c.setSelectionRange(0, 99999);
+      var fatto = false;
+      try { fatto = document.execCommand('copy'); } catch (e) { }
+      c.type = prima;
+      CA.toast(fatto ? '📋 Token copiato: incollalo nell\'admin del telefono, poi cancella il messaggio.'
+        : '⚠️ Non riesco a copiarlo da solo: premi 👁️ Mostra e copialo a mano.', 8000);
+    });
     $('btnVaiPubblica').addEventListener('click', function () {
       document.querySelector('[data-vista="pubblica"]').click();
     });
@@ -3609,12 +3627,19 @@
      l'utente e metto il cursore nel campo. Le sue modifiche intanto restano
      salvate come bozza, così non si perde niente. */
   function chiediGh() {
+    /* il riquadro del token vive nella scheda «Pubblica»: se sto altrove
+       (per esempio nell'album, dal telefono) devo prima portarcelo, se no
+       scorro verso una sezione nascosta e sembra che non succeda niente */
+    var linguetta = document.querySelector('[data-vista="pubblica"]');
+    if (linguetta && !linguetta.classList.contains('attiva')) linguetta.click();
     var det = $('dettagliGh');
     if (det) det.open = true;
-    var card = $('sec-github');
-    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    setTimeout(function () { try { $('gh_token').focus(); } catch (e) { } }, 500);
-    CA.toast('🔑 Manca il token di GitHub: seguendo i tre passi qui sopra ci vuole un minuto. Le tue modifiche sono salvate, non le perdi.', 12000);
+    setTimeout(function () {
+      var card = $('sec-github');
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      try { $('gh_token').focus(); } catch (e) { }
+    }, 120);
+    CA.toast('🔑 Manca il token di GitHub in questo telefono: seguendo i tre passi ci vuole un minuto. Le tue modifiche sono salvate, non le perdi.', 12000);
   }
 
   function ghPut(path, contenutoB64, messaggio) {
@@ -3749,7 +3774,8 @@
       return Promise.resolve(false);
     }
     if (!ghPronto()) {
-      testo('statoFoto', '⚠️ Manca il token di GitHub: serve per caricare le foto nel sito. Te l\'ho aperto qui sotto.');
+      testo('statoFoto', '⚠️ Manca il token di GitHub in questo telefono: serve per caricare le foto. ' +
+        'Ti porto nella scheda 📣 Pubblica, dove si incolla — poi torna qui e riscatta.');
       chiediGh();
       return Promise.resolve(false);
     }
