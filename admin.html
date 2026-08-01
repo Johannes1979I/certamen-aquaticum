@@ -427,6 +427,26 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
 
 <!-- ------------------------------ PUNTEGGI ----------------------------- -->
 <section class="vista" id="v-punteggi">
+  <div class="card" id="sec-cronometro">
+    <h2>⏱️ Cronometro della gara</h2>
+    <p class="aiuto">Scegli la gara e premi <b>Via</b>: il tempo scorre uguale per tutti
+      gli organizzatori. Quando finisce parte la sirena — se nessuna squadra ha già
+      vinto, vince chi è avanti in quel momento.</p>
+    <div class="campo" style="max-width:460px">
+      <label for="cronGioco">Quale gara</label>
+      <select id="cronGioco"></select>
+    </div>
+    <div class="orologio" id="orologio">--:--</div>
+    <p class="aiuto" id="cronNota"></p>
+    <div class="azioni" style="justify-content:flex-start">
+      <button class="btn btn-p btn-grande" id="btnCronVia">▶ Via</button>
+      <button class="btn btn-chiaro" id="btnCronPausa">⏸ Pausa</button>
+      <button class="btn btn-chiaro" id="btnCronAzzera">↺ Azzera</button>
+      <a class="btn btn-chiaro" id="btnCronMusica" target="_blank" rel="noopener">🎵 Scaletta</a>
+      <button class="btn btn-rosso" id="btnCronZitto" style="display:none">🔕 Basta sirena</button>
+    </div>
+  </div>
+
   <div class="card">
     <h2>🏅 Punteggi</h2>
     <p class="aiuto">Registra i risultati mano a mano. Ogni modifica si salva da sola nel database.</p>

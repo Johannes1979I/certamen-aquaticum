@@ -402,6 +402,59 @@
     return a ? (t + ' — ' + a) : t;
   }
 
+  /* ------------------------ la scaletta di un gioco ---------------------- */
+  /* Ogni gioco ha una scaletta lunga quanto il gioco stesso: si fa partire a
+     inizio gara e finisce da sola quando è ora di tirare le somme. Se la
+     scaletta non c'è si usa la canzone singola, così i contenuti vecchi
+     continuano a funzionare. */
+  var MINUTI_A_BRANO = 3.5;
+
+  function playlistDi(g) {
+    if (!g) return [];
+    var l = V(g.playlist, []).filter(function (b) {
+      return b && (String(V(b.titolo, '')).trim() || String(V(b.url, '')).trim());
+    });
+    if (l.length) return l;
+    return g.musica ? [g.musica] : [];
+  }
+
+  function minutiPlaylist(g) {
+    return Math.round(playlistDi(g).length * MINUTI_A_BRANO);
+  }
+
+  /* l'identificativo del video dentro un indirizzo di YouTube, in tutte le
+     forme in cui la gente lo copia */
+  function idVideo(url) {
+    var u = String(V(url, '')).trim();
+    if (!u) return '';
+    var m = u.match(/[?&]v=([A-Za-z0-9_-]{6,})/) ||
+      u.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/) ||
+      u.match(/\/(?:embed|shorts|live)\/([A-Za-z0-9_-]{6,})/);
+    return m ? m[1] : '';
+  }
+
+  /* Con due o più video precisi YouTube sa incolonnarli in una coda
+     temporanea: un solo tocco e partono uno dietro l'altro, senza dover
+     creare nessun account né nessuna playlist salvata. */
+  function linkPlaylist(g) {
+    var brani = playlistDi(g);
+    var ids = [];
+    brani.forEach(function (b) {
+      var id = idVideo(b.url);
+      if (id && ids.indexOf(id) < 0) ids.push(id);
+    });
+    if (ids.length >= 2) {
+      return 'https://www.youtube.com/watch_videos?video_ids=' + ids.join(',');
+    }
+    return linkMusica(brani[0]);
+  }
+
+  /* quanti brani hanno il collegamento preciso: sotto due, la coda automatica
+     non si può fare e si apre solo il primo */
+  function braniColLink(g) {
+    return playlistDi(g).filter(function (b) { return !!idVideo(b.url); }).length;
+  }
+
   /* --------------------------- iscrizioni aperte? ------------------------ */
   function iscrizioniChiuse() {
     var ev = V(dati().evento, {});
@@ -425,6 +478,9 @@
     memLeggi: memLeggi, memScrivi: memScrivi, memCancella: memCancella,
     iscrizioniChiuse: iscrizioniChiuse,
     linkMusica: linkMusica, titoloMusica: titoloMusica,
+    playlistDi: playlistDi, minutiPlaylist: minutiPlaylist,
+    linkPlaylist: linkPlaylist, braniColLink: braniColLink,
+    idVideo: idVideo, MINUTI_A_BRANO: MINUTI_A_BRANO,
     giochiAttivi: giochiAttivi, torneiAttivi: torneiAttivi,
     urlSito: urlSito, messaggioInvito: messaggioInvito,
     linkWhatsApp: linkWhatsApp, linkTelegram: linkTelegram

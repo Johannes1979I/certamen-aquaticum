@@ -31,7 +31,13 @@
   var NOMI_SQ = ['Delfini', 'Squali', 'Tartarughe', 'Meduse', 'Orche', 'Piovre', 'Granchi', 'Stelle marine'];
 
   function statoVuoto() {
-    return { squadre: [], configSquadre: {}, risultati: {}, titoli: [], tornei: {}, bonus: {} };
+    return {
+      squadre: [], configSquadre: {}, risultati: {}, titoli: [], tornei: {}, bonus: {},
+      cronometro: cronometroVuoto()
+    };
+  }
+  function cronometroVuoto() {
+    return { gioco: '', minuti: 0, avvio: 0, consumato: 0, suonato: false };
   }
 
   /* ========================= ACCESSO ALLA PAGINA ======================== */
@@ -181,6 +187,18 @@
     });
     $('btnPubblicaContenuti').addEventListener('click', pubblicaContenuti);
     $('btnScarica').addEventListener('click', scaricaContenuti);
+    $('cronGioco').addEventListener('change', function () { scegliGiocoCron(this.value); });
+    /* Col telefono in tasca o la pagina in secondo piano il browser rallenta
+       i timer fino a un giro al minuto: il conto resta giusto (si calcola
+       dall'orario di avvio) ma la sirena arriverebbe in ritardo. Appena si
+       riguarda lo schermo si ricontrolla subito. */
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) tic(); });
+    window.addEventListener('focus', tic);
+    $('btnCronVia').addEventListener('click', avviaCron);
+    $('btnCronPausa').addEventListener('click', pausaCron);
+    $('btnCronAzzera').addEventListener('click', azzeraCron);
+    $('btnCronZitto').addEventListener('click', zittisci);
+
     $('btnSalvaGh').addEventListener('click', salvaGh);
     /* il token si scrive una volta e non si rilegge più: ma per passarlo al
        telefono bisogna poterlo vedere e copiare */
@@ -680,7 +698,8 @@
         bonus: STATO.bonus
       },
       risultati: { risultati: STATO.risultati },
-      titoli: { titoli: STATO.titoli }
+      titoli: { titoli: STATO.titoli },
+      cronometro: { cronometro: STATO.cronometro }
     };
     Object.keys(STATO.tornei || {}).forEach(function (id) {
       p['torneo_' + id] = STATO.tornei[id];
@@ -698,6 +717,9 @@
       STATO.risultati = V(dati.risultati, {});
     } else if (nome === 'titoli') {
       STATO.titoli = V(dati.titoli, []);
+    } else if (nome === 'cronometro') {
+      STATO.cronometro = V(dati.cronometro, cronometroVuoto());
+      disegnaCronometro();
     } else if (nome.indexOf('torneo_') === 0) {
       STATO.tornei = STATO.tornei || {};
       STATO.tornei[nome.slice(7)] = dati;
@@ -2646,8 +2668,204 @@
     return scroll;
   }
 
+  /* ========================= CRONOMETRO DELLA GARA =====================
+     Ogni gioco ha il suo tempo massimo. Il conto alla rovescia non si
+     scala di secondo in secondo: si ricalcola ogni volta dall'orario di
+     avvio, così resta giusto anche se il telefono si blocca, la pagina
+     finisce in secondo piano o la si ricarica per sbaglio.
+     Vive dentro lo stato condiviso: se lo fa partire uno, lo vedono
+     tutti gli altri organizzatori. Quando scade suona, e allora si
+     assegnano i punti a chi è avanti in quel momento.               */
+  var TIC = null, SIRENA = null, AUDIO = null;
+
+  function cron() {
+    STATO.cronometro = STATO.cronometro || cronometroVuoto();
+    return STATO.cronometro;
+  }
+  function giocoCron() {
+    var c = cron();
+    return V(DATI.giochi, []).filter(function (g) { return g.id === c.gioco; })[0] || null;
+  }
+  function totaleMs() { return (Number(cron().minuti) || 0) * 60000; }
+  function rimastiMs() {
+    var c = cron();
+    if (!totaleMs()) return 0;
+    var passato = (Number(c.consumato) || 0) + (c.avvio ? (Date.now() - c.avvio) : 0);
+    return totaleMs() - passato;
+  }
+  function inMarcia() { return !!cron().avvio; }
+
+  function mmss(ms) {
+    var neg = ms < 0;
+    var s = Math.floor(Math.abs(ms) / 1000);
+    return (neg ? '-' : '') + due(Math.floor(s / 60)) + ':' + due(s % 60);
+  }
+
+  function scegliGiocoCron(id) {
+    var g = V(DATI.giochi, []).filter(function (x) { return x.id === id; })[0];
+    var c = cron();
+    c.gioco = V(id, '');
+    c.minuti = g ? (Number(g.durata) || 0) : 0;
+    c.avvio = 0; c.consumato = 0; c.suonato = false;
+    zittisci();
+    salvaStato(); disegnaCronometro();
+  }
+  function avviaCron() {
+    var c = cron();
+    if (!c.gioco) { CA.toast('Scegli prima quale gara stai per far partire.', 5000); return; }
+    if (c.avvio) return;
+    if (rimastiMs() <= 0) { c.consumato = 0; c.suonato = false; }
+    preparaAudio();                    /* il permesso al suono si prende adesso,
+                                          mentre il dito è ancora sul pulsante */
+    c.avvio = Date.now();
+    salvaStato(); disegnaCronometro();
+  }
+  function pausaCron() {
+    var c = cron();
+    if (!c.avvio) return;
+    c.consumato = (Number(c.consumato) || 0) + (Date.now() - c.avvio);
+    c.avvio = 0;
+    salvaStato(); disegnaCronometro();
+  }
+  function azzeraCron() {
+    var c = cron();
+    c.avvio = 0; c.consumato = 0; c.suonato = false;
+    zittisci();
+    salvaStato(); disegnaCronometro();
+  }
+
+  /* --- la sirena: due note ripetute, fatte al momento, senza file audio --- */
+  function preparaAudio() {
+    try {
+      AUDIO = AUDIO || new (window.AudioContext || window.webkitAudioContext)();
+      if (AUDIO.state === 'suspended') AUDIO.resume();
+    } catch (e) { AUDIO = null; }
+  }
+  function unBip() {
+    if (!AUDIO) return;
+    try {
+      var t = AUDIO.currentTime;
+      [[0, 880], [0.26, 880], [0.52, 660]].forEach(function (n) {
+        var o = AUDIO.createOscillator(), v = AUDIO.createGain();
+        o.type = 'square';
+        o.frequency.value = n[1];
+        v.gain.setValueAtTime(0.0001, t + n[0]);
+        v.gain.exponentialRampToValueAtTime(0.22, t + n[0] + 0.02);
+        v.gain.exponentialRampToValueAtTime(0.0001, t + n[0] + 0.2);
+        o.connect(v); v.connect(AUDIO.destination);
+        o.start(t + n[0]); o.stop(t + n[0] + 0.22);
+      });
+    } catch (e) { }
+  }
+  function suona() {
+    if (SIRENA) return;
+    preparaAudio();
+    unBip();
+    try { if (navigator.vibrate) navigator.vibrate([400, 180, 400, 180, 600]); } catch (e) { }
+    SIRENA = setInterval(unBip, 1600);
+    /* non suona all'infinito: dopo un minuto smette da sola */
+    setTimeout(zittisci, 60000);
+    var z = $('btnCronZitto');
+    if (z) z.style.display = '';
+  }
+  function zittisci() {
+    if (SIRENA) { clearInterval(SIRENA); SIRENA = null; }
+    try { if (navigator.vibrate) navigator.vibrate(0); } catch (e) { }
+    var z = $('btnCronZitto');
+    if (z) z.style.display = 'none';
+  }
+
+  function disegnaCronometro() {
+    var sel = $('cronGioco');
+    if (!sel) return;
+    var c = cron();
+
+    /* la tendina si rifà solo se l'elenco è cambiato: se no perde il tocco */
+    var giochi = V(DATI.giochi, []).filter(function (g) { return !g.escluso; });
+    var firma = giochi.map(function (g) { return g.id + ':' + g.nome + ':' + g.durata; }).join('|');
+    if (sel.getAttribute('data-firma') !== firma) {
+      sel.setAttribute('data-firma', firma);
+      sel.textContent = '';
+      var vuoto = document.createElement('option');
+      vuoto.value = ''; vuoto.textContent = '— scegli la gara —';
+      sel.appendChild(vuoto);
+      giochi.forEach(function (g) {
+        var o = document.createElement('option');
+        o.value = g.id;
+        o.textContent = V(g.emoji, '🎯') + ' ' + g.nome + ' · ' + (g.durata || 0) + ' min' +
+          (g.riserva ? ' (di riserva)' : '');
+        sel.appendChild(o);
+      });
+    }
+    if (sel.value !== V(c.gioco, '')) sel.value = V(c.gioco, '');
+
+    var g = giocoCron();
+    var mus = $('btnCronMusica');
+    if (mus) {
+      var l = g ? CA.linkPlaylist(g) : '';
+      mus.href = l || '#';
+      mus.style.display = l ? '' : 'none';
+      /* il pulsante dice la verità: incolonna i brani solo se hanno il
+         collegamento preciso, se no apre il primo e basta */
+      mus.textContent = !g ? '🎵 Scaletta'
+        : (CA.braniColLink(g) >= 2
+          ? '🎵 Scaletta · ' + CA.braniColLink(g) + ' brani in fila'
+          : '🎵 Metti la musica');
+    }
+    tic();
+    if (!TIC) TIC = setInterval(tic, 500);
+  }
+
+  function tic() {
+    var el = $('orologio');
+    if (!el) return;
+    var c = cron();
+    var ms = rimastiMs();
+
+    if (!c.gioco || !totaleMs()) {
+      el.textContent = '--:--';
+      el.className = 'orologio';
+      testo('cronNota', 'Scegli la gara: il tempo lo prendo dalla durata scritta nei contenuti.');
+      return;
+    }
+
+    /* è appena scaduto: si ferma da solo e suona, una volta sola */
+    if (ms <= 0 && !c.suonato) {
+      c.suonato = true;
+      c.consumato = totaleMs();
+      c.avvio = 0;
+      salvaStato();
+      suona();
+      CA.toast('⏰ Tempo scaduto: assegna i punti a chi è avanti adesso.', 12000);
+    }
+
+    el.textContent = mmss(Math.max(0, ms));
+    el.className = 'orologio' +
+      (ms <= 0 ? ' scaduto' : (ms <= 60000 ? ' agli-sgoccioli' : (inMarcia() ? ' in-marcia' : '')));
+
+    var g = giocoCron();
+    var nome = g ? (V(g.emoji, '') + ' ' + g.nome) : '';
+    if (ms <= 0) {
+      testo('cronNota', '⏰ Tempo scaduto su ' + nome +
+        '. Se nessuno ha già vinto, vince chi è avanti adesso: scrivi l\'ordine d\'arrivo qui sotto.');
+    } else if (inMarcia()) {
+      testo('cronNota', '▶ ' + nome + ' in corso — finisce alle ' +
+        oraFinale() + '. Lo vedono anche gli altri organizzatori.');
+    } else if (c.consumato) {
+      testo('cronNota', '⏸ ' + nome + ' in pausa. Premi Via per ripartire da dove eri.');
+    } else {
+      testo('cronNota', nome + ': ' + c.minuti + ' minuti. Premi Via quando parte la gara.');
+    }
+  }
+
+  function oraFinale() {
+    var f = new Date(Date.now() + Math.max(0, rimastiMs()));
+    return due(f.getHours()) + ':' + due(f.getMinutes());
+  }
+
   /* ============================== PUNTEGGI ============================= */
   function disegnaPunteggi() {
+    disegnaCronometro();
     disegnaPuntiRagazzi();
     disegnaPuntiCarte();
     disegnaTitoli();
@@ -2997,31 +3215,124 @@
     disegnaEditTornei();
   }
 
+  /* La scaletta di ogni gioco: tanti brani quanti ne servono a coprire la
+     durata della gara. Il primo brano è anche quello che compare sul sito
+     come canzone del gioco, così le due cose non si sdoppiano. */
   function disegnaEditMusica() {
     var el = $('editMusica');
     el.textContent = '';
     V(DATI.giochi, []).filter(function (g) { return !g.escluso; }).forEach(function (g) {
-      g.musica = g.musica || { titolo: '', artista: '', url: '', ricerca: '' };
+      sistemaPlaylist(g);
       var d = crea('div', 'voce-edit');
-      var h = crea('div');
-      h.style.cssText = 'font-weight:bold;margin-bottom:8px';
-      h.textContent = V(g.emoji, '🎯') + ' ' + g.nome;
+
+      var h = crea('div', 'testa-scaletta');
+      h.appendChild(crea('b', null, V(g.emoji, '🎯') + ' ' + g.nome));
+      var stima = crea('span', 'dida-scaletta');
+      h.appendChild(stima);
       d.appendChild(h);
-      var gr = crea('div', 'griglia3');
-      gr.appendChild(campoMini('Titolo', g.musica.titolo, function (v) { g.musica.titolo = v; aggiornaRicerca(g); }));
-      gr.appendChild(campoMini('Artista', g.musica.artista, function (v) { g.musica.artista = v; aggiornaRicerca(g); }));
-      gr.appendChild(campoMini('Collegamento YouTube (facoltativo)', g.musica.url, function (v) { g.musica.url = v.trim(); }));
-      d.appendChild(gr);
-      var prova = crea('a', 'bottoncino', '▶ Prova il collegamento');
+
+      var lista = crea('div', 'brani');
+      d.appendChild(lista);
+
+      function conta() {
+        var min = Math.round(g.playlist.length * CA.MINUTI_A_BRANO);
+        var dur = Number(g.durata) || 0;
+        stima.textContent = g.playlist.length + ' brani · circa ' + min + ' min' +
+          (dur ? (min >= dur ? ' — coprono i ' + dur + ' min del gioco'
+            : ' — il gioco dura ' + dur + ' min: ne manca qualcuno') : '');
+        stima.className = 'dida-scaletta' + (dur && min < dur ? ' corta' : '');
+      }
+
+      function ridisegna() {
+        lista.textContent = '';
+        g.playlist.forEach(function (b, i) {
+          lista.appendChild(rigaBrano(g, b, i, ridisegna, conta));
+        });
+        conta();
+      }
+      ridisegna();
+
+      var az = crea('div', 'azioni');
+      az.style.cssText = 'justify-content:flex-start;margin-top:10px';
+      az.appendChild(bottone('➕ Aggiungi un brano', 'chiaro btn-piccolo', function () {
+        g.playlist.push({ titolo: '', artista: '', url: '', ricerca: '' });
+        ridisegna();
+        salvaBozzaFraPoco();
+      }));
+      var prova = crea('a', 'btn btn-chiaro btn-piccolo', '▶ Prova la scaletta');
       prova.target = '_blank'; prova.rel = 'noopener';
-      prova.href = CA.linkMusica(g.musica) || '#';
-      prova.style.display = 'inline-block';
-      d.appendChild(prova);
+      prova.href = CA.linkPlaylist(g) || '#';
+      az.appendChild(prova);
+      d.appendChild(az);
+
+      var quanti = CA.braniColLink(g);
+      if (quanti < 2 && g.playlist.length > 1) {
+        d.appendChild(crea('p', 'aiuto',
+          'Con almeno due collegamenti YouTube incollati i brani partono in fila da soli. ' +
+          'Adesso ne hai ' + quanti + ': senza, si apre solo il primo e gli altri si cercano a mano.'));
+      }
       el.appendChild(d);
     });
   }
-  function aggiornaRicerca(g) {
-    g.musica.ricerca = (V(g.musica.titolo, '') + ' ' + V(g.musica.artista, '')).trim();
+
+  /* una riga della scaletta */
+  function rigaBrano(g, b, i, ridisegna, conta) {
+    var r = crea('div', 'brano');
+    r.appendChild(crea('span', 'num-brano', String(i + 1)));
+
+    var gr = crea('div', 'griglia3');
+    gr.style.flex = '1';
+    gr.appendChild(campoMini('Titolo', b.titolo, function (v) {
+      b.titolo = v; aggiornaRicerca(b); if (i === 0) allineaCanzone(g);
+    }));
+    gr.appendChild(campoMini('Artista', b.artista, function (v) {
+      b.artista = v; aggiornaRicerca(b); if (i === 0) allineaCanzone(g);
+    }));
+    gr.appendChild(campoMini('Collegamento YouTube (facoltativo)', b.url, function (v) {
+      b.url = v.trim(); if (i === 0) allineaCanzone(g);
+    }));
+    r.appendChild(gr);
+
+    var az = crea('div', 'azioni-r');
+    az.appendChild(bottone('▲', 'chiaro btn-piccolo', function () {
+      if (i === 0) return;
+      g.playlist.splice(i - 1, 0, g.playlist.splice(i, 1)[0]);
+      allineaCanzone(g); ridisegna(); salvaBozzaFraPoco();
+    }));
+    az.appendChild(bottone('▼', 'chiaro btn-piccolo', function () {
+      if (i >= g.playlist.length - 1) return;
+      g.playlist.splice(i + 1, 0, g.playlist.splice(i, 1)[0]);
+      allineaCanzone(g); ridisegna(); salvaBozzaFraPoco();
+    }));
+    az.appendChild(bottone('🗑️', 'rosso btn-piccolo', function () {
+      if (g.playlist.length <= 1) { CA.toast('Almeno un brano deve restare.', 4000); return; }
+      g.playlist.splice(i, 1);
+      allineaCanzone(g); ridisegna(); salvaBozzaFraPoco();
+    }));
+    r.appendChild(az);
+    return r;
+  }
+
+  function sistemaPlaylist(g) {
+    g.musica = g.musica || { titolo: '', artista: '', url: '', ricerca: '' };
+    if (!Array.isArray(g.playlist) || !g.playlist.length) {
+      g.playlist = [{
+        titolo: V(g.musica.titolo, ''), artista: V(g.musica.artista, ''),
+        url: V(g.musica.url, ''), ricerca: V(g.musica.ricerca, '')
+      }];
+    }
+  }
+  /* il primo brano è la canzone del gioco: si tengono allineati */
+  function allineaCanzone(g) {
+    var primo = g.playlist[0];
+    if (!primo) return;
+    g.musica.titolo = primo.titolo;
+    g.musica.artista = primo.artista;
+    g.musica.url = primo.url;
+    g.musica.ricerca = primo.ricerca;
+  }
+  function aggiornaRicerca(m) {
+    m.ricerca = (V(m.titolo, '') + ' ' + V(m.artista, '')).trim();
   }
 
   function campoMini(eti, valore, alCambio) {

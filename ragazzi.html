@@ -284,8 +284,9 @@ function cartaGioco(g, numero){
     dentro.appendChild(p);
   }
 
-  /* la canzone del gioco: apre YouTube in una scheda nuova */
-  var link = CA.linkMusica(g.musica);
+  /* la scaletta del gioco: il primo tocco fa partire tutti i brani in fila */
+  var scaletta = CA.playlistDi(g);
+  var link = CA.linkPlaylist(g);
   if(DATI.musicaAttiva !== false && link){
     var m = crea('a', 'musica-chip');
     m.href = link;
@@ -293,11 +294,32 @@ function cartaGioco(g, numero){
     m.rel = 'noopener noreferrer';
     m.appendChild(crea('span', 'nota-mus', '🎵'));
     var mt = crea('span');
-    mt.appendChild(crea('b', null, CA.titoloMusica(g.musica)));
-    if(g.musica && g.musica.perche) mt.appendChild(crea('small', null, g.musica.perche));
+    mt.appendChild(crea('b', null, CA.titoloMusica(scaletta[0])));
+    if(scaletta.length > 1){
+      mt.appendChild(crea('small', null, 'e altri ' + (scaletta.length - 1) +
+        ' brani · circa ' + CA.minutiPlaylist(g) + ' minuti di musica'));
+    } else if(g.musica && g.musica.perche){
+      mt.appendChild(crea('small', null, g.musica.perche));
+    }
     m.appendChild(mt);
     m.appendChild(crea('span', 'freccia-mus', '▶'));
     dentro.appendChild(m);
+
+    if(scaletta.length > 1){
+      var voci = scaletta.map(function(b){ return CA.titoloMusica(b); });
+      var d = blocco('🎶 La scaletta', voci, false);
+      /* ogni brano si apre da solo, per chi vuole saltare alla sua canzone */
+      var righe = d.querySelectorAll('li');
+      scaletta.forEach(function(b, i){
+        var l = CA.linkMusica(b);
+        if(!l || !righe[i]) return;
+        var a = crea('a', null, righe[i].textContent);
+        a.href = l; a.target = '_blank'; a.rel = 'noopener noreferrer';
+        righe[i].textContent = '';
+        righe[i].appendChild(a);
+      });
+      dentro.appendChild(d);
+    }
   }
 
   if((g.regole || []).length) dentro.appendChild(blocco('📋 Regole', g.regole, true));

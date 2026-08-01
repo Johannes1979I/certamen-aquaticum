@@ -105,7 +105,33 @@
         "perche": "Ritmo veloce e stop improvvisi: perfetta per far girare la palla.",
         "url": "https://www.youtube.com/watch?v=llyiQ4I-mcQ",
         "ricerca": "Boom, Boom, Boom, Boom!! Vengaboys"
-      }
+      },
+      "playlist": [
+        {
+          "titolo": "Boom, Boom, Boom, Boom!!",
+          "artista": "Vengaboys",
+          "url": "https://www.youtube.com/watch?v=llyiQ4I-mcQ",
+          "ricerca": "Boom, Boom, Boom, Boom!! Vengaboys"
+        },
+        {
+          "titolo": "Gioca Jouer",
+          "artista": "Claudio Cecchetto",
+          "url": "",
+          "ricerca": "Gioca Jouer Claudio Cecchetto"
+        },
+        {
+          "titolo": "Macarena",
+          "artista": "Los del Río",
+          "url": "",
+          "ricerca": "Macarena Los del Río"
+        },
+        {
+          "titolo": "Sarà perché ti amo",
+          "artista": "Ricchi e Poveri",
+          "url": "",
+          "ricerca": "Sarà perché ti amo Ricchi e Poveri"
+        }
+      ]
     },
     {
       "id": "staffetta-materassino",
@@ -138,7 +164,39 @@
         "perche": "Il classico da tavola da surf, per chi pagaia sul materassino.",
         "url": "https://www.youtube.com/watch?v=enlOHxQ0tb4",
         "ricerca": "Surfin' USA The Beach Boys"
-      }
+      },
+      "playlist": [
+        {
+          "titolo": "Surfin' USA",
+          "artista": "The Beach Boys",
+          "url": "https://www.youtube.com/watch?v=enlOHxQ0tb4",
+          "ricerca": "Surfin' USA The Beach Boys"
+        },
+        {
+          "titolo": "Kokomo",
+          "artista": "The Beach Boys",
+          "url": "",
+          "ricerca": "Kokomo The Beach Boys"
+        },
+        {
+          "titolo": "Surfin' Bird",
+          "artista": "The Trashmen",
+          "url": "",
+          "ricerca": "Surfin' Bird The Trashmen"
+        },
+        {
+          "titolo": "Good Vibrations",
+          "artista": "The Beach Boys",
+          "url": "",
+          "ricerca": "Good Vibrations The Beach Boys"
+        },
+        {
+          "titolo": "Rock Lobster",
+          "artista": "The B-52's",
+          "url": "",
+          "ricerca": "Rock Lobster The B-52's"
+        }
+      ]
     },
     {
       "id": "staffetta-pallone",
@@ -171,7 +229,39 @@
         "perche": "L'inno dello sport: si parte a tempo di palla.",
         "url": "https://www.youtube.com/watch?v=pRpeEdMmmQ0",
         "ricerca": "Waka Waka (This Time for Africa) Shakira"
-      }
+      },
+      "playlist": [
+        {
+          "titolo": "Waka Waka (This Time for Africa)",
+          "artista": "Shakira",
+          "url": "https://www.youtube.com/watch?v=pRpeEdMmmQ0",
+          "ricerca": "Waka Waka (This Time for Africa) Shakira"
+        },
+        {
+          "titolo": "Un'estate italiana",
+          "artista": "Edoardo Bennato e Gianna Nannini",
+          "url": "",
+          "ricerca": "Un'estate italiana Edoardo Bennato e Gianna Nannini"
+        },
+        {
+          "titolo": "La Copa de la Vida",
+          "artista": "Ricky Martin",
+          "url": "",
+          "ricerca": "La Copa de la Vida Ricky Martin"
+        },
+        {
+          "titolo": "Wavin' Flag",
+          "artista": "K'naan",
+          "url": "",
+          "ricerca": "Wavin' Flag K'naan"
+        },
+        {
+          "titolo": "Freed from Desire",
+          "artista": "Gala",
+          "url": "",
+          "ricerca": "Freed from Desire Gala"
+        }
+      ]
     },
     {
       "id": "trasporto-compagno",
@@ -204,7 +294,39 @@
         "url": "https://www.youtube.com/watch?v=HMqgVXSvwGo",
         "ricerca": "Fireball Pitbull"
       },
-      "escluso": false
+      "escluso": false,
+      "playlist": [
+        {
+          "titolo": "Fireball",
+          "artista": "Pitbull",
+          "url": "https://www.youtube.com/watch?v=HMqgVXSvwGo",
+          "ricerca": "Fireball Pitbull"
+        },
+        {
+          "titolo": "Count on Me",
+          "artista": "Bruno Mars",
+          "url": "",
+          "ricerca": "Count on Me Bruno Mars"
+        },
+        {
+          "titolo": "Lean on Me",
+          "artista": "Bill Withers",
+          "url": "",
+          "ricerca": "Lean on Me Bill Withers"
+        },
+        {
+          "titolo": "Stand by Me",
+          "artista": "Ben E. King",
+          "url": "",
+          "ricerca": "Stand by Me Ben E. King"
+        },
+        {
+          "titolo": "You've Got a Friend in Me",
+          "artista": "Randy Newman",
+          "url": "",
+          "ricerca": "You've Got a Friend in Me Randy Newman"
+        }
+      ]
     },
     {
       "id": "traghetto",
@@ -236,7 +358,39 @@
         "perche": "Una ciurma sola su una barchetta gialla: il traghetto in musica.",
         "url": "https://www.youtube.com/watch?v=m2uTFF_3MaA",
         "ricerca": "Yellow Submarine The Beatles"
-      }
+      },
+      "playlist": [
+        {
+          "titolo": "Yellow Submarine",
+          "artista": "The Beatles",
+          "url": "https://www.youtube.com/watch?v=m2uTFF_3MaA",
+          "ricerca": "Yellow Submarine The Beatles"
+        },
+        {
+          "titolo": "Banana Boat Song (Day-O)",
+          "artista": "Harry Belafonte",
+          "url": "",
+          "ricerca": "Banana Boat Song (Day-O) Harry Belafonte"
+        },
+        {
+          "titolo": "Rock the Boat",
+          "artista": "The Hues Corporation",
+          "url": "",
+          "ricerca": "Rock the Boat The Hues Corporation"
+        },
+        {
+          "titolo": "Sailing",
+          "artista": "Rod Stewart",
+          "url": "",
+          "ricerca": "Sailing Rod Stewart"
+        },
+        {
+          "titolo": "Maracaibo",
+          "artista": "Lu Colombo",
+          "url": "",
+          "ricerca": "Maracaibo Lu Colombo"
+        }
+      ]
     },
     {
       "id": "palla-capitano",
@@ -269,7 +423,45 @@
         "perche": "Il battito di mani lo fanno le squadre a bordo vasca.",
         "url": "https://www.youtube.com/watch?v=-tJYN-eG1zk",
         "ricerca": "We Will Rock You Queen"
-      }
+      },
+      "playlist": [
+        {
+          "titolo": "We Will Rock You",
+          "artista": "Queen",
+          "url": "https://www.youtube.com/watch?v=-tJYN-eG1zk",
+          "ricerca": "We Will Rock You Queen"
+        },
+        {
+          "titolo": "Cotton Eye Joe",
+          "artista": "Rednex",
+          "url": "",
+          "ricerca": "Cotton Eye Joe Rednex"
+        },
+        {
+          "titolo": "Jump",
+          "artista": "Van Halen",
+          "url": "",
+          "ricerca": "Jump Van Halen"
+        },
+        {
+          "titolo": "Hey Ya!",
+          "artista": "OutKast",
+          "url": "",
+          "ricerca": "Hey Ya! OutKast"
+        },
+        {
+          "titolo": "Can't Stop the Feeling!",
+          "artista": "Justin Timberlake",
+          "url": "",
+          "ricerca": "Can't Stop the Feeling! Justin Timberlake"
+        },
+        {
+          "titolo": "I Gotta Feeling",
+          "artista": "The Black Eyed Peas",
+          "url": "",
+          "ricerca": "I Gotta Feeling The Black Eyed Peas"
+        }
+      ]
     },
     {
       "id": "catena",
@@ -301,7 +493,27 @@
         "perche": "La canzone delle file che non si spezzano mai.",
         "url": "https://www.youtube.com/watch?v=w15oWDh02K4",
         "ricerca": "L'Amour toujours Giggi D'Agostino"
-      }
+      },
+      "playlist": [
+        {
+          "titolo": "L'Amour toujours",
+          "artista": "Giggi D'Agostino",
+          "url": "https://www.youtube.com/watch?v=w15oWDh02K4",
+          "ricerca": "L'Amour toujours Giggi D'Agostino"
+        },
+        {
+          "titolo": "Blue (Da Ba Dee)",
+          "artista": "Eiffel 65",
+          "url": "",
+          "ricerca": "Blue (Da Ba Dee) Eiffel 65"
+        },
+        {
+          "titolo": "Vamos a bailar",
+          "artista": "Paola e Chiara",
+          "url": "",
+          "ricerca": "Vamos a bailar Paola e Chiara"
+        }
+      ]
     },
     {
       "id": "pallanuoto",
@@ -334,7 +546,57 @@
         "perche": "Il coro da stadio: parte da solo appena si segna.",
         "url": "https://www.youtube.com/watch?v=0J2QdDbelmY",
         "ricerca": "Seven Nation Army The White Stripes"
-      }
+      },
+      "playlist": [
+        {
+          "titolo": "Seven Nation Army",
+          "artista": "The White Stripes",
+          "url": "https://www.youtube.com/watch?v=0J2QdDbelmY",
+          "ricerca": "Seven Nation Army The White Stripes"
+        },
+        {
+          "titolo": "Zombie Nation",
+          "artista": "Kernkraft 400",
+          "url": "",
+          "ricerca": "Zombie Nation Kernkraft 400"
+        },
+        {
+          "titolo": "Song 2",
+          "artista": "Blur",
+          "url": "",
+          "ricerca": "Song 2 Blur"
+        },
+        {
+          "titolo": "Chelsea Dagger",
+          "artista": "The Fratellis",
+          "url": "",
+          "ricerca": "Chelsea Dagger The Fratellis"
+        },
+        {
+          "titolo": "Pump It",
+          "artista": "The Black Eyed Peas",
+          "url": "",
+          "ricerca": "Pump It The Black Eyed Peas"
+        },
+        {
+          "titolo": "Titanium",
+          "artista": "David Guetta e Sia",
+          "url": "",
+          "ricerca": "Titanium David Guetta e Sia"
+        },
+        {
+          "titolo": "Believer",
+          "artista": "Imagine Dragons",
+          "url": "",
+          "ricerca": "Believer Imagine Dragons"
+        },
+        {
+          "titolo": "Sandstorm",
+          "artista": "Darude",
+          "url": "",
+          "ricerca": "Sandstorm Darude"
+        }
+      ]
     },
     {
       "id": "passaggi-materassino",
@@ -366,7 +628,39 @@
         "perche": "Un minuto di passaggi vuole un minuto di buonumore.",
         "url": "https://www.youtube.com/watch?v=ZbZSe6N_BXs",
         "ricerca": "Happy Pharrell Williams"
-      }
+      },
+      "playlist": [
+        {
+          "titolo": "Happy",
+          "artista": "Pharrell Williams",
+          "url": "https://www.youtube.com/watch?v=ZbZSe6N_BXs",
+          "ricerca": "Happy Pharrell Williams"
+        },
+        {
+          "titolo": "Walking on Sunshine",
+          "artista": "Katrina and the Waves",
+          "url": "",
+          "ricerca": "Walking on Sunshine Katrina and the Waves"
+        },
+        {
+          "titolo": "Best Day of My Life",
+          "artista": "American Authors",
+          "url": "",
+          "ricerca": "Best Day of My Life American Authors"
+        },
+        {
+          "titolo": "Shut Up and Dance",
+          "artista": "Walk the Moon",
+          "url": "",
+          "ricerca": "Shut Up and Dance Walk the Moon"
+        },
+        {
+          "titolo": "L'estate addosso",
+          "artista": "Jovanotti",
+          "url": "",
+          "ricerca": "L'estate addosso Jovanotti"
+        }
+      ]
     },
     {
       "id": "re-materassino",
@@ -399,7 +693,39 @@
         "url": "https://www.youtube.com/watch?v=9jK-NcRmVcw",
         "ricerca": "The Final Countdown Europe"
       },
-      "escluso": false
+      "escluso": false,
+      "playlist": [
+        {
+          "titolo": "The Final Countdown",
+          "artista": "Europe",
+          "url": "https://www.youtube.com/watch?v=9jK-NcRmVcw",
+          "ricerca": "The Final Countdown Europe"
+        },
+        {
+          "titolo": "Another One Bites the Dust",
+          "artista": "Queen",
+          "url": "",
+          "ricerca": "Another One Bites the Dust Queen"
+        },
+        {
+          "titolo": "The Power",
+          "artista": "Snap!",
+          "url": "",
+          "ricerca": "The Power Snap!"
+        },
+        {
+          "titolo": "Everybody Wants to Rule the World",
+          "artista": "Tears for Fears",
+          "url": "",
+          "ricerca": "Everybody Wants to Rule the World Tears for Fears"
+        },
+        {
+          "titolo": "Kung Fu Fighting",
+          "artista": "Carl Douglas",
+          "url": "",
+          "ricerca": "Kung Fu Fighting Carl Douglas"
+        }
+      ]
     },
     {
       "id": "nuoto-pallone",
@@ -431,7 +757,27 @@
         "perche": "Per spingere il pallone col naso serve grinta.",
         "url": "https://www.youtube.com/watch?v=btPJPFnesV4",
         "ricerca": "Eye of the Tiger Survivor"
-      }
+      },
+      "playlist": [
+        {
+          "titolo": "Eye of the Tiger",
+          "artista": "Survivor",
+          "url": "https://www.youtube.com/watch?v=btPJPFnesV4",
+          "ricerca": "Eye of the Tiger Survivor"
+        },
+        {
+          "titolo": "Gonna Fly Now (tema di Rocky)",
+          "artista": "Bill Conti",
+          "url": "",
+          "ricerca": "Gonna Fly Now (tema di Rocky) Bill Conti"
+        },
+        {
+          "titolo": "Momenti di gloria",
+          "artista": "Vangelis",
+          "url": "",
+          "ricerca": "Momenti di gloria Vangelis"
+        }
+      ]
     },
     {
       "id": "cavalca-materassino",
@@ -463,7 +809,27 @@
         "perche": "La batteria delle cadute: come quando si scivola giu.",
         "url": "https://www.youtube.com/watch?v=dBURLdhmmZ8",
         "ricerca": "Wipe Out The Surfaris"
-      }
+      },
+      "playlist": [
+        {
+          "titolo": "Wipe Out",
+          "artista": "The Surfaris",
+          "url": "https://www.youtube.com/watch?v=dBURLdhmmZ8",
+          "ricerca": "Wipe Out The Surfaris"
+        },
+        {
+          "titolo": "Misirlou",
+          "artista": "Dick Dale",
+          "url": "",
+          "ricerca": "Misirlou Dick Dale"
+        },
+        {
+          "titolo": "Hawaii Five-O (tema)",
+          "artista": "The Ventures",
+          "url": "",
+          "ricerca": "Hawaii Five-O (tema) The Ventures"
+        }
+      ]
     },
     {
       "id": "king-of-the-mat",
@@ -498,7 +864,45 @@
         "url": "https://www.youtube.com/watch?v=v2AC41dglnM",
         "ricerca": "Thunderstruck AC/DC"
       },
-      "escluso": false
+      "escluso": false,
+      "playlist": [
+        {
+          "titolo": "Thunderstruck",
+          "artista": "AC/DC",
+          "url": "https://www.youtube.com/watch?v=v2AC41dglnM",
+          "ricerca": "Thunderstruck AC/DC"
+        },
+        {
+          "titolo": "Radioactive",
+          "artista": "Imagine Dragons",
+          "url": "",
+          "ricerca": "Radioactive Imagine Dragons"
+        },
+        {
+          "titolo": "Uprising",
+          "artista": "Muse",
+          "url": "",
+          "ricerca": "Uprising Muse"
+        },
+        {
+          "titolo": "Roar",
+          "artista": "Katy Perry",
+          "url": "",
+          "ricerca": "Roar Katy Perry"
+        },
+        {
+          "titolo": "Stronger (What Doesn't Kill You)",
+          "artista": "Kelly Clarkson",
+          "url": "",
+          "ricerca": "Stronger (What Doesn't Kill You) Kelly Clarkson"
+        },
+        {
+          "titolo": "Whatever It Takes",
+          "artista": "Imagine Dragons",
+          "url": "",
+          "ricerca": "Whatever It Takes Imagine Dragons"
+        }
+      ]
     },
     {
       "id": "super-staffetta",
@@ -534,7 +938,45 @@
         "url": "https://www.youtube.com/watch?v=HgzGwKwLmgM",
         "ricerca": "Don't Stop Me Now Queen"
       },
-      "escluso": false
+      "escluso": false,
+      "playlist": [
+        {
+          "titolo": "Don't Stop Me Now",
+          "artista": "Queen",
+          "url": "https://www.youtube.com/watch?v=HgzGwKwLmgM",
+          "ricerca": "Don't Stop Me Now Queen"
+        },
+        {
+          "titolo": "We Are the Champions",
+          "artista": "Queen",
+          "url": "",
+          "ricerca": "We Are the Champions Queen"
+        },
+        {
+          "titolo": "Livin' on a Prayer",
+          "artista": "Bon Jovi",
+          "url": "",
+          "ricerca": "Livin' on a Prayer Bon Jovi"
+        },
+        {
+          "titolo": "Hall of Fame",
+          "artista": "The Script",
+          "url": "",
+          "ricerca": "Hall of Fame The Script"
+        },
+        {
+          "titolo": "Wake Me Up",
+          "artista": "Avicii",
+          "url": "",
+          "ricerca": "Wake Me Up Avicii"
+        },
+        {
+          "titolo": "Firework",
+          "artista": "Katy Perry",
+          "url": "",
+          "ricerca": "Firework Katy Perry"
+        }
+      ]
     },
     {
       "id": "baseball-acqua",
@@ -557,7 +999,45 @@
         "perche": "È la canzone del baseball per eccellenza: quella che negli stadi americani parte appena si comincia.",
         "url": "https://www.youtube.com/watch?v=oQBW__nrmJU",
         "ricerca": "Centerfield John Fogerty"
-      }
+      },
+      "playlist": [
+        {
+          "titolo": "Centerfield",
+          "artista": "John Fogerty",
+          "url": "https://www.youtube.com/watch?v=oQBW__nrmJU",
+          "ricerca": "Centerfield John Fogerty"
+        },
+        {
+          "titolo": "Take Me Out to the Ball Game",
+          "artista": "canzone tradizionale",
+          "url": "",
+          "ricerca": "Take Me Out to the Ball Game canzone tradizionale"
+        },
+        {
+          "titolo": "Sweet Caroline",
+          "artista": "Neil Diamond",
+          "url": "",
+          "ricerca": "Sweet Caroline Neil Diamond"
+        },
+        {
+          "titolo": "Dancing in the Moonlight",
+          "artista": "Toploader",
+          "url": "",
+          "ricerca": "Dancing in the Moonlight Toploader"
+        },
+        {
+          "titolo": "Summer of '69",
+          "artista": "Bryan Adams",
+          "url": "",
+          "ricerca": "Summer of '69 Bryan Adams"
+        },
+        {
+          "titolo": "Don't Stop Believin'",
+          "artista": "Journey",
+          "url": "",
+          "ricerca": "Don't Stop Believin' Journey"
+        }
+      ]
     }
   ],
   "tornei": [

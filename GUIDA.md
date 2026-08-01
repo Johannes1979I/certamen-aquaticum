@@ -87,9 +87,13 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
    - 3–6 coppie → girone all'italiana
    - 7–12 coppie → due gironi, semifinali e finale
    - 13 e più → tabellone a eliminazione diretta
-4. **Punteggi** — scheda `🏅 Punteggi`: per i ragazzi scegli chi è arrivato
-   primo, secondo, terzo…; per le carte scrivi i punti delle partite.
-   Si salva tutto da solo nel database.
+4. **Punteggi** — scheda `🏅 Punteggi`: in cima c'è il **cronometro della
+   gara**. Scegli la gara, premi **▶ Via** e il tempo scorre; 🎵 apre la
+   scaletta di quel gioco. Quando scade suona la sirena: se nessuna squadra
+   ha già vinto, vince chi è avanti in quel momento e scrivi tu l'ordine
+   d'arrivo. Sotto, per i ragazzi scegli chi è arrivato primo, secondo,
+   terzo…; per le carte scrivi i punti delle partite. Si salva tutto da
+   solo nel database.
 5. **Pubblica** — non devi fare niente: con l'interruttore
    **«Aggiorna la bacheca da sola»** acceso (lo è di serie), ogni punteggio che
    registri finisce in bacheca entro pochi secondi, e chi guarda le classifiche
@@ -121,6 +125,46 @@ fosse. In alto compare *«⏳ da mandare quando torna la rete»* e i punteggi
 restano nel telefono; appena il segnale torna partono da soli e l'avviso
 diventa *«✅ salvato nel database»*. Non chiudere il sito prima di aver visto
 la spunta verde.
+
+## Il cronometro e la musica
+
+Ogni gioco ha un **tempo massimo**, quello scritto nella sua durata. Il
+cronometro sta in cima alla scheda `🏅 Punteggi`.
+
+- Scegli la gara nella tendina: il tempo lo prende da solo dalla durata.
+- **▶ Via** fa partire il conto alla rovescia. **⏸ Pausa** lo ferma dove sta
+  (serve quando ci si ferma a spiegare), **↺ Azzera** lo riporta all'inizio.
+- Sotto il minuto i numeri diventano arancioni; a zero diventano rossi e
+  parte la **sirena**, con la vibrazione sul telefono. `🔕 Basta sirena` la
+  zittisce, e comunque smette da sola dopo un minuto.
+- **A tempo scaduto la gara finisce lì**: se nessuna squadra ha già vinto,
+  vince chi è avanti in quel momento. L'ordine d'arrivo lo scrivi tu subito
+  sotto, nella stessa schermata.
+- Il cronometro è **uno solo per tutti**: se lo fa partire Veronica dal suo
+  telefono, sullo schermo di Gianpaolo compare la stessa gara con lo stesso
+  tempo. Il conto si calcola dall'ora di partenza, quindi non si sfasa mai,
+  nemmeno se ricarichi la pagina.
+- Una cosa da sapere: se **blocchi il telefono o vai su un'altra app**, il
+  browser mette in pausa i conti e la sirena può arrivare in ritardo. Il
+  tempo resta giusto — appena riguardi lo schermo si rimette in pari da
+  solo — ma se vuoi la sirena puntuale tieni la pagina davanti.
+
+### La scaletta di ogni gioco
+
+Ogni gioco ha la sua **scaletta**, lunga quanto il gioco: quattro brani per
+dieci minuti, otto per venticinque. Si modifica in `⚙️ Contenuti →
+🎵 La musica dei giochi`: aggiungi brani, li sposti con ▲▼, li togli col
+cestino. Sotto il nome del gioco c'è la stima — *«5 brani · circa 17 min —
+coprono i 15 min del gioco»* — che diventa rossa se la scaletta è corta.
+
+- Il **primo brano** è anche la canzone che compare sul sito accanto al
+  gioco: cambiando l'uno cambia l'altro, non si sdoppiano.
+- Il campo del collegamento YouTube è facoltativo. Con **almeno due
+  collegamenti incollati** i brani partono in fila da soli con un tocco;
+  senza, si apre solo il primo e gli altri si cercano a mano. Le canzoni che
+  ho proposto io hanno il collegamento solo sulla prima: se vuoi la fila
+  automatica, incolla gli indirizzi degli altri.
+- Sono **solo proposte**: cambiale tutte, sono lì per non partire dal vuoto.
 
 ## L'album della giornata
 

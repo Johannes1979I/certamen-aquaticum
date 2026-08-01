@@ -287,6 +287,34 @@ section{ padding:clamp(40px,6vw,72px) 0; }
 .eti.gialla{ background:rgba(255,194,51,.24); color:#7a5300; }
 .eti.grigia{ background:rgba(10,37,64,.08); color:var(--muted); }
 .eti.rossa{ background:rgba(193,18,31,.12); color:#a30f1a; }
+/* ------------------------- cronometro della gara -------------------------
+   Deve leggersi da lontano, con il telefono appoggiato sul lettino e le
+   mani bagnate: numeri enormi e colore che cambia da solo. */
+.orologio{
+  font-variant-numeric:tabular-nums; font-weight:800; line-height:1;
+  font-size:clamp(3.6rem,14vw,6.4rem); letter-spacing:-.02em;
+  color:var(--ink); margin:6px 0 4px; text-align:center;
+}
+.orologio.in-marcia{ color:#0f7a4a; }
+.orologio.agli-sgoccioli{ color:#c9740f; animation:battito 1s ease-in-out infinite; }
+.orologio.scaduto{ color:#a30f1a; animation:battito .55s ease-in-out infinite; }
+@keyframes battito{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.045); } }
+@media (prefers-reduced-motion:reduce){ .orologio{ animation:none !important; } }
+
+/* --------------------------- scaletta dei brani ------------------------- */
+.testa-scaletta{ display:flex; flex-wrap:wrap; align-items:baseline; gap:10px; margin-bottom:10px; }
+.dida-scaletta{ font-size:.86rem; color:var(--muted); }
+.dida-scaletta.corta{ color:#a30f1a; font-weight:bold; }
+.brano{ display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-top:1px solid var(--linea); }
+.brano:first-child{ border-top:none; }
+.num-brano{
+  flex:0 0 26px; height:26px; border-radius:999px; background:var(--c1); color:#fff;
+  font-size:.82rem; font-weight:bold; display:flex; align-items:center; justify-content:center;
+  margin-top:20px;
+}
+.brano .griglia3{ gap:8px; }
+.brano .azioni-r{ margin-top:18px; }
+
 /* gioco senza regole ancora scritte: si dice, invece di lasciare il vuoto */
 .in-arrivo{
   border-top:1px solid var(--linea); padding-top:12px; margin-top:2px;
