@@ -436,7 +436,22 @@
   /* Con due o più video precisi YouTube sa incolonnarli in una coda
      temporanea: un solo tocco e partono uno dietro l'altro, senza dover
      creare nessun account né nessuna playlist salvata. */
+  /* Se in un brano c'è incollato un indirizzo che contiene già una playlist
+     di YouTube (la parte «list=»), quella vince su tutto: è una scaletta
+     vera, fatta e ordinata su YouTube, e basta aprirla. */
+  function playlistYouTube(g) {
+    var trovata = '';
+    playlistDi(g).forEach(function (b) {
+      if (trovata) return;
+      var u = String(V(b.url, ''));
+      if (/^https?:\/\//i.test(u) && /[?&]list=[A-Za-z0-9_-]{6,}/.test(u)) trovata = u;
+    });
+    return trovata;
+  }
+
   function linkPlaylist(g) {
+    var vera = playlistYouTube(g);
+    if (vera) return vera;
     var brani = playlistDi(g);
     var ids = [];
     brani.forEach(function (b) {
@@ -480,6 +495,7 @@
     linkMusica: linkMusica, titoloMusica: titoloMusica,
     playlistDi: playlistDi, minutiPlaylist: minutiPlaylist,
     linkPlaylist: linkPlaylist, braniColLink: braniColLink,
+    playlistYouTube: playlistYouTube,
     idVideo: idVideo, MINUTI_A_BRANO: MINUTI_A_BRANO,
     giochiAttivi: giochiAttivi, torneiAttivi: torneiAttivi,
     urlSito: urlSito, messaggioInvito: messaggioInvito,

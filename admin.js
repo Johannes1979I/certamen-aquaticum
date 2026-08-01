@@ -2808,9 +2808,10 @@
       /* il pulsante dice la verità: incolonna i brani solo se hanno il
          collegamento preciso, se no apre il primo e basta */
       mus.textContent = !g ? '🎵 Scaletta'
-        : (CA.braniColLink(g) >= 2
-          ? '🎵 Scaletta · ' + CA.braniColLink(g) + ' brani in fila'
-          : '🎵 Metti la musica');
+        : (CA.playlistYouTube(g) ? '🎵 Playlist di YouTube'
+          : (CA.braniColLink(g) >= 2
+            ? '🎵 Scaletta · ' + CA.braniColLink(g) + ' brani in fila'
+            : '🎵 Metti la musica'));
     }
     tic();
     if (!TIC) TIC = setInterval(tic, 500);
@@ -3266,10 +3267,16 @@
       d.appendChild(az);
 
       var quanti = CA.braniColLink(g);
-      if (quanti < 2 && g.playlist.length > 1) {
+      if (CA.playlistYouTube(g)) {
         d.appendChild(crea('p', 'aiuto',
-          'Con almeno due collegamenti YouTube incollati i brani partono in fila da soli. ' +
-          'Adesso ne hai ' + quanti + ': senza, si apre solo il primo e gli altri si cercano a mano.'));
+          '✅ Qui hai incollato l\'indirizzo di una playlist di YouTube: un tocco e parte ' +
+          'tutta, nell\'ordine che hai messo su YouTube. È il modo più comodo — i brani ' +
+          'scritti qui sotto restano solo come promemoria di cosa c\'è dentro.'));
+      } else if (quanti < 2 && g.playlist.length > 1) {
+        d.appendChild(crea('p', 'aiuto',
+          'Due strade per farli partire in fila: incolla il collegamento di almeno due brani ' +
+          '(adesso ne hai ' + quanti + '), oppure fai una playlist su YouTube e incolla il suo ' +
+          'indirizzo — quello lungo, con dentro «list=» — nel primo brano.'));
       }
       el.appendChild(d);
     });
