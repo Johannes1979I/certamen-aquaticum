@@ -106,6 +106,11 @@
     $('fbPwd').addEventListener('keydown', function (e) { if (e.key === 'Enter') login(); });
     $('btnEsci').addEventListener('click', esci);
     $('btnRicarica').addEventListener('click', function () { ricarica(true); });
+    $('nomeOperatore').addEventListener('change', function () {
+      var v = this.value.trim();
+      if (v) { CA.memScrivi('ca_operatore', v); CA.toast('👤 Ti firmerai come «' + v + '».', 4000); }
+      else { CA.memCancella('ca_operatore'); }
+    });
 
     /* filtri del registro */
     var fi = document.querySelectorAll('[data-fi]');
@@ -191,6 +196,27 @@
     $('v-contenuti').addEventListener('change', salvaBozzaFraPoco);
     $('sec-telegram').addEventListener('change', salvaBozzaFraPoco);
 
+    /* anteprima dell'avviso in cima al sito */
+    $('btnProvaAvviso').addEventListener('click', function () {
+      var box = $('antepAvviso');
+      box.textContent = '';
+      if (!$('c_avvisoAttivo').checked || !$('c_avvisoTesto').value.trim()) {
+        box.appendChild(crea('p', 'aiuto', 'L\'avviso è spento, oppure non hai ancora scritto il testo: sul sito non comparirebbe niente.'));
+        return;
+      }
+      var d = crea('div', 'avviso-sito ' + $('c_avvisoTipo').value);
+      var dentro = crea('div', 'avviso-dentro');
+      var t = $('c_avvisoTipo').value;
+      dentro.appendChild(crea('span', 'segno', t === 'allarme' ? '⛔' : (t === 'attenzione' ? '⚠️' : 'ℹ️')));
+      var box2 = crea('div');
+      if ($('c_avvisoTitolo').value.trim()) box2.appendChild(crea('b', null, $('c_avvisoTitolo').value.trim()));
+      box2.appendChild(crea('span', null, $('c_avvisoTesto').value.trim()));
+      dentro.appendChild(box2);
+      d.appendChild(dentro);
+      box.appendChild(d);
+      box.appendChild(crea('p', 'aiuto', 'Ricordati di premere «Pubblica contenuti.json»: finché non lo fai, sul sito non si vede.'));
+    });
+
     /* avvisi su Telegram */
     $('btnProvaTg').addEventListener('click', provaTelegram);
     $('btnChiId').addEventListener('click', chiId);
@@ -248,6 +274,51 @@
 
     caricaGh();
 
+    /* album: scatto dalla fotocamera o scelta dalla galleria */
+    $('btnScatta').addEventListener('click', function () { $('fileScatto').click(); });
+    $('btnCaricaFoto').addEventListener('click', function () { $('fileFoto').click(); });
+    function daiFile(ev) {
+      var elenco = [].slice.call(ev.target.files || []);
+      ev.target.value = '';
+      if (!elenco.length) return;
+      /* una alla volta, così il telefono non si strozza. Il .catch finale è
+         importante: senza, un errore qui dentro sparirebbe in silenzio e il
+         pulsante sembrerebbe non fare niente. */
+      elenco.reduce(function (fila, f) {
+        return fila.then(function () { return aggiungiFoto(f); });
+      }, Promise.resolve()).catch(function (e) {
+        testo('statoFoto', '⚠️ Non sono riuscito a caricare la foto: ' + e.message);
+        CA.toast('⚠️ ' + e.message, 8000);
+      });
+    }
+    $('fileScatto').addEventListener('change', daiFile);
+    $('fileFoto').addEventListener('change', daiFile);
+    /* l'interruttore vale subito sul sito, non solo alla prossima pubblicazione */
+    $('c_albumAttivo').addEventListener('change', function () {
+      ALBUM_ACCESO = $('c_albumAttivo').checked;
+      if (!SESS) return;
+      salvaAlbum().then(function () {
+        testo('statoFoto', ALBUM_ACCESO
+          ? '👀 Album acceso: si vede subito sul sito.'
+          : '🙈 Album spento: le foto restano qui ma nessuno le vede.');
+      }).catch(function (e) { testo('statoFoto', '⚠️ ' + e.message); });
+    });
+    $('btnConsolidaAlbum').addEventListener('click', function () {
+      var righeVecchie = righe($('c_albumFoto').value);
+      ALBUM.forEach(function (f) {
+        var riga = V(f.file, f.url) + (f.didascalia ? ' | ' + f.didascalia : '');
+        if (righeVecchie.indexOf(riga) < 0) righeVecchie.push(riga);
+      });
+      $('c_albumFoto').value = righeVecchie.join('\n');
+      salvaBozzaFraPoco();
+      CA.toast('📥 Foto travasate nei contenuti: ora premi «Pubblica contenuti.json» per conservarle.', 9000);
+    });
+
+    /* copia di sicurezza */
+    $('btnCopiaSicurezza').addEventListener('click', scaricaCopiaSicurezza);
+    $('btnLeggiCopia').addEventListener('click', function () { $('fileCopia').click(); });
+    $('fileCopia').addEventListener('change', leggiCopiaSicurezza);
+
     /* stampe */
     var st = document.querySelectorAll('[data-stampa]');
     for (var s = 0; s < st.length; s++) {
@@ -273,7 +344,8 @@
       }, 60);
     });
 
-    /* aggiornamento automatico del registro: ogni minuto, mai mentre scrivo */
+    /* il registro delle iscrizioni si rilegge ogni minuto; squadre, punteggi
+       e tabelloni ogni dieci secondi, per stare dietro agli altri operatori */
     setInterval(function () {
       if (document.hidden || STOSCRIVENDO || !SESS) return;
       ricarica(false);
@@ -284,6 +356,13 @@
   }
 
   /* ============================== LOGIN ================================ */
+  /* Il nome con cui mi firmo sulle modifiche: serve agli altri operatori per
+     sapere chi ha toccato cosa. Si può cambiare dal cruscotto. */
+  function chiSono() {
+    return CA.memLeggi('ca_operatore') ||
+      (SESS && SESS.email ? String(SESS.email).split('@')[0] : 'organizzatore');
+  }
+
   function sessSalva() { CA.memScrivi('ca_fbsess', JSON.stringify(SESS)); }
   function sessLeggi() {
     try {
@@ -319,6 +398,7 @@
     return 'Non riesco a entrare: ' + m;
   }
   function esci() {
+    if (inSospeso && !confirm('Ci sono ancora dati non mandati al database. Esco lo stesso? Li ritroverai alla prossima entrata.')) return;
     SESS = null;
     CA.memCancella('ca_fbsess');
     mostraLogin();
@@ -335,7 +415,12 @@
     $('boxConnesso').style.display = '';
     testo('chiSono', V(SESS.email, ''));
     testo('statoCloud', '✅ collegato');
-    ricarica(false);
+    $('nomeOperatore').value = chiSono();
+    ricarica(false).then(function () {
+      avviaSincronizzazione();
+      mostraOperatori();
+      caricaAlbum();
+    });
   }
 
   /* il token dura un'ora: si rinnova da solo */
@@ -357,17 +442,42 @@
   function ricarica(conAvviso) {
     if (!SESS) { if (conAvviso) CA.toast('Prima entra nel database.', 5000); return; }
     return token().then(function (t) {
-      return Promise.all([FB.elenco(t), FB.leggiStato(t)]);
+      return Promise.all([FB.elenco(t), FB.leggiPezzi(t), FB.leggiStato(t)]);
     }).then(function (r) {
       ISCR = (r[0] || []).map(leggiIscrizione).filter(Boolean);
       ISCR.sort(function (a, b) { return String(a.creatoIl) < String(b.creatoIl) ? 1 : -1; });
-      var s = r[1];
-      if (s) {
+
+      var pezzi = r[1] || {};
+      var vecchio = r[2];
+      if (!Object.keys(pezzi).length && vecchio) {
+        /* prima volta dopo il passaggio ai documenti separati: si legge quello
+           vecchio, tutto in uno, e al primo salvataggio si spezza da solo */
         STATO = {
-          squadre: V(s.squadre, []), configSquadre: V(s.configSquadre, {}),
-          risultati: V(s.risultati, {}), titoli: V(s.titoli, []),
-          tornei: V(s.tornei, {}), bonus: V(s.bonus, {})
+          squadre: V(vecchio.squadre, []), configSquadre: V(vecchio.configSquadre, {}),
+          risultati: V(vecchio.risultati, {}), titoli: V(vecchio.titoli, []),
+          tornei: V(vecchio.tornei, {}), bonus: V(vecchio.bonus, {})
         };
+        BASE = {};                       /* tutto da mandare, così si spezza */
+      } else {
+        Object.keys(pezzi).forEach(function (nome) {
+          if (SPORCHI[nome]) return;            /* ho modifiche mie non ancora mandate */
+          applicaPezzo(nome, pezzi[nome].dati);
+          BASE[nome] = JSON.stringify(pezzi[nome].dati);
+        });
+        segnaChiHaToccato(pezzi);
+      }
+      allineaLocale();
+      /* Se sul telefono era rimasto qualcosa da mandare, quello è più recente
+         di quello che sta nel database: vale il telefono, e si riprova a
+         mandarlo. È il caso della rete caduta a metà di un punteggio. */
+      var coda = inCoda();
+      if (coda) {
+        STATO = coda.stato;
+        inSospeso = true;
+        var q = new Date(coda.quando);
+        CA.toast('📴 Avevo dei dati rimasti sul telefono dalle ' +
+          due(q.getHours()) + ':' + due(q.getMinutes()) + ': li rimando adesso.', 8000);
+        salvaAdesso(false);
       }
       var d = new Date();
       testo('quandoAgg', '· letto alle ' + due(d.getHours()) + ':' + due(d.getMinutes()));
@@ -388,6 +498,101 @@
     });
   }
   function due(n) { return (n < 10 ? '0' : '') + n; }
+
+  /* ================ SINCRONIZZAZIONE FRA PIÙ OPERATORI ================
+     Ogni dieci secondi si va a vedere se qualcun altro ha cambiato qualcosa.
+     Regola: un pezzo che ho modificato io e non ho ancora mandato NON viene
+     sovrascritto; tutti gli altri si aggiornano da soli. Così tre persone
+     possono segnare punti insieme, ognuna sulla sua parte, e ognuna vede
+     comparire quello che fanno gli altri.                                */
+  var timerSincro = null, ULTIMI_TOCCHI = {};
+
+  function segnaChiHaToccato(pezzi) {
+    Object.keys(pezzi).forEach(function (nome) {
+      ULTIMI_TOCCHI[nome] = { chi: pezzi[nome].chi, quando: pezzi[nome].quando };
+    });
+  }
+
+  function sincronizza() {
+    if (!SESS || document.hidden) return Promise.resolve();
+    return token().then(function (t) { return FB.leggiPezzi(t); })
+      .then(function (pezzi) {
+        segnaSporchi();                 /* prima di tutto: cos'ho toccato io? */
+        var novita = [];
+        Object.keys(pezzi).forEach(function (nome) {
+          var remoto = JSON.stringify(pezzi[nome].dati);
+          if (remoto === BASE[nome]) return;                 /* niente di nuovo */
+          if (SPORCHI[nome]) return;                         /* ci sto lavorando io */
+          applicaPezzo(nome, pezzi[nome].dati);
+          BASE[nome] = remoto;
+          LOCALE[nome] = remoto;
+          var chi = pezzi[nome].chi;
+          if (chi && chi !== chiSono()) novita.push({ pezzo: nome, chi: chi });
+        });
+        segnaChiHaToccato(pezzi);
+        if (novita.length) {
+          disegnaTutto();
+          var quali = novita.map(function (n) { return nomePezzo(n.pezzo); });
+          var chi = novita[0].chi;
+          CA.toast('🔄 ' + chi + ' ha aggiornato: ' + quali.join(', ') + '.', 6000);
+          mostraOperatori();
+        }
+      })
+      .catch(function () { /* rete assente: si riprova al giro dopo */ });
+  }
+
+  function nomePezzo(nome) {
+    if (nome === 'squadre') return 'le squadre';
+    if (nome === 'risultati') return 'i punteggi dei giochi';
+    if (nome === 'titoli') return 'i premi';
+    if (nome.indexOf('torneo_') === 0) {
+      var t = torneoDati(nome.slice(7));
+      return t.nome ? ('il torneo ' + t.nome) : 'un torneo';
+    }
+    return nome;
+  }
+
+  /* chi altro sta lavorando adesso, e su cosa */
+  function mostraOperatori() {
+    var el = $('altriOperatori');
+    if (!el) return;
+    el.textContent = '';
+    var visti = {};
+    Object.keys(ULTIMI_TOCCHI).forEach(function (nome) {
+      var u = ULTIMI_TOCCHI[nome];
+      if (!u.chi || u.chi === chiSono()) return;
+      var q = new Date(u.quando);
+      if (isNaN(q.getTime()) || Date.now() - q.getTime() > 30 * 60000) return;  /* più di mezz'ora fa */
+      (visti[u.chi] = visti[u.chi] || []).push({ pezzo: nome, quando: q });
+    });
+    var nomi = Object.keys(visti);
+    if (!nomi.length) {
+      el.appendChild(crea('p', 'aiuto', 'In questo momento stai lavorando solo tu.'));
+      return;
+    }
+    nomi.forEach(function (chi) {
+      var ultimo = visti[chi].sort(function (a, b) { return b.quando - a.quando; })[0];
+      var r = crea('div', 'riga-iscr');
+      var c = crea('div', 'cnt');
+      c.appendChild(crea('b', null, '👤 ' + chi));
+      c.appendChild(crea('small', null, 'ultima modifica: ' + nomePezzo(ultimo.pezzo) +
+        ', alle ' + due(ultimo.quando.getHours()) + ':' + due(ultimo.quando.getMinutes())));
+      r.appendChild(c);
+      el.appendChild(r);
+    });
+  }
+
+  function avviaSincronizzazione() {
+    if (timerSincro) return;
+    timerSincro = setInterval(function () {
+      if (STOSCRIVENDO) return;      /* non mentre sto battendo un punteggio */
+      sincronizza();
+    }, 10000);
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden && SESS) sincronizza();
+    });
+    window.addEventListener('focus', function () { if (SESS) sincronizza(); });
+  }
 
   function leggiIscrizione(doc) {
     var o = {};
@@ -414,38 +619,175 @@
   }
 
   /* =========================== SALVATAGGIO ============================= */
-  var timerSalva = null, salvataggioInSospeso = false;
+  /* ============== SALVATAGGIO CHE RESISTE ALLA RETE CHE SALTA ==========
+     A bordo piscina il telefono prende male. Ogni modifica finisce PRIMA
+     nella memoria del telefono e poi si prova a mandarla nel database: se
+     la linea non c'è, resta in coda e riparte da sola appena torna. Così un
+     punteggio non si perde nemmeno se si ricarica la pagina per sbaglio.  */
+  var CHIAVE_CODA = 'ca_stato_da_mandare';
+  var timerSalva = null, inSospeso = false, timerRiprova = null;
+
+  /* ------------------- lo stato spezzato in pezzi ---------------------
+     Ogni pezzo è un documento a sé nel database, così due operatori che
+     lavorano su cose diverse non si pestano i piedi. BASE ricorda com'era
+     ogni pezzo l'ultima volta che ci siamo parlati con il database: serve
+     per capire cos'ho cambiato IO e cosa invece ha cambiato un altro.   */
+  var BASE = {};                 /* pezzo -> testo com'era nel database */
+  var LOCALE = {};               /* pezzo -> testo com'era da me un attimo fa */
+  var SPORCHI = {};              /* i pezzi che ho cambiato IO e devo mandare */
+
+  /* Segna quali pezzi ho toccato dall'ultima volta. È il cuore del lavoro a
+     più mani: si manda solo quello che si è cambiato davvero. Confrontare col
+     database non basterebbe — chi entra a metà pomeriggio si ritroverebbe i
+     pezzi «diversi» solo perché non li aveva ancora letti, e li sovrascriverebbe
+     con i propri, vuoti. */
+  function segnaSporchi() {
+    var ora = pezziLocali();
+    Object.keys(ora).forEach(function (nome) {
+      var testoOra = JSON.stringify(ora[nome]);
+      if (LOCALE[nome] !== testoOra) SPORCHI[nome] = true;
+    });
+  }
+  function allineaLocale() {
+    var ora = pezziLocali();
+    LOCALE = {};
+    Object.keys(ora).forEach(function (nome) { LOCALE[nome] = JSON.stringify(ora[nome]); });
+  }
+
+  function pezziLocali() {
+    var p = {
+      squadre: {
+        squadre: STATO.squadre,
+        configSquadre: STATO.configSquadre,
+        bonus: STATO.bonus
+      },
+      risultati: { risultati: STATO.risultati },
+      titoli: { titoli: STATO.titoli }
+    };
+    Object.keys(STATO.tornei || {}).forEach(function (id) {
+      p['torneo_' + id] = STATO.tornei[id];
+    });
+    return p;
+  }
+
+  function applicaPezzo(nome, dati) {
+    if (!dati) return;
+    if (nome === 'squadre') {
+      STATO.squadre = V(dati.squadre, []);
+      STATO.configSquadre = V(dati.configSquadre, {});
+      STATO.bonus = V(dati.bonus, {});
+    } else if (nome === 'risultati') {
+      STATO.risultati = V(dati.risultati, {});
+    } else if (nome === 'titoli') {
+      STATO.titoli = V(dati.titoli, []);
+    } else if (nome.indexOf('torneo_') === 0) {
+      STATO.tornei = STATO.tornei || {};
+      STATO.tornei[nome.slice(7)] = dati;
+    }
+  }
+
+  function metti(stato) {
+    try {
+      CA.memScrivi(CHIAVE_CODA, JSON.stringify({ quando: new Date().toISOString(), stato: stato }));
+    } catch (e) { /* memoria piena o navigazione privata: pazienza */ }
+  }
+  function inCoda() {
+    try {
+      var c = JSON.parse(CA.memLeggi(CHIAVE_CODA) || 'null');
+      return (c && c.stato) ? c : null;
+    } catch (e) { return null; }
+  }
+  function svuotaCoda() { CA.memCancella(CHIAVE_CODA); }
+
+  function mostraSospeso(quanto) {
+    var el = $('statoCloud');
+    if (!el) return;
+    if (quanto === 'ok') { testo('statoCloud', '✅ salvato nel database'); return; }
+    if (quanto === 'coda') { testo('statoCloud', '⏳ da mandare quando torna la rete'); return; }
+    if (quanto === 'invio') { testo('statoCloud', '📡 sto mandando…'); return; }
+  }
+
   function salvaStato(conAvviso) {
     if (!SESS) { if (conAvviso) CA.toast('⚠️ Non sei collegato: non posso salvare.', 7000); return; }
-    salvataggioInSospeso = true;
+    segnaSporchi();
+    inSospeso = true;
+    metti(STATO);                 /* prima al sicuro nel telefono, sempre */
+    mostraSospeso('coda');
     if (timerSalva) clearTimeout(timerSalva);
     timerSalva = setTimeout(function () { salvaAdesso(conAvviso); }, conAvviso ? 0 : 600);
   }
+
+  /* Manda SOLO i pezzi che ho cambiato io: se sto segnando il Burraco, il
+     documento del Trittico non lo tocco nemmeno, e chi ci sta lavorando non
+     si vede sovrascrivere niente. */
   function salvaAdesso(conAvviso) {
     if (!SESS) return;
-    salvataggioInSospeso = false;
-    token().then(function (t) { return FB.scriviStato(t, STATO); })
+    segnaSporchi();
+    var locali = pezziLocali();
+    var daMandare = [];
+    Object.keys(SPORCHI).forEach(function (nome) {
+      if (locali[nome] === undefined) return;
+      daMandare.push({ nome: nome, dati: locali[nome], testo: JSON.stringify(locali[nome]) });
+    });
+
+    if (!daMandare.length) { inSospeso = false; svuotaCoda(); mostraSospeso('ok'); return; }
+
+    mostraSospeso('invio');
+    token().then(function (t) {
+      return Promise.all(daMandare.map(function (p) {
+        return FB.scriviPezzo(t, p.nome, p.dati, chiSono()).then(function () {
+          BASE[p.nome] = p.testo;
+          LOCALE[p.nome] = p.testo;
+          delete SPORCHI[p.nome];
+        });
+      }));
+    })
       .then(function () {
-        testo('statoCloud', '✅ salvato nel database');
+        inSospeso = false;
+        svuotaCoda();
+        mostraSospeso('ok');
         if (conAvviso) CA.toast('💾 Salvato nel database.', 4000);
         /* la bacheca pubblica segue da sola: chi guarda le classifiche dal
            telefono vede il punteggio nuovo senza che io prema niente */
         aggiornaBachecaSePuoi();
       })
       .catch(function (e) {
-        salvataggioInSospeso = true;
+        inSospeso = true;
         if (permessiNegati(e)) {
           testo('statoCloud', '⛔ database bloccato');
           CA.toast('⛔ Non riesco a salvare: mancano le regole di sicurezza del database. Vai su 📊 Cruscotto → Stato del database.', 10000);
-        } else {
-          CA.toast('⚠️ Non ho salvato: ' + e.message, 8000);
+          return;
         }
+        mostraSospeso('coda');
+        if (conAvviso) {
+          CA.toast('📴 Rete assente: ho tenuto tutto sul telefono e riprovo da solo appena torna.', 8000);
+        }
+        riprovaFraPoco();
       });
   }
+
+  /* riprova ogni venti secondi finché non ce la fa */
+  function riprovaFraPoco() {
+    if (timerRiprova) return;
+    timerRiprova = setInterval(function () {
+      if (!inSospeso || !SESS) { clearInterval(timerRiprova); timerRiprova = null; return; }
+      if (navigator.onLine === false) return;
+      salvaAdesso(false);
+    }, 20000);
+  }
+
+  /* appena il telefono ritrova la linea, si riparte senza aspettare */
+  window.addEventListener('online', function () {
+    if (inSospeso && SESS) {
+      CA.toast('📶 È tornata la rete: mando quello che era rimasto in sospeso.', 6000);
+      salvaAdesso(false);
+    }
+  });
+
   /* se chiudo o metto via il telefono mentre il salvataggio è ancora in coda,
      lo mando subito: mezzo secondo di ritardo non deve costare un punteggio */
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden && salvataggioInSospeso) {
+    if (document.hidden && inSospeso) {
       if (timerSalva) clearTimeout(timerSalva);
       salvaAdesso(false);
     }
@@ -760,14 +1102,51 @@
   }
 
   function interpretaTelegram(testoIntero) {
-    /* più messaggi incollati di seguito: si separano sull'intestazione */
-    var pezzi = String(testoIntero || '')
-      .split(/(?=🏊\s*CERTAMEN AQUATICUM)/)
-      .map(function (x) { return x.trim(); })
-      .filter(function (x) { return x.length > 20; });
-    if (!pezzi.length) pezzi = [String(testoIntero || '')];
+    return spezzaMessaggi(testoIntero).map(leggiUnMessaggio).filter(Boolean);
+  }
 
-    return pezzi.map(leggiUnMessaggio).filter(Boolean);
+  /* Separa più messaggi incollati di seguito. Si taglia sull'intestazione del
+     bot, ma anche quando un campo si ripete: se ricompare «Nome:» vuol dire
+     che è cominciata un'altra iscrizione. Serve perché copiando da Telegram
+     l'intestazione spesso non viene, e senza questo taglio due messaggi si
+     fondevano in una scheda sola con i dati mescolati: il nome di uno e il
+     telefono dell'altro, senza che niente lo facesse sospettare. */
+  function spezzaMessaggi(testoIntero) {
+    var righe = String(testoIntero || '').split('\n');
+    var blocchi = [], corrente = [], visto = {};
+    function chiudi() {
+      if (corrente.join('\n').trim().length) blocchi.push(corrente.join('\n'));
+      corrente = []; visto = {};
+    }
+    righe.forEach(function (r) {
+      var intestazione = /CERTAMEN AQUATICUM/i.test(r);
+      var m = r.match(/^\s*(Sezione|Codice|Pass|Nome|Telefono)\s*:/i);
+      var chiave = m ? m[1].toLowerCase() : '';
+      if ((intestazione || (chiave && visto[chiave])) && /nome\s*:/i.test(corrente.join('\n'))) chiudi();
+      if (chiave) visto[chiave] = true;
+      corrente.push(r);
+    });
+    chiudi();
+    return blocchi.filter(function (b) { return /nome\s*:/i.test(b); });
+  }
+
+  /* Da «Sezione: Il Trittico» al gruppo giusto. Si guardano prima i nomi veri
+     che stanno nei contenuti, così se un torneo viene rinominato l'importatore
+     continua a capirlo; le parole fisse sono solo la rete di sicurezza. */
+  function gruppoDaSezione(sezione) {
+    var s = String(sezione || '').toLowerCase().trim();
+    if (!s) return '';
+    var trovato = '';
+    V(DATI.gruppiCarte, []).forEach(function (g) {
+      if (!trovato && g.nome && s.indexOf(String(g.nome).toLowerCase()) >= 0) trovato = g.id;
+    });
+    V(DATI.tornei, []).forEach(function (t) {
+      if (!trovato && t.nome && s.indexOf(String(t.nome).toLowerCase()) >= 0) trovato = V(t.gruppo, t.id);
+    });
+    if (trovato) return trovato;
+    if (/burraco/.test(s)) return 'burraco';
+    if (/italiana|trittico|scopone|briscola|tresette|carte/.test(s)) return 'italiana';
+    return '';
   }
 
   function leggiUnMessaggio(testoMsg) {
@@ -780,9 +1159,11 @@
     if (!nome) return null;
 
     var sezione = V(campi['sezione'], '');
-    var gruppo = '';
-    if (/burraco/i.test(sezione)) gruppo = 'burraco';
-    else if (/italiana/i.test(sezione)) gruppo = 'italiana';
+    var gruppo = gruppoDaSezione(sezione);
+    /* se la sezione non dice niente, lo dicono i campi: «Tornei» e
+       «Esperienza» esistono solo per gli adulti, «Età» e «Genitore» solo
+       per i ragazzi */
+    if (!gruppo && (campi['tornei'] || campi['esperienza'] || campi['coppia'])) gruppo = 'italiana';
     var area = gruppo ? 'adulti' : 'ragazzi';
 
     var p = {
@@ -790,7 +1171,7 @@
       area: area,
       gruppo: gruppo,
       sezione: sezione || (area === 'ragazzi' ? 'Giochi in acqua' : 'Tornei di carte'),
-      codice: V(campi['codice'], ''),
+      codice: V(campi['codice'], V(campi['pass'], '')),
       telefono: V(campi['telefono'], ''),
       appartamento: V(campi['appartamento'], ''),
       note: V(campi['note'], ''),
@@ -1043,6 +1424,8 @@
      squadra, altrimenti una comitiva sbilancerebbe tutto.                  */
   var ESITO_PREFERENZE = { fatte: [], saltate: [] };
   var LEGATI = {};          /* chi non va separato dai riequilibri */
+  var DESIDERI = [];        /* tutti i «vorrei stare con…» dichiarati */
+  var SALTATI = {};         /* quelli gia' scartati prima di distribuire */
 
   /* ---------------------- quanto "pesa" un ragazzo ---------------------
      In acqua non conta l'età da sola: un diciassettenne che nuota bene vale
@@ -1066,10 +1449,15 @@
   function eGrande(p) { return etaDi(p) >= 15; }
   function ePiccolo(p) { return etaDi(p) <= 10; }
 
+  /* Le squadre si fanno due volte: una tenendo insieme gli amici, una
+     ignorandoli del tutto. Poi si guarda quale delle due è più equilibrata e
+     si tiene quella. Serve perché una preferenza può costare carissimo — due
+     bambini piccoli che si scelgono a vicenda finiscono nella stessa squadra
+     e la affondano — e l'equilibrio, che è quello che rende la gara bella,
+     deve venire prima. Con «Prima le preferenze» invece comanda l'amicizia:
+     l'ha chiesto l'organizzatore e si fa così.                              */
   function distribuisciBilanciato(persone, squadre) {
     var n = squadre.length;
-    squadre.forEach(function (s) { s.componenti = []; });
-
     var perSquadra = Math.ceil(persone.length / n);
     var livello = ($('sqPreferenze') || {}).value || 'poco';
     /* Quanto si lascia crescere un gruppo di amici. Più è grande, più vincola
@@ -1077,7 +1465,38 @@
        di serie si sta stretti. */
     var maxGruppo = (livello === 'molto') ? Math.max(2, Math.floor(perSquadra / 2))
       : (livello === 'medio') ? 3 : 2;
-    var blocchi = gruppiDiPreferenza(persone, maxGruppo, livello);
+
+    var capitaniPrima = squadre.map(function (s) { return s.capitano; });
+
+    /* strada A: con gli amici insieme */
+    var blocchiA = gruppiDiPreferenza(persone, maxGruppo, livello);
+    var saltatePrima = ESITO_PREFERENZE.saltate.slice();
+    var legatiA = LEGATI;
+    var pianoA = eseguiPiano(squadre, blocchiA, perSquadra, capitaniPrima);
+    var votoA = misuraPiano(squadre);
+
+    /* strada B: ognuno per sé, le preferenze si lasciano cadere */
+    LEGATI = {};
+    var blocchiB = persone.map(function (p) { return { persone: [p], eta: etaDi(p) }; });
+    var pianoB = eseguiPiano(squadre, blocchiB, perSquadra, capitaniPrima);
+    var votoB = misuraPiano(squadre);
+
+    /* Quanto squilibrio si accetta pur di tenere insieme gli amici: una
+       inezia al livello prudente, di più se l'organizzatore l'ha chiesto. */
+    var tolleranza = (livello === 'molto') ? Infinity : (livello === 'medio' ? 1.5 : 0.5);
+    var tieniA = punteggioPiano(votoA) <= punteggioPiano(votoB) + tolleranza;
+
+    LEGATI = tieniA ? legatiA : {};
+    applicaPiano(squadre, tieniA ? pianoA : pianoB);
+    scegliCapitani(squadre);
+    verificaPreferenze(squadre, saltatePrima, livello);
+  }
+
+  /* Una passata sola: piazza i blocchi e riequilibra. Restituisce com'è
+     venuta, così se ne possono confrontare due senza rifare i conti. */
+  function eseguiPiano(squadre, blocchi, perSquadra, capitaniPrima) {
+    var n = squadre.length;
+    squadre.forEach(function (s, i) { s.componenti = []; s.capitano = capitaniPrima[i]; });
 
     /* Si parte dai blocchi più pesanti e ognuno va nella squadra che finora
        pesa di meno. È il modo più semplice per non far finire due ragazzoni
@@ -1117,7 +1536,61 @@
     pareggiaScaglioni(squadre);
     sparpagliaDeboli(squadre);
     affinaForza(squadre);
-    scegliCapitani(squadre);
+    return squadre.map(function (s) {
+      return { componenti: s.componenti.slice(), capitano: s.capitano };
+    });
+  }
+
+  function applicaPiano(squadre, piano) {
+    squadre.forEach(function (s, i) {
+      s.componenti = piano[i].componenti.slice();
+      s.capitano = piano[i].capitano;
+      /* il capitano deve stare nella sua squadra */
+      if (s.capitano && s.componenti.indexOf(s.capitano) < 0) s.capitano = '';
+    });
+  }
+
+  /* Quanto è venuta bene: quante volte una fascia è spartita male, e quanto
+     ballano le forze medie. Meno è, meglio è. */
+  function misuraPiano(squadre) {
+    var violazioni = 0;
+    [eGrande, ePiccolo, nuotaPoco].forEach(function (test) {
+      var c = squadre.map(function (s) {
+        return s.componenti.filter(function (id) { return test(perId(id)); }).length;
+      });
+      var d = Math.max.apply(null, c) - Math.min.apply(null, c);
+      if (d > 1) violazioni += d - 1;
+    });
+    var m = squadre.map(mediaForza);
+    return { violazioni: violazioni, scarto: Math.max.apply(null, m) - Math.min.apply(null, m) };
+  }
+  /* una fascia spartita male pesa più di qualsiasi differenza di forza */
+  function punteggioPiano(v) { return v.violazioni * 100 + v.scarto; }
+
+  /* Il resoconto dice la verità su come sono finite davvero le squadre, non
+     su cosa si era provato a fare: si guarda chi è finito con chi. */
+  function verificaPreferenze(squadre, saltatePrima, livello) {
+    var dove = {};
+    squadre.forEach(function (s, i) {
+      s.componenti.forEach(function (id) { dove[id] = i; });
+    });
+    var fatte = [], saltate = saltatePrima.slice(), visti = {};
+    DESIDERI.forEach(function (d) {
+      if (d.sconosciuto) return;                     /* già spiegato prima */
+      var k = [d.a._id, d.b._id].sort().join('|');
+      if (visti[k]) return;
+      visti[k] = true;
+      if (dove[d.a._id] === undefined || dove[d.b._id] === undefined) return;
+      if (dove[d.a._id] === dove[d.b._id]) {
+        fatte.push(d.a.nome + ' con ' + d.b.nome + (d.reciproco ? ' (scelta reciproca)' : ''));
+      } else if (!SALTATI[k]) {
+        saltate.push(d.a.nome + ' con ' + d.b.nome +
+          ': tenerli insieme sbilanciava le squadre, e ' +
+          (livello === 'molto' ? 'non c\'era modo di sistemarle'
+            : 'età e capacità in acqua vengono prima'));
+      }
+    });
+    ESITO_PREFERENZE = { fatte: fatte, saltate: saltate };
   }
 
   /* Controllo di equità sulla fascia alta: mettendo tutti in fila dal più
@@ -1325,6 +1798,10 @@
     });
     desideri.sort(function (x, y) { return (y.reciproco ? 1 : 0) - (x.reciproco ? 1 : 0); });
 
+    DESIDERI = desideri;
+    SALTATI = {};
+    function chiave(d) { return [d.a._id, d.b._id].sort().join('|'); }
+
     ESITO_PREFERENZE = { fatte: [], saltate: [] };
     desideri.forEach(function (d) {
       if (d.sconosciuto) {
@@ -1334,6 +1811,7 @@
       /* col livello più prudente si tiene insieme solo chi si è scelto a
          vicenda: una richiesta a senso unico non vale quanto l'equilibrio */
       if (livello === 'poco' && !d.reciproco) {
+        SALTATI[chiave(d)] = true;
         ESITO_PREFERENZE.saltate.push(d.a.nome + ' → ' + d.b.nome +
           ': richiesta a senso unico, e ho tenuto l\'equilibrio delle squadre');
         return;
@@ -1341,6 +1819,7 @@
       var ra = radice(d.a._id), rb = radice(d.b._id);
       if (ra === rb) { ESITO_PREFERENZE.fatte.push(d.a.nome + ' con ' + d.b.nome); return; }
       if (quanti[ra] + quanti[rb] > maxGruppo) {
+        SALTATI[chiave(d)] = true;
         ESITO_PREFERENZE.saltate.push(d.a.nome + ' con ' + d.b.nome +
           ': sarebbe diventato un gruppo di ' + (quanti[ra] + quanti[rb]) + ', troppo per una squadra sola');
         return;
@@ -1898,7 +2377,7 @@
 
     /* nei tornei a piu' prove (il Trittico) ogni turno ha il suo gioco */
     var td = torneoDati(idTorneo);
-    incontri = assegnaProve(incontri, V(td.prove, []), V(td.provaFinale, ''));
+    incontri = assegnaProve(incontri, V(td.prove, []), V(td.provaFinale, ''), formato);
 
     STATO.tornei[idTorneo] = STATO.tornei[idTorneo] || {};
     STATO.tornei[idTorneo].formato = formato;
@@ -1999,8 +2478,11 @@
      girone se ne gioca uno, a rotazione. Qui si scrive nel nome del turno
      quale prova tocca, cosi' al tavolo non ci sono dubbi.
      Le fasi finali (semifinali, finale, finalina) giocano tutte la prova
-     scelta come "provaFinale": per il Trittico e' lo scopone. */
-  function assegnaProve(incontri, prove, idProvaFinale) {
+     scelta come "provaFinale": per il Trittico e' lo scopone.
+     Nella sfida diretta il nome "finale" non compare, ma l'ultima partita
+     e' quella che decide: quella si gioca alla prova finale come tutte le
+     altre finali. */
+  function assegnaProve(incontri, prove, idProvaFinale, formato) {
     if (!prove.length) return incontri;
     var finale = prove.filter(function (p) { return p.id === idProvaFinale; })[0]
       || prove[prove.length - 1];
@@ -2009,8 +2491,16 @@
       if (turni.indexOf(m.turno) < 0) turni.push(m.turno);
     });
     var soloGironi = turni.filter(function (t) { return !/final/i.test(t); });
+    var perTurni = prove;
+    if (formato === 'sfida' && soloGironi.length > 1) {
+      soloGironi.pop();                      /* l'ultima partita e' la finale */
+      /* le prime si giocano agli altri due giochi, cosi' il pomeriggio li
+         tocca tutti e tre e la bella resta allo scopone */
+      var senzaFinale = prove.filter(function (p) { return p.id !== finale.id; });
+      if (senzaFinale.length) perTurni = senzaFinale;
+    }
     var mappa = {};
-    soloGironi.forEach(function (t, i) { mappa[t] = prove[i % prove.length]; });
+    soloGironi.forEach(function (t, i) { mappa[t] = perTurni[i % perTurni.length]; });
     turni.forEach(function (t) {
       if (!mappa[t]) mappa[t] = finale;
     });
@@ -2466,6 +2956,14 @@
     $('c_quotaEtichetta').value = V(q.etichetta, '');
     $('c_quotaSpiega').value = V(q.spiegazione, '');
     $('c_musicaAttiva').checked = (DATI.musicaAttiva !== false);
+    var av = V(DATI.avviso, {});
+    $('c_avvisoAttivo').checked = (av.attivo === true);
+    $('c_avvisoTipo').value = V(av.tipo, 'attenzione');
+    $('c_avvisoTitolo').value = V(av.titolo, '');
+    $('c_avvisoTesto').value = V(av.testo, '');
+    var alb = V(DATI.album, {});
+    $('c_albumAttivo').checked = (alb.attivo === true);
+    $('c_albumFoto').value = V(alb.foto, []).join('\n');
     var n = V(DATI.notifiche, {});
     $('tg_token').value = V(n.telegramBotToken, '');
     $('tg_chat').value = V(n.telegramChatId, '');
@@ -2781,6 +3279,15 @@
     d.quota.etichetta = $('c_quotaEtichetta').value.trim();
     d.quota.spiegazione = $('c_quotaSpiega').value.trim();
     d.musicaAttiva = $('c_musicaAttiva').checked;
+    d.avviso = {
+      attivo: $('c_avvisoAttivo').checked,
+      tipo: $('c_avvisoTipo').value,
+      titolo: $('c_avvisoTitolo').value.trim(),
+      testo: $('c_avvisoTesto').value.trim()
+    };
+    d.album = d.album || {};
+    d.album.attivo = $('c_albumAttivo').checked;
+    d.album.foto = righe($('c_albumFoto').value);
     d.notifiche = d.notifiche || {};
     d.notifiche.telegramBotToken = $('tg_token').value.trim();
     d.notifiche.telegramChatId = $('tg_chat').value.trim();
@@ -2831,14 +3338,16 @@
     "                   || request.resource.data.keys().hasOnly(['ragazzi', 'adulti', 'italiana', 'burraco']);",
     '    }',
     '',
-    '    // Classifiche e tabellone: li legge chiunque, li scrive solo',
-    "    // l'organizzatore dopo il login.",
-    '    match /pubblico_certamen/classifica {',
+    '    // Classifiche, tabellone e album delle foto: li legge chiunque,',
+    "    // li scrive solo l'organizzatore dopo il login.",
+    '    match /pubblico_certamen/{doc} {',
     '      allow read: if true;',
     '      allow write: if request.auth != null;',
     '    }',
     '',
     '    // Squadre, punteggi e tabelloni: contengono i nomi veri.',
+    '    // Sono documenti separati, uno per area, cosi\' piu\' operatori',
+    '    // possono lavorare insieme senza sovrascriversi.',
     '    match /stato_certamen/{doc} {',
     '      allow read, write: if request.auth != null;',
     '    }',
@@ -2884,7 +3393,19 @@
             .then(function (s) {
               riga(s ? '✅ Squadre e punteggi leggibili.'
                 : 'ℹ️ Squadre e punteggi non ancora salvati: normale se non hai ancora formato le squadre.');
-              chiudiDiagnosi(mancanoRegole);
+              /* 3. l'album delle foto: percorso nuovo, spesso manca nelle regole */
+              return FB.provaAlbum().then(function (esito) {
+                if (esito === 'bloccato') {
+                  mancanoRegole = true;
+                  riga('⛔ L\'album delle foto è bloccato: le foto che scatti non si vedranno. ' +
+                    'Serve la riga «match /pubblico_certamen/{doc}» nelle regole.');
+                } else if (esito === 'errore') {
+                  riga('⚠️ Non riesco a controllare l\'album: riprova fra poco.');
+                } else {
+                  riga('✅ Album delle foto raggiungibile.');
+                }
+                chiudiDiagnosi(mancanoRegole);
+              });
             });
         })
         .catch(function (e) {
@@ -3077,6 +3598,13 @@
     return btoa(bin);
   }
 
+  /* Il collegamento a GitHub è pronto? Utente e repository hanno un valore
+     predefinito, quindi in pratica manca sempre e solo il token. */
+  function ghPronto() {
+    var s = gh();
+    return !!(s.owner && s.repo && s.token);
+  }
+
   /* Se manca il token non basta dirlo: apro la sezione giusta, ci porto
      l'utente e metto il cursore nel campo. Le sue modifiche intanto restano
      salvate come bozza, così non si perde niente. */
@@ -3148,6 +3676,238 @@
         CA.toast('✅ Pubblicato! Il sito si aggiorna fra 30-60 secondi. Ricordati di premere ⌘⇧R.', 9000);
       })
       .catch(function (e) { CA.toast('⚠️ ' + e.message, 10000); });
+  }
+
+  /* ====================== ALBUM: SCATTA E VA ONLINE ====================
+     Dal telefono si apre la fotocamera, si scatta, e la foto finisce subito
+     nell'album del sito. La foto vera sale su GitHub (serve il token), il
+     suo indirizzo e la didascalia finiscono nel database: così l'album si
+     riempie in diretta, senza ripubblicare il sito ogni volta.
+     La didascalia se la scrive da sola guardando l'ora e il programma.   */
+  var ALBUM = [], ALBUM_ACCESO = false;
+
+  /* Cosa sta succedendo adesso, secondo il programma della giornata */
+  function cosaSuccedeAdesso() {
+    var ora = new Date();
+    var minutiOra = ora.getHours() * 60 + ora.getMinutes();
+    var righe = V(DATI.programma, []).filter(function (r) { return r.ora; });
+    var scelta = null;
+    righe.forEach(function (r) {
+      var p = String(r.ora).split(':');
+      var m = Number(p[0]) * 60 + Number(p[1]);
+      if (!isFinite(m)) return;
+      if (m <= minutiOra && (!scelta || m > scelta.minuti)) scelta = { r: r, minuti: m };
+    });
+    return scelta ? scelta.r : null;
+  }
+
+  function didascaliaAutomatica() {
+    var ora = new Date();
+    var orario = due(ora.getHours()) + ':' + due(ora.getMinutes());
+    var tappa = cosaSuccedeAdesso();
+    if (tappa) return orario + ' — ' + String(tappa.titolo).replace(/^[^\wÀ-ÿ]+/, '').trim();
+    var ev = V(DATI.evento, {});
+    return orario + ' — ' + V(V(DATI.tema, {}).titolo, 'Certamen Aquaticum') +
+      (ev.data ? ' · ' + CA.dataIt(ev.data, false) : '');
+  }
+
+  /* Le foto dal telefono sono enormi: si rimpiccioliscono prima di mandarle,
+     altrimenti si riempie il sito e il caricamento non finisce mai. */
+  function rimpicciolisci(file, latoMax) {
+    return new Promise(function (ok, ko) {
+      var lettore = new FileReader();
+      lettore.onerror = function () { ko(new Error('non riesco a leggere la foto')); };
+      lettore.onload = function () {
+        var img = new Image();
+        img.onerror = function () { ko(new Error('la foto non si apre')); };
+        img.onload = function () {
+          var s = Math.min(1, latoMax / Math.max(img.naturalWidth, img.naturalHeight));
+          var c = document.createElement('canvas');
+          c.width = Math.round(img.naturalWidth * s);
+          c.height = Math.round(img.naturalHeight * s);
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          ok(c.toDataURL('image/jpeg', 0.82).split(',')[1]);
+        };
+        img.src = String(lettore.result);
+      };
+      lettore.readAsDataURL(file);
+    });
+  }
+
+  function nomeFoto() {
+    var d = new Date();
+    return 'foto_' + d.getFullYear() + due(d.getMonth() + 1) + due(d.getDate()) + '_' +
+      due(d.getHours()) + due(d.getMinutes()) + due(d.getSeconds()) + '.jpg';
+  }
+
+  function aggiungiFoto(file) {
+    /* si dice sempre cosa sta succedendo: un pulsante che non fa niente e non
+       spiega perché è la cosa più fastidiosa che ci sia */
+    if (!SESS) {
+      testo('statoFoto', '⚠️ Prima entra nel database, in cima alla scheda 📊 Cruscotto.');
+      CA.toast('Prima entra nel database.', 6000);
+      return Promise.resolve(false);
+    }
+    if (!ghPronto()) {
+      testo('statoFoto', '⚠️ Manca il token di GitHub: serve per caricare le foto nel sito. Te l\'ho aperto qui sotto.');
+      chiediGh();
+      return Promise.resolve(false);
+    }
+    if (!file || !/^image\//.test(file.type || '')) {
+      testo('statoFoto', '⚠️ Questo non è un file di immagine.');
+      return Promise.resolve(false);
+    }
+    testo('statoFoto', '⏳ Preparo la foto…');
+    return rimpicciolisci(file, 1600).then(function (b64) {
+      var nome = nomeFoto();
+      testo('statoFoto', '📤 Sto caricando ' + nome + '…');
+      return ghPut('images/album/' + nome, b64, 'Foto dell\'album: ' + nome)
+        .then(function (risposta) {
+          /* l'indirizzo diretto funziona subito, senza aspettare che il sito
+             si ricostruisca: è quello che rende l'album istantaneo */
+          var url = (risposta && risposta.content && risposta.content.download_url) ||
+            ('images/album/' + nome);
+          var voce = {
+            url: url,
+            file: 'images/album/' + nome,
+            didascalia: didascaliaAutomatica(),
+            quando: new Date().toISOString(),
+            chi: chiSono()
+          };
+          ALBUM.unshift(voce);
+          /* chi scatta vuole che si veda: l'album si accende da solo, senza
+             dover ricordarsi anche di ripubblicare il sito */
+          ALBUM_ACCESO = true;
+          if ($('c_albumAttivo') && !$('c_albumAttivo').checked) {
+            $('c_albumAttivo').checked = true;
+            salvaBozzaFraPoco();
+          }
+          return salvaAlbum().then(function () {
+            testo('statoFoto', '✅ Foto nell\'album: già visibile a tutti.');
+            disegnaAlbum();
+            return true;
+          });
+        });
+    }).catch(function (e) {
+      testo('statoFoto', '⚠️ ' + e.message);
+      return false;
+    });
+  }
+
+  function salvaAlbum() {
+    return token().then(function (t) {
+      return FB.scriviAlbum(t, { attivo: ALBUM_ACCESO, foto: ALBUM });
+    });
+  }
+
+  function caricaAlbum() {
+    return FB.leggiAlbum().then(function (a) {
+      ALBUM = (a && Array.isArray(a.foto)) ? a.foto : [];
+      ALBUM_ACCESO = !!(a && a.attivo);
+      /* comanda il database: è quello che vedono i visitatori adesso */
+      if (ALBUM_ACCESO && $('c_albumAttivo')) $('c_albumAttivo').checked = true;
+      disegnaAlbum();
+    }).catch(function () { });
+  }
+
+  function disegnaAlbum() {
+    var el = $('elencoAlbum');
+    if (!el) return;
+    el.textContent = '';
+    if (!ALBUM.length) {
+      el.appendChild(crea('p', 'aiuto', 'Nessuna foto ancora. Premi «Scatta una foto».'));
+      return;
+    }
+    ALBUM.forEach(function (f, i) {
+      var r = crea('div', 'riga-iscr');
+      var img = document.createElement('img');
+      img.src = f.url;
+      img.alt = f.didascalia || '';
+      img.loading = 'lazy';
+      img.style.cssText = 'width:82px;height:82px;object-fit:cover;border-radius:12px;flex:0 0 82px';
+      r.appendChild(img);
+
+      var c = crea('div', 'cnt');
+      var inp = document.createElement('input');
+      inp.type = 'text'; inp.className = 'mini'; inp.value = V(f.didascalia, '');
+      inp.addEventListener('change', function () {
+        f.didascalia = inp.value.trim();
+        salvaAlbum().then(function () { CA.toast('✏️ Didascalia aggiornata.', 3500); });
+      });
+      c.appendChild(inp);
+      var q = new Date(f.quando);
+      c.appendChild(crea('small', null,
+        (isNaN(q.getTime()) ? '' : ('scattata alle ' + due(q.getHours()) + ':' + due(q.getMinutes()))) +
+        (f.chi ? ' da ' + f.chi : '')));
+      r.appendChild(c);
+
+      var az = crea('div', 'azioni-r');
+      az.appendChild(bottone('🗑️ Togli', 'rosso', function () {
+        if (!confirm('Tolgo questa foto dall\'album?')) return;
+        ALBUM.splice(i, 1);
+        salvaAlbum().then(function () { disegnaAlbum(); CA.toast('Foto tolta.', 4000); });
+      }));
+      r.appendChild(az);
+      el.appendChild(r);
+    });
+  }
+
+  /* ========================= COPIA DI SICUREZZA ========================
+     Tutto quello che serve per ricostruire la giornata, in un file solo.
+     Contiene nomi e recapiti, quindi resta sul telefono dell'organizzatore:
+     non va messo nel sito né mandato in giro.                            */
+  function scaricaCopiaSicurezza() {
+    var d = new Date();
+    var quando = d.getFullYear() + '-' + due(d.getMonth() + 1) + '-' + due(d.getDate()) +
+      '_' + due(d.getHours()) + due(d.getMinutes());
+    var copia = {
+      tipo: 'copia-di-sicurezza-certamen-aquaticum',
+      versione: 1,
+      fattaIl: d.toISOString(),
+      evento: V(DATI.evento, {}),
+      iscrizioni: ISCR.map(function (p) { return JSON.parse(JSON.stringify(p)); }),
+      stato: STATO,
+      contatori: CA.contatori(),
+      bacheca: costruisciPubblico()
+    };
+    scaricaFile('certamen_copia_' + quando + '.json', JSON.stringify(copia, null, 2), 'application/json');
+    testo('statoCopia', '💾 Copia scaricata: ' + copia.iscrizioni.length + ' iscrizioni, ' +
+      STATO.squadre.length + ' squadre, ' + Object.keys(STATO.risultati).length + ' gare con punteggio. ' +
+      'Contiene nomi e recapiti: tienila per te.');
+  }
+
+  /* Rilegge una copia: rimette squadre, punteggi e tabelloni com'erano.
+     Le iscrizioni non si toccano — quelle stanno nel registro e si
+     recuperano da lì, riscriverle rischierebbe di crearne di doppie. */
+  function leggiCopiaSicurezza(ev) {
+    var file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+    var lettore = new FileReader();
+    lettore.onload = function () {
+      var c = null;
+      try { c = JSON.parse(String(lettore.result)); } catch (e) { }
+      if (!c || c.tipo !== 'copia-di-sicurezza-certamen-aquaticum' || !c.stato) {
+        testo('statoCopia', '⚠️ Questo non sembra un file di copia del Certamen.');
+        return;
+      }
+      var q = new Date(c.fattaIl);
+      var quante = V(c.stato.squadre, []).length;
+      if (!confirm('Copia del ' + q.getDate() + '/' + (q.getMonth() + 1) + ' alle ' +
+        due(q.getHours()) + ':' + due(q.getMinutes()) + '.\n\n' +
+        'Rimetto ' + quante + ' squadre, i punteggi e i tabelloni come erano allora.\n' +
+        'Quello che c\'è adesso viene sostituito. Procedo?')) return;
+
+      STATO = {
+        squadre: V(c.stato.squadre, []), configSquadre: V(c.stato.configSquadre, {}),
+        risultati: V(c.stato.risultati, {}), titoli: V(c.stato.titoli, []),
+        tornei: V(c.stato.tornei, {}), bonus: V(c.stato.bonus, {})
+      };
+      salvaStato(true);
+      disegnaTutto();
+      testo('statoCopia', '✅ Copia riletta: squadre, punteggi e tabelloni sono tornati come erano.');
+    };
+    lettore.readAsText(file);
+    ev.target.value = '';
   }
 
   /* =============================== STAMPE ============================= */

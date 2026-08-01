@@ -1023,5 +1023,18 @@
       "Solo alla fine si guardano le preferenze: chi si è scelto a vicenda resta insieme, ma senza sbilanciare le squadre. L'equilibrio viene prima.",
       "Le squadre restano dello stesso numero, al massimo uno di differenza."
     ]
+  },
+  "avviso": {
+    "attivo": false,
+    "tipo": "attenzione",
+    "titolo": "",
+    "testo": ""
+  },
+  "album": {
+    "attivo": false,
+    "titolo": "Le foto della giornata",
+    "sottotitolo": "Come è andata: i giochi, le squadre, le facce di chi ha vinto e di chi ci ha provato.",
+    "nota": "Se in una foto c'è tuo figlio e non vuoi che resti qui, scrivilo agli organizzatori: la togliamo subito.",
+    "foto": []
   }
 }

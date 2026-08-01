@@ -63,6 +63,18 @@ section{ padding:clamp(40px,6vw,72px) 0; }
 .btn-largo{ width:100%; }
 .azioni{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; }
 
+/* ------------- avviso in cima al sito (rinvii, cambi d'orario) ----------- */
+.avviso-sito{
+  background:#eaf5ff; color:#0a2540; border-bottom:3px solid var(--c1);
+  padding:12px 0; font-size:.98rem;
+}
+.avviso-sito.attenzione{ background:#fff8e5; border-bottom-color:var(--c3); }
+.avviso-sito.allarme{ background:#fdeaea; border-bottom-color:#c1121f; color:#7a0d15; }
+.avviso-dentro{ display:flex; gap:12px; align-items:flex-start; justify-content:center; text-align:left; }
+.avviso-sito .segno{ font-size:1.3rem; line-height:1.2; flex:0 0 auto; }
+.avviso-sito b{ display:block; margin-bottom:2px; }
+@media print{ .avviso-sito{ display:none !important; } }
+
 /* ------------------------------ barra alta ------------------------------ */
 .barra{
   position:sticky; top:0; z-index:40;

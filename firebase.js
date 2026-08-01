@@ -30,6 +30,7 @@
    nei documenti pubblici, che non contengono dati personali.
    ========================================================================= */
 (function () {
+  function V(v, def) { return (v === undefined || v === null) ? def : v; }
   var API = '', PROJ = '', BASE = '';
   var COLL = 'iscrizioni';
   var DOC_CONT = 'pubblico_certamen/contatore';
@@ -305,6 +306,121 @@
     });
   }
 
+  /* ======================= ALBUM DELLA GIORNATA ========================
+     Le foto scattate durante la festa. Vive in un documento pubblico, così
+     l'album si riempie sotto gli occhi di chi guarda la pagina, senza dover
+     ripubblicare il sito: le immagini stanno su GitHub, qui ci sono solo gli
+     indirizzi e le didascalie. Lo scrive solo chi ha fatto il login.      */
+  /* L'album porta con sé anche il proprio interruttore: così basta scattare
+     una foto per farlo comparire sul sito, senza dover anche ripubblicare i
+     contenuti — cosa che il giorno della festa nessuno si ricorderebbe. */
+  function leggiAlbum() {
+    return fetch(BASE + '/pubblico_certamen/album?key=' + API + '&_=' + Date.now(),
+      { cache: 'no-store' })
+      .then(jget).then(function (d) {
+        if (d.error) return null;
+        var f = d.fields || {};
+        var testo = (f.json && f.json.stringValue) || '';
+        if (!testo) return null;
+        try {
+          var o = JSON.parse(testo);
+          if (Array.isArray(o)) return { attivo: o.length > 0, foto: o };   /* formato vecchio */
+          return { attivo: o.attivo !== false, foto: Array.isArray(o.foto) ? o.foto : [] };
+        } catch (e) { return null; }
+      }).catch(function () { return null; });
+  }
+
+  /* Serve alla diagnosi: dice se l'album è bloccato dalle regole, cosa che
+     leggiAlbum() nasconde apposta per non disturbare chi guarda il sito. */
+  function provaAlbum() {
+    return fetch(BASE + '/pubblico_certamen/album?key=' + API + '&_=' + Date.now(),
+      { cache: 'no-store' })
+      .then(jget).then(function (d) {
+        if (d.error && /PERMISSION_DENIED/i.test(String(d.error.status || d.error.message || ''))) {
+          return 'bloccato';
+        }
+        if (d.error && String(d.error.status || '') === 'NOT_FOUND') return 'vuoto';
+        if (d.error) return 'errore';
+        return 'ok';
+      }).catch(function () { return 'errore'; });
+  }
+
+  function scriviAlbum(idToken, album) {
+    if (!idToken) return Promise.resolve(false);
+    var o = Array.isArray(album) ? { attivo: album.length > 0, foto: album } : (album || {});
+    return fetch(BASE + '/pubblico_certamen/album?key=' + API +
+      '&updateMask.fieldPaths=json&updateMask.fieldPaths=aggiornatoIl', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+      body: JSON.stringify({
+        fields: {
+          json: { stringValue: JSON.stringify({ attivo: o.attivo !== false, foto: V(o.foto, []) }) },
+          aggiornatoIl: { stringValue: new Date().toISOString() }
+        }
+      })
+    }).then(jget).then(function (d) {
+      if (d.error) throw new Error(d.error.message || 'salvataggio album fallito');
+      return true;
+    });
+  }
+
+  /* ============ LAVORO A PIÙ MANI: LO STATO SPEZZATO IN PEZZI ==========
+     Il giorno della festa gli operatori sono più d'uno: chi segue i giochi in
+     acqua, chi il Trittico, chi il Burraco. Se tutti scrivessero nello stesso
+     documento, l'ultimo che salva cancellerebbe il lavoro degli altri.
+     Per questo lo stato è diviso in documenti separati — uno per le squadre,
+     uno per i punteggi dei giochi, uno per ogni torneo, uno per i titoli — e
+     ognuno scrive solo il proprio. Chi segna il Burraco non tocca il Trittico.
+
+       stato_certamen/squadre          squadre, configurazione, punti bonus
+       stato_certamen/risultati        punteggi delle gare dei ragazzi
+       stato_certamen/titoli           premi individuali
+       stato_certamen/torneo_<id>      coppie, tabellone e punteggi di un torneo
+  */
+  function leggiPezzi(idToken) {
+    if (!idToken) return Promise.resolve({});
+    return fetch(BASE + '/stato_certamen?key=' + API + '&pageSize=100&_=' + Date.now(), {
+      headers: { 'Authorization': 'Bearer ' + idToken }, cache: 'no-store'
+    }).then(jget).then(function (d) {
+      var out = {};
+      if (d.error) return out;
+      (d.documents || []).forEach(function (doc) {
+        var nome = doc.name.split('/').pop();
+        var f = doc.fields || {};
+        var testo = (f.json && f.json.stringValue) || '';
+        if (!testo) return;
+        try {
+          out[nome] = {
+            dati: JSON.parse(testo),
+            quando: (f.aggiornatoIl && f.aggiornatoIl.stringValue) || '',
+            chi: (f.chi && f.chi.stringValue) || ''
+          };
+        } catch (e) { }
+      });
+      return out;
+    }).catch(function () { return {}; });
+  }
+
+  function scriviPezzo(idToken, nome, oggetto, chi) {
+    if (!idToken || !nome) return Promise.resolve(false);
+    var corpo = {
+      fields: {
+        json: { stringValue: JSON.stringify(oggetto === undefined ? null : oggetto) },
+        aggiornatoIl: { stringValue: new Date().toISOString() },
+        chi: { stringValue: String(chi || '') }
+      }
+    };
+    return fetch(BASE + '/stato_certamen/' + encodeURIComponent(nome) + '?key=' + API +
+      '&updateMask.fieldPaths=json&updateMask.fieldPaths=aggiornatoIl&updateMask.fieldPaths=chi', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+      body: JSON.stringify(corpo)
+    }).then(jget).then(function (d) {
+      if (d.error) throw new Error(d.error.message || 'salvataggio fallito');
+      return true;
+    });
+  }
+
   window.FB = {
     cfg: cfg, attivo: attivo,
     signIn: signIn, refresh: refresh,
@@ -312,6 +428,8 @@
     leggiContatori: leggiContatori, incrementaContatore: incrementaContatore,
     scriviContatori: scriviContatori,
     leggiClassifica: leggiClassifica, scriviClassifica: scriviClassifica,
-    leggiStato: leggiStato, scriviStato: scriviStato
+    leggiStato: leggiStato, scriviStato: scriviStato,
+    leggiPezzi: leggiPezzi, scriviPezzo: scriviPezzo,
+    leggiAlbum: leggiAlbum, scriviAlbum: scriviAlbum, provaAlbum: provaAlbum
   };
 })();

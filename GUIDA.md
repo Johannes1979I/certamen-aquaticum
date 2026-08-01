@@ -63,7 +63,12 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
         squadra, e così via — nessuno può prendersi la fascia alta;
      3. si pareggiano le **fasce**: i ragazzi dai 15 in su, i più piccoli
         fino a 10 anni e chi nuota poco, mai più di uno di differenza;
-     4. **solo alla fine** le preferenze, e solo se non rovinano niente.
+     4. **solo alla fine** le preferenze, e solo se non rovinano niente: le
+        squadre si fanno due volte, una tenendo insieme gli amici e una
+        ignorandoli, e vince la più equilibrata. Due amichetti di otto anni
+        che si scelgono a vicenda vengono separati, perché insieme
+        affonderebbero la loro squadra; due tredicenni che si scelgono
+        restano insieme, perché non costa niente.
      Con il menù *«Quanto contano le preferenze»* decidi tu quanto pesano:
      di serie sta su *Prima l'equilibrio* (solo chi si è scelto a vicenda,
      e a coppie). Alla fine ti dice quante preferenze ha rispettato e quali
@@ -91,6 +96,73 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
    dal telefono le vede cambiare da sole ogni quindici secondi, con un lampo
    verde quando arrivano dati nuovi. Il pulsante `Pubblica adesso` serve solo
    se hai spento l'automatismo o vuoi forzare l'aggiornamento.
+6. **Foto** — scheda `⚙️ Contenuti → 📷 Album`, pulsante `📸 Scatta una foto`:
+   dal telefono si apre la fotocamera e la foto è **subito** nell'album del
+   sito. Vedi sotto.
+
+## Lavorare in più persone
+
+Il giorno della festa il sito lo tenete aperto in tre o quattro: uno al
+Trittico, uno al burraco, uno ai giochi in acqua. Non vi pestate i piedi.
+
+- Scrivi il tuo nome in `📊 Cruscotto → Chi sei` (Gianpaolo, Veronica…):
+  serve solo a far capire agli altri chi ha cambiato cosa.
+- Ognuno tocca la sua parte e **si salva solo quella**: le squadre, i punteggi
+  di una gara, il tabellone di un torneo viaggiano separati. Chi non tocca il
+  burraco non lo può sovrascrivere, nemmeno per sbaglio.
+- Ogni dieci secondi arriva il lavoro degli altri, con un avviso in basso —
+  *«🔄 Veronica ha aggiornato: burraco»*. Quello che stai scrivendo tu in quel
+  momento non viene toccato.
+- In `📊 Cruscotto → 👥 Chi sta lavorando` vedi chi è collegato e a cosa ha
+  messo mano per ultimo.
+
+**Se salta la rete** (in piscina succede): continua a segnare come se niente
+fosse. In alto compare *«⏳ da mandare quando torna la rete»* e i punteggi
+restano nel telefono; appena il segnale torna partono da soli e l'avviso
+diventa *«✅ salvato nel database»*. Non chiudere il sito prima di aver visto
+la spunta verde.
+
+## L'album della giornata
+
+`⚙️ Contenuti → 📷 Album`. Dal telefono premi **📸 Scatta una foto**: si apre
+la fotocamera, scatti, e la foto compare nell'album del sito **subito**, senza
+pubblicare niente. Con `🖼️ Scegli dalla galleria` ne mandi anche parecchie in
+una volta.
+
+- La **didascalia se la scrive da sola** guardando l'ora e il programma —
+  alle 16:40 scriverà *«16:40 — Staffetta con pallone»*. La correggi scrivendo
+  nella riga sotto la foto: si salva da sola.
+- L'album **si accende alla prima foto**: la spunta *«Mostra l'album sul sito»*
+  vale immediatamente, sia per accendere che per spegnere.
+- Le foto vengono rimpicciolite prima di partire (lato lungo 1600 px), così
+  anche con la rete del cellulare partono in un attimo.
+- Servono le impostazioni di GitHub in `📤 Pubblica` (le stesse che usi per
+  pubblicare): la foto vera finisce nel sito, il suo indirizzo nel database.
+- Le foto stanno nel database, che è più veloce ma non è per sempre: quando la
+  festa è finita premi **`📥 Porta le foto nei contenuti`** e poi
+  `Pubblica contenuti.json`. Da quel momento l'album è dentro al sito e resta
+  lì per sempre.
+
+## L'avviso in cima al sito
+
+`⚙️ Contenuti → 📢 Avviso`: accendi la spunta, scrivi due righe e appare una
+fascia in cima a **tutte** le pagine. Serve per le cose dell'ultimo minuto —
+*«Rinviato di un'ora per il temporale»*, *«Iscrizioni chiuse»*. Tre colori:
+informazione (azzurro), attenzione (giallo), allarme (rosso). Va pubblicato
+come tutti gli altri contenuti.
+
+## La copia di sicurezza
+
+`🖨️ Stampe → 💾 Copia di sicurezza`: scarica un file con **tutto** — iscritti,
+squadre, tabelloni, punteggi, contatori, bacheca. Fanne una la mattina della
+festa e una alla fine.
+
+Per rimetterla: stesso posto, `Ripristina da una copia`. Rimette squadre,
+tabelloni e punteggi; **le iscrizioni no**, perché quelle vivono nel database e
+si rischierebbe di far tornare in vita gente cancellata.
+
+> Il file contiene nomi, età e numeri di telefono: tienilo sul tuo telefono,
+> non mandarlo in giro e non metterlo nel sito.
 
 ## Scegliere i giochi e metterli in ordine
 
@@ -231,7 +303,8 @@ service cloud.firestore {
       allow read: if true;
       allow write: if true;
     }
-    match /pubblico_certamen/classifica {
+    // classifica e album: li legge chiunque, li scrive solo l'organizzatore
+    match /pubblico_certamen/{doc} {
       allow read: if true;
       allow write: if request.auth != null;
     }

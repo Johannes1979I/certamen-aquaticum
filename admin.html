@@ -266,6 +266,20 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
     </div>
   </div>
 
+  <div class="card" id="sec-operatori">
+    <h2>👥 Chi sta lavorando</h2>
+    <p class="aiuto">Il giorno della festa potete essere in più d'uno: chi segue i giochi
+      in acqua, chi il Trittico, chi il Burraco. Ognuno apre questa pagina sul suo telefono
+      e <b>tutto si sincronizza da solo ogni dieci secondi</b>. Chi scrive su una parte non
+      cancella il lavoro degli altri, perché ogni parte viaggia per conto suo.</p>
+    <div class="campo" style="max-width:340px">
+      <label for="nomeOperatore">Come ti chiami</label>
+      <input type="text" id="nomeOperatore" class="mini" placeholder="Gianpaolo" />
+      <div class="aiuto">Serve solo perché gli altri vedano chi ha aggiornato cosa.</div>
+    </div>
+    <div id="altriOperatori"></div>
+  </div>
+
   <div class="card" id="sec-diagnosi">
     <h2>🩺 Stato del database</h2>
     <p class="aiuto">Se qualcosa non torna — le iscrizioni non compaiono, i contatori
@@ -572,6 +586,33 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
     </div>
   </div>
 
+  <div class="card" id="sec-avviso">
+    <h2>📢 Avviso in cima al sito</h2>
+    <p class="aiuto">Una striscia che compare in cima a <b>tutte</b> le pagine: serve per
+      i rinvii per maltempo, i cambi d'orario, gli avvisi dell'ultimo minuto. Accendila,
+      scrivi cosa c'è da dire e pubblica i contenuti: la vedono tutti.</p>
+    <label class="spunta" for="c_avvisoAttivo" style="margin-bottom:14px">
+      <input type="checkbox" id="c_avvisoAttivo" />
+      <span><b>Mostra l'avviso sul sito</b></span>
+    </label>
+    <div class="griglia2">
+      <div class="campo">
+        <label for="c_avvisoTipo">Quanto è grosso</label>
+        <select id="c_avvisoTipo" class="mini">
+          <option value="info">Informazione (azzurro)</option>
+          <option value="attenzione">Attenzione (giallo)</option>
+          <option value="allarme">Importante (rosso)</option>
+        </select>
+      </div>
+      <div class="campo"><label for="c_avvisoTitolo">Titolo (facoltativo)</label><input type="text" id="c_avvisoTitolo" class="mini" placeholder="Rinviato per maltempo" /></div>
+    </div>
+    <div class="campo"><label for="c_avvisoTesto">Cosa c'è da dire</label><textarea id="c_avvisoTesto" placeholder="Per la pioggia il Certamen è rimandato a domenica 16 agosto, stessa ora."></textarea></div>
+    <div class="azioni" style="justify-content:flex-start">
+      <button class="btn btn-chiaro btn-piccolo" id="btnProvaAvviso">👀 Guarda com'è</button>
+    </div>
+    <div id="antepAvviso" style="margin-top:14px"></div>
+  </div>
+
   <div class="card">
     <h2>🏆 Quota per i premi</h2>
     <label class="spunta" for="c_quotaAttiva" style="margin-bottom:12px">
@@ -607,7 +648,7 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
     <div class="conteggi-ord" id="conteggiGiochi"></div>
     <div id="editGiochi"></div>
     <p class="aiuto" style="margin-top:12px">La durata totale dei giochi in programma è
-      <b id="durataTotale">—</b>: confrontala con le ore dell'evento.</p>
+      <b id="durataTotale">—</b>.</p>
   </div>
 
   <div class="card">
@@ -615,6 +656,50 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
     <p class="aiuto">Stessa cosa per i tornei: ordine, quali si fanno e quali no.</p>
     <div class="conteggi-ord" id="conteggiTornei"></div>
     <div id="editTornei"></div>
+  </div>
+
+  <div class="card" id="sec-album">
+    <h2>📷 Album della giornata</h2>
+    <p class="aiuto">Dal telefono premi <b>Scatta</b>: si apre la fotocamera, fai la foto e
+      quella <b>compare subito nell'album</b> del sito, senza dover pubblicare niente.
+      La didascalia se la scrive da sola guardando l'ora e il programma — poi la correggi
+      come vuoi.</p>
+    <label class="spunta" for="c_albumAttivo" style="margin-bottom:12px">
+      <input type="checkbox" id="c_albumAttivo" />
+      <span>Mostra l'album sul sito <small class="aiuto">(vale subito; si accende
+        da sola alla prima foto)</small></span>
+    </label>
+    <div class="azioni" style="justify-content:flex-start;margin-bottom:12px">
+      <button class="btn btn-p btn-grande" id="btnScatta">📸 Scatta una foto</button>
+      <input type="file" id="fileScatto" accept="image/*" capture="environment" style="display:none" />
+      <button class="btn btn-chiaro" id="btnCaricaFoto">🖼️ Scegli dalla galleria</button>
+      <input type="file" id="fileFoto" accept="image/*" multiple style="display:none" />
+      <a class="btn btn-chiaro btn-piccolo" href="album.html" target="_blank">👀 Vedi l'album</a>
+    </div>
+    <p class="aiuto" id="statoFoto"></p>
+
+    <h3>Le foto già nell'album</h3>
+    <div id="elencoAlbum"></div>
+
+    <details style="margin-top:14px">
+      <summary style="cursor:pointer;font-weight:bold;padding:6px 0">Modificare l'elenco a mano</summary>
+      <p class="aiuto" style="margin-top:8px">Una riga per foto: indirizzo, poi la
+        didascalia dopo una barra verticale.<br>
+        <code>images/album/foto1.jpg | La staffetta dei Delfini</code></p>
+      <div class="campo">
+        <textarea id="c_albumFoto" style="min-height:140px"></textarea>
+      </div>
+      <p class="aiuto">Queste sono le foto messe nei contenuti del sito, che restano anche
+        dopo la festa. Quelle scattate durante la giornata vivono invece nel database e si
+        vedono subito: con il pulsante qui sotto le si travasa qui, per conservarle.</p>
+      <button class="btn btn-chiaro btn-piccolo" id="btnConsolidaAlbum">📥 Porta le foto della giornata nei contenuti</button>
+    </details>
+
+    <div class="nota-box" style="font-size:.92rem;margin-top:14px">
+      ⚠️ Nelle foto ci sono dei ragazzi: pubblica solo quelle per cui i genitori sono
+      d'accordo, e se qualcuno chiede di togliere una foto, toglila subito — c'è il
+      cestino accanto a ognuna.
+    </div>
   </div>
 
   <div class="card">
@@ -649,6 +734,19 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
       <button class="btn btn-chiaro" data-stampa="programma">🕓 Programma del pomeriggio</button>
       <a class="btn btn-chiaro" href="locandina.html" target="_blank">🖼️ Locandina A4 con QR</a>
     </div>
+  </div>
+
+  <div class="card">
+    <h2>💾 Copia di sicurezza</h2>
+    <p class="aiuto">Scarica <b>tutto</b> in un file solo: iscrizioni, squadre, punteggi,
+      tabelloni e contatori. Tienilo sul telefono durante la giornata: se il database
+      facesse i capricci, da lì si ricostruisce ogni cosa.</p>
+    <div class="azioni" style="justify-content:flex-start">
+      <button class="btn btn-p" id="btnCopiaSicurezza">💾 Scarica la copia di tutto</button>
+      <button class="btn btn-chiaro btn-piccolo" id="btnLeggiCopia">📂 Rileggi una copia</button>
+      <input type="file" id="fileCopia" accept="application/json,.json" style="display:none" />
+    </div>
+    <p class="aiuto" id="statoCopia" style="margin-top:10px"></p>
   </div>
 </section>
 

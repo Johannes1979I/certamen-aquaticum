@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Album della giornata — Certamen Aquaticum</title>
+<meta name="description" content="Le foto del Certamen Aquaticum al Residence Holiday: i giochi in acqua, i tornei di carte e la premiazione." />
+<!-- anteprima del link su WhatsApp, Telegram e social -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Certamen Aquaticum" />
+<meta property="og:locale" content="it_IT" />
+<meta property="og:title" content="Album della giornata — Certamen Aquaticum" />
+<meta property="og:description" content="Le foto del Certamen Aquaticum al Residence Holiday: i giochi in acqua, i tornei di carte e la premiazione." />
+<meta property="og:url" content="https://johannes1979i.github.io/certamen-aquaticum/album.html" />
+<meta property="og:image" content="https://johannes1979i.github.io/certamen-aquaticum/images/anteprima-social.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Locandina del Certamen Aquaticum al Residence Holiday" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#e8734a" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>" />
+<link rel="stylesheet" href="stile.css" />
+<script src="firebase.js"></script>
+<script src="comune.js"></script>
+<style>
+.hero.corta .hero-dentro{ padding:clamp(28px,4vw,52px) 0 clamp(52px,6vw,74px); }
+.hero.corta .velo{ background:linear-gradient(160deg, rgba(92,40,6,.82), rgba(232,115,74,.6) 60%, rgba(255,194,51,.5)); }
+/* muro di foto: le immagini si dispongono su più colonne e si aprono grandi */
+.muro{ column-count:1; column-gap:14px; }
+@media(min-width:620px){ .muro{ column-count:2; } }
+@media(min-width:1000px){ .muro{ column-count:3; } }
+@media(min-width:1500px){ .muro{ column-count:4; } }
+.muro figure{
+  break-inside:avoid; margin:0 0 14px; border-radius:18px; overflow:hidden;
+  box-shadow:var(--shadow-s); background:#fff; cursor:zoom-in;
+}
+.muro img{ width:100%; height:auto; display:block; }
+.muro figcaption{ padding:9px 13px; font-size:.88rem; color:var(--muted); }
+.lente{
+  position:fixed; inset:0; background:rgba(10,37,64,.94); display:none;
+  align-items:center; justify-content:center; z-index:200; padding:16px; cursor:zoom-out;
+}
+.lente.aperta{ display:flex; }
+.lente img{ max-width:100%; max-height:88vh; border-radius:12px; }
+.lente .chiudi{
+  position:absolute; top:14px; right:18px; background:#fff; color:var(--ink);
+  border:none; border-radius:999px; width:46px; height:46px; font-size:1.2rem; cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<nav class="barra no-stampa">
+  <div class="wrap barra-dentro">
+    <a class="marchio" href="index.html"><span class="goccia">🏊</span><span id="marchioNome">Certamen Aquaticum</span></a>
+    <div class="menu">
+      <a href="index.html">Home</a>
+      <a href="ragazzi.html">🤽 Ragazzi</a>
+      <a href="carte.html">🃏 Adulti</a>
+      <a href="classifiche.html">🏆 Classifiche</a>
+      <a href="album.html">📷 Album</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+<header class="hero corta">
+  <div class="sfondo" id="heroSfondo"></div>
+  <div class="velo"></div>
+  <div class="hero-dentro wrap">
+    <span class="targhetta">📷 Com'è andata</span>
+    <h1 id="titoloAlbum">Le foto della giornata</h1>
+    <p class="sottotitolo" id="sottoAlbum"></p>
+  </div>
+  <svg class="onde" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#f7fbff" d="M0,64L60,58.7C120,53,240,43,360,48C480,53,600,75,720,74.7C840,75,960,53,1080,45.3C1200,37,1320,43,1380,45.3L1440,48L1440,120L0,120Z"></path>
+  </svg>
+</header>
+
+<section>
+  <div class="wrap">
+    <div id="vuoto" class="nota-box info" style="display:none;text-align:center">
+      <h3 style="font-size:1.1rem;margin-bottom:6px">📷 Le foto non ci sono ancora</h3>
+      <p>L'album si riempie dopo la festa. Torna a dare un'occhiata nei giorni seguenti.</p>
+      <p style="margin-top:14px"><a href="index.html" class="btn btn-chiaro btn-piccolo">Torna alla home</a></p>
+    </div>
+
+    <div class="muro" id="muro"></div>
+
+    <p class="centro" id="notaAlbum" style="margin-top:26px;color:var(--muted);font-size:.92rem;max-width:700px;margin-left:auto;margin-right:auto"></p>
+
+    <div class="azioni" style="margin-top:30px">
+      <a href="classifiche.html" class="btn btn-p">🏆 Chi ha vinto</a>
+      <a href="index.html" class="btn btn-chiaro">🏠 Torna alla home</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="piede no-stampa"><div class="wrap" id="piede"></div></footer>
+
+<div class="lente" id="lente">
+  <button class="chiudi" id="chiudiLente" aria-label="Chiudi">✕</button>
+  <img id="lenteImg" alt="" />
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =========================================================================
+   Album della giornata. Le foto arrivano da contenuti.json (album.foto):
+   l'organizzatore le carica dall'area amministrazione.
+   ========================================================================= */
+var $ = CA.$, V = CA.V, testo = CA.testo, crea = CA.crea;
+
+CA.carica().then(function(d){
+  testo('marchioNome', V(V(d.tema,{}).titolo, 'Certamen Aquaticum'));
+  var a = V(d.album, {});
+  testo('titoloAlbum', V(a.titolo, 'Le foto della giornata'));
+  testo('sottoAlbum', V(a.sottotitolo, ''));
+  testo('notaAlbum', V(a.nota, ''));
+
+  var hero = V(d.fotoHero, (V(d.foto, [])[0] || ''));
+  if(hero) $('heroSfondo').style.backgroundImage = 'url("' + encodeURI(hero) + '")';
+
+  NEICONTENUTI = (a.attivo === true);
+  FISSE = V(a.foto, []).filter(Boolean).map(function(riga){
+    var p = String(riga).split('|');
+    return { url: p[0].trim(), didascalia: (p[1] || '').trim() };
+  }).filter(function(x){ return x.url; });
+
+  CA.segnaPagina();
+  CA.disegnaPiede('piede');
+
+  /* Le foto scattate durante la festa arrivano dal database e compaiono
+     mentre la festa è in corso: si ricontrolla ogni quindici secondi. */
+  aggiorna();
+  setInterval(function(){ if(!document.hidden) aggiorna(); }, 15000);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) aggiorna(); });
+  window.addEventListener('focus', aggiorna);
+}).catch(function(e){ CA.toast('Non riesco a leggere i contenuti: ' + e.message, 9000); });
+
+var NEICONTENUTI = false, FISSE = [], IMPRONTA = '';
+
+function aggiorna(){
+  var dalVivo = (window.FB && FB.attivo()) ? FB.leggiAlbum() : Promise.resolve(null);
+  dalVivo.then(function(vive){
+    vive = vive || {};
+    /* L'album si accende da solo appena l'organizzatore scatta la prima foto:
+       l'interruttore viaggia insieme alle foto, senza bisogno di ripubblicare. */
+    var acceso = NEICONTENUTI || (vive.attivo === true);
+    var tutte = (Array.isArray(vive.foto) ? vive.foto : []).concat(FISSE);
+    /* niente doppioni se una foto della giornata è già stata messa nei contenuti */
+    var viste = {}, pulite = [];
+    tutte.forEach(function(f){
+      var chiave = String(f.file || f.url).split('/').pop();
+      if(viste[chiave]) return;
+      viste[chiave] = true;
+      pulite.push(f);
+    });
+
+    var impronta = acceso + '|' + JSON.stringify(pulite);
+    if(impronta === IMPRONTA) return;      /* niente di nuovo, non ridisegno */
+    var cerano = IMPRONTA && $('muro').children.length;
+    IMPRONTA = impronta;
+
+    if(!acceso || !pulite.length){
+      $('vuoto').style.display = '';
+      $('muro').style.display = 'none';
+      testo('notaAlbum', '');
+      return;
+    }
+    $('vuoto').style.display = 'none';
+    $('muro').style.display = '';
+    disegnaMuro(pulite);
+    if(cerano) CA.toast('📷 Sono arrivate foto nuove.', 4000);
+  }).catch(function(){ /* rete assente: si riprova al giro dopo */ });
+}
+
+function disegnaMuro(foto){
+  var el = $('muro');
+  el.textContent = '';
+  foto.forEach(function(v, i){
+    var percorso = v.url;
+    var didascalia = v.didascalia || '';
+    if(!percorso) return;
+
+    var f = document.createElement('figure');
+    var img = document.createElement('img');
+    img.src = percorso;
+    img.alt = didascalia || ('Foto ' + (i+1) + ' del Certamen Aquaticum');
+    img.loading = 'lazy';
+    f.appendChild(img);
+    if(didascalia) f.appendChild(crea('figcaption', null, didascalia));
+    f.addEventListener('click', function(){ apriLente(percorso, img.alt); });
+    el.appendChild(f);
+  });
+}
+
+function apriLente(src, alt){
+  $('lenteImg').src = src;
+  $('lenteImg').alt = alt || '';
+  $('lente').classList.add('aperta');
+}
+function chiudiLente(){
+  $('lente').classList.remove('aperta');
+  $('lenteImg').removeAttribute('src');
+}
+$('lente').addEventListener('click', chiudiLente);
+$('chiudiLente').addEventListener('click', chiudiLente);
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape') chiudiLente(); });
+</script>
+</body>
+</html>

@@ -74,6 +74,7 @@
       <a href="carte.html">🃏 Adulti</a>
       <a href="programma.html">🕓 Programma</a>
       <a href="classifiche.html">🏆 Classifiche</a>
+      <a href="album.html">📷 Album</a>
     </div>
   </div>
 </nav>
@@ -302,21 +303,25 @@ function disegnaRagazzi(){
   }
 
   /* titoli individuali */
-  var titoli = r ? V(r.titoli, []) : [];
-  if(titoli.length){
-    var bt = crea('div', 'blocco-cl');
-    bt.appendChild(crea('h3', null, '⭐ Titoli individuali'));
-    var gt = crea('div', 'schede');
-    titoli.forEach(function(x){
-      var c = crea('div', 'scheda');
-      c.appendChild(crea('div', 'ico', V(x.emoji, '🏅')));
-      c.appendChild(crea('h3', null, V(x.premio, '')));
-      c.appendChild(crea('p', null, V(x.chi, '—')));
-      gt.appendChild(c);
-    });
-    bt.appendChild(gt);
-    el.appendChild(bt);
-  }
+  var bt = bloccoTitoli(r ? V(r.titoli, []) : []);
+  if(bt) el.appendChild(bt);
+}
+
+/* I premi individuali assegnati: valgono per i ragazzi e per gli adulti */
+function bloccoTitoli(titoli){
+  if(!titoli.length) return null;
+  var bt = crea('div', 'blocco-cl');
+  bt.appendChild(crea('h3', null, '⭐ Titoli individuali'));
+  var gt = crea('div', 'schede');
+  titoli.forEach(function(x){
+    var c = crea('div', 'scheda');
+    c.appendChild(crea('div', 'ico', V(x.emoji, '🏅')));
+    c.appendChild(crea('h3', null, V(x.premio, '')));
+    c.appendChild(crea('p', null, V(x.chi, '—')));
+    gt.appendChild(c);
+  });
+  bt.appendChild(gt);
+  return bt;
 }
 
 /* -------------------------------- carte --------------------------------- */
@@ -326,9 +331,12 @@ function disegnaCarte(){
   var c = CL && CL.carte ? CL.carte : null;
   var tornei = c ? V(c.tornei, []) : [];
 
+  var titoli = bloccoTitoli(c ? V(c.titoli, []) : []);
+
   if(!tornei.length){
     el.appendChild(vuoto('🃏', 'I tabelloni non sono ancora stati sorteggiati',
       'La formula di ogni torneo si decide in base a quante coppie si iscrivono: appena i tavoli sono composti, qui compaiono il tabellone degli incontri e la classifica.'));
+    if(titoli) el.appendChild(titoli);
     return;
   }
 
@@ -373,6 +381,8 @@ function disegnaCarte(){
     }
     el.appendChild(b);
   });
+
+  if(titoli) el.appendChild(titoli);
 }
 
 function etichettaFormato(f){

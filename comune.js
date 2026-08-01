@@ -67,6 +67,7 @@
         DATI = d || {};
         applicaColori(DATI);
         avviaCloud(DATI);
+        disegnaAvviso();
         return DATI;
       });
   }
@@ -97,6 +98,34 @@
     if (window.FB && c.firebaseApiKey && c.firebaseProjectId) {
       FB.cfg(c.firebaseApiKey, c.firebaseProjectId);
     }
+  }
+
+  /* --------------------------- avviso in cima ---------------------------
+     La striscia che l'organizzatore accende quando c'è da dire qualcosa a
+     tutti: rimandato per pioggia, ritrovo spostato, iscrizioni chiuse prima.
+     Compare da sola in cima a ogni pagina che carica i contenuti, senza
+     doverla mettere pagina per pagina. */
+  function disegnaAvviso() {
+    var vecchio = $('avvisoSito');
+    if (vecchio) vecchio.remove();
+
+    var a = V(dati().avviso, {});
+    if (a.attivo !== true || !String(V(a.testo, '')).trim()) return;
+
+    var barra = crea('div', 'avviso-sito ' + (V(a.tipo, 'info')));
+    barra.id = 'avvisoSito';
+    barra.setAttribute('role', 'status');
+
+    var dentro = crea('div', 'wrap avviso-dentro');
+    dentro.appendChild(crea('span', 'segno', a.tipo === 'allarme' ? '⛔'
+      : (a.tipo === 'attenzione' ? '⚠️' : 'ℹ️')));
+    var testoBox = crea('div');
+    if (a.titolo) testoBox.appendChild(crea('b', null, a.titolo));
+    testoBox.appendChild(crea('span', null, a.testo));
+    dentro.appendChild(testoBox);
+    barra.appendChild(dentro);
+
+    document.body.insertBefore(barra, document.body.firstChild);
   }
 
   /* ------------------------- conto alla rovescia ------------------------- */
@@ -391,7 +420,8 @@
     avviaConto: avviaConto,
     avviaContatori: avviaContatori, leggiContatori: leggiContatori,
     contatori: contatori, mostraContatore: mostraContatore,
-    disegnaPiede: disegnaPiede, toast: toast, segnaPagina: segnaPagina,
+    disegnaPiede: disegnaPiede, disegnaAvviso: disegnaAvviso,
+    toast: toast, segnaPagina: segnaPagina,
     memLeggi: memLeggi, memScrivi: memScrivi, memCancella: memCancella,
     iscrizioniChiuse: iscrizioniChiuse,
     linkMusica: linkMusica, titoloMusica: titoloMusica,
