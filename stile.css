@@ -301,6 +301,17 @@ section{ padding:clamp(40px,6vw,72px) 0; }
 @keyframes battito{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.045); } }
 @media (prefers-reduced-motion:reduce){ .orologio{ animation:none !important; } }
 
+/* ------------- i modi possibili di giocare le carte italiane ------------- */
+.modi{ display:grid; gap:14px; max-width:900px; margin:0 auto;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+.modo{ background:#fff; border:1px solid var(--linea); border-radius:16px; padding:16px 18px;
+  box-shadow:var(--shadow-s); }
+.modo .emoji-modo{ font-size:1.6rem; line-height:1; margin-bottom:6px; }
+.modo b{ display:block; font-size:1.02rem; }
+.modo .sotto-modo{ display:block; color:var(--muted); font-size:.84rem; margin-bottom:8px; }
+.modo p{ font-size:.92rem; margin:0; }
+.eti.verde{ background:#e9f9f0; color:#0f7a4a; border-color:#a9e6c4; }
+
 /* ------------------ la gara in corso, sulle classifiche ------------------
    Striscia in cima: si legge da lontano, con il telefono in mano bagnata o
    un tablet appoggiato al bordo vasca. */

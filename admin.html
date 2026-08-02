@@ -237,6 +237,7 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
     <button data-vista="tornei">🃏 Tornei</button>
     <button data-vista="punteggi">🏅 Punteggi</button>
     <button data-vista="album">📷 Album</button>
+    <button data-vista="giochi">🎯 Settaggio giochi acquatici</button>
     <button data-vista="pubblica">📣 Pubblica</button>
     <button data-vista="contenuti">⚙️ Contenuti</button>
     <button data-vista="stampe">🖨️ Stampe</button>
@@ -417,6 +418,13 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
 
 <!-- ------------------------------- TORNEI ------------------------------ -->
 <section class="vista" id="v-tornei">
+  <div class="card" id="sec-assetto">
+    <h2>🗂️ Come si giocano le carte italiane</h2>
+    <p class="aiuto">Decidi qui il giorno della festa, quando sai quanti sono arrivati.
+      Nomi, regole, tabelloni, classifiche e coppe si rifanno da soli su quello che scegli.</p>
+    <div id="assettoCarte"></div>
+  </div>
+
   <div class="card">
     <h2>🃏 Tornei di carte</h2>
     <p class="aiuto">Per ogni torneo: forma le coppie, scegli la formula in base a quante coppie ci sono e genera il tabellone.</p>
@@ -509,6 +517,44 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
         vedono subito: con il pulsante qui sotto le si travasa qui, per conservarle.</p>
       <button class="btn btn-chiaro btn-piccolo" id="btnConsolidaAlbum">📥 Porta le foto della giornata nei contenuti</button>
     </details>
+  </div>
+</section>
+
+<!-- ------------------- SETTAGGIO GIOCHI ACQUATICI ------------------- -->
+<section class="vista" id="v-giochi">
+
+  <div class="card">
+    <h2>🎯 Giochi in acqua</h2>
+    <p class="aiuto">Qui c'è tutto quello che riguarda i giochi dei ragazzi: quali si
+      fanno, in che ordine, con che regole, con che musica. Le modifiche restano in
+      questa pagina finché non premi «Pubblica contenuti.json» nella scheda
+      <b>📣 Pubblica</b>.</p>
+    <p class="aiuto">Decidi tu quali giochi si fanno e in che ordine. Trascina la maniglia ⠿
+      per spostare un gioco, oppure usa le frecce ▲▼ se sei da telefono.
+      <b>In programma</b> = si gioca · <b>Di riserva</b> = solo se avanza tempo ·
+      <b>Escluso</b> = sparisce dal sito.</p>
+    <div class="conteggi-ord" id="conteggiGiochi"></div>
+    <div id="editGiochi"></div>
+    <p class="aiuto" style="margin-top:12px">La durata totale dei giochi in programma è
+      <b id="durataTotale">—</b>.</p>
+  </div>
+
+  <div class="card">
+    <h2>🎵 Musica dei giochi</h2>
+    <p class="aiuto">Ogni gioco dei ragazzi ha la sua canzone, con il collegamento
+      <b>diretto al video</b>. Se vuoi cambiare brano incolla l'indirizzo del video nuovo
+      (quello che copi dalla barra del browser su YouTube). Se svuoti il campo, il sito
+      apre la ricerca del titolo: è la rete di sicurezza, nel caso un video sparisca.</p>
+    <label class="spunta" for="c_musicaAttiva" style="margin-bottom:14px">
+      <input type="checkbox" id="c_musicaAttiva" />
+      <span>Mostra la canzone accanto a ogni gioco</span>
+    </label>
+    <div id="editMusica"></div>
+  </div>
+
+  <div class="card">
+    <p class="aiuto">Fatte le modifiche, vanno pubblicate per vederle sul sito.</p>
+    <button class="btn btn-p" id="btnVaiPubblica2">Vai a pubblicare →</button>
   </div>
 </section>
 
@@ -703,31 +749,6 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
       <div class="campo"><label for="c_quotaEtichetta">Come si chiama</label><input type="text" id="c_quotaEtichetta" class="mini" /></div>
     </div>
     <div class="campo"><label for="c_quotaSpiega">Spiegazione</label><textarea id="c_quotaSpiega"></textarea></div>
-  </div>
-
-  <div class="card">
-    <h2>🎵 Musica dei giochi</h2>
-    <p class="aiuto">Ogni gioco dei ragazzi ha la sua canzone, con il collegamento
-      <b>diretto al video</b>. Se vuoi cambiare brano incolla l'indirizzo del video nuovo
-      (quello che copi dalla barra del browser su YouTube). Se svuoti il campo, il sito
-      apre la ricerca del titolo: è la rete di sicurezza, nel caso un video sparisca.</p>
-    <label class="spunta" for="c_musicaAttiva" style="margin-bottom:14px">
-      <input type="checkbox" id="c_musicaAttiva" />
-      <span>Mostra la canzone accanto a ogni gioco</span>
-    </label>
-    <div id="editMusica"></div>
-  </div>
-
-  <div class="card">
-    <h2>🎯 Giochi in acqua</h2>
-    <p class="aiuto">Decidi tu quali giochi si fanno e in che ordine. Trascina la maniglia ⠿
-      per spostare un gioco, oppure usa le frecce ▲▼ se sei da telefono.
-      <b>In programma</b> = si gioca · <b>Di riserva</b> = solo se avanza tempo ·
-      <b>Escluso</b> = sparisce dal sito.</p>
-    <div class="conteggi-ord" id="conteggiGiochi"></div>
-    <div id="editGiochi"></div>
-    <p class="aiuto" style="margin-top:12px">La durata totale dei giochi in programma è
-      <b id="durataTotale">—</b>.</p>
   </div>
 
   <div class="card">

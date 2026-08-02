@@ -379,7 +379,119 @@
     return V(dati().giochi, []).filter(function (g) { return !g.escluso; });
   }
   function torneiAttivi() {
-    return V(dati().tornei, []).filter(function (t) { return !t.escluso; });
+    return componiTornei(dati().tornei, null);
+  }
+
+  /* ==================== COME SI GIOCANO LE CARTE ITALIANE ==============
+     Briscola, scopone e tresette si possono mettere insieme in un torneo
+     solo (il Trittico), oppure giocare due prove su tre, oppure una sola
+     disciplina, oppure tenerle separate con un torneo e una coppa per
+     ognuna. La scelta si fa il giorno della festa, quando si sa quanti
+     sono arrivati: da qui escono nomi, regole, tabelloni e classifiche,
+     tutti già coerenti con quello che si è deciso.                      */
+
+  function assettoPredefinito(t) {
+    return {
+      prove: V(t && t.prove, []).map(function (p) { return p.id; }),
+      forma: 'unico',
+      provaFinale: V(t && t.provaFinale, '')
+    };
+  }
+
+  function elencoConE(nomi) {
+    if (nomi.length <= 1) return nomi[0] || '';
+    return nomi.slice(0, -1).join(', ') + ' e ' + nomi[nomi.length - 1];
+  }
+
+  /* un torneo che gioca una disciplina sola: prende testi e regole da lei */
+  function torneoDiUnaProva(t, p) {
+    var n = {};
+    Object.keys(t).forEach(function (k) { n[k] = t[k]; });
+    n.id = t.id + '_' + p.id;
+    n.nome = 'Torneo di ' + p.nome;
+    n.emoji = V(p.emoji, t.emoji);
+    n.illustrazione = V(p.illustrazione, t.illustrazione);
+    n.prove = [p];
+    n.provaFinale = p.id;
+    n.descrizione = V(p.descrizione, t.descrizione);
+    n.partita = V(p.partita, t.partita);
+    n.regole = V(p.regole, t.regole);
+    n.varianti = V(p.varianti, t.varianti);
+    n.premio = 'Coppa di ' + p.nome;
+    n.formula = 'La formula la decidono gli organizzatori il giorno stesso, in base a ' +
+      'quante coppie si sono iscritte: girone all\'italiana se siamo pochi, gironi con ' +
+      'finale se siamo tanti.';
+    return n;
+  }
+
+  /* un torneo solo che tiene insieme più prove: punti sommati, classifica unica */
+  function torneoUnico(t, prove, idFinale) {
+    var n = {};
+    Object.keys(t).forEach(function (k) { n[k] = t[k]; });
+    var nomi = prove.map(function (p) { return p.nome; });
+    var fin = prove.filter(function (p) { return p.id === idFinale; })[0] || prove[prove.length - 1];
+    n.prove = prove;
+    n.provaFinale = fin.id;
+    /* il nome storico resta solo quando ci sono davvero tutte e tre le prove:
+       chiamare «Trittico» un torneo di due giochi confonderebbe e basta */
+    var tutte = (prove.length === V(t.prove, []).length);
+    n.nome = tutte ? t.nome : elencoConE(nomi);
+    if (!tutte) {
+      n.emoji = V(prove[0].emoji, t.emoji);
+      n.illustrazione = V(prove[0].illustrazione, t.illustrazione);
+      n.premio = 'Coppa ' + elencoConE(nomi);
+    }
+    n.descrizione = 'Un torneo solo con le carte italiane, in ' + parolaNumero(prove.length) +
+      ' prove: ' + elencoConE(nomi.map(function (x) { return x.toLowerCase(); })) + '. ' +
+      'La stessa coppia gioca tutte le prove e i punti si sommano: non vince chi è bravo ' +
+      'a un gioco, vince chi se la cava con tutti.';
+    n.partita = 'Ogni turno di girone si gioca a una prova diversa, al massimo ' +
+      V(t.durataPartita, 25) + ' minuti a partita. La finale si disputa a ' +
+      fin.nome.toLowerCase() + '. Vittoria 3 punti, pareggio 1, sconfitta 0: la ' +
+      'classifica è unica.';
+    n.formula = 'La formula la decidono gli organizzatori il giorno stesso, in base a quante ' +
+      'coppie si sono iscritte: girone all\'italiana se siamo pochi, gironi con finale se ' +
+      'siamo tanti. Le prove si alternano turno dopo turno e la finale si gioca a ' +
+      fin.nome.toLowerCase() + '.';
+    n.regole = [
+      'Si gioca in quattro, a coppie: i compagni siedono uno di fronte all\'altro.',
+      'La coppia resta la stessa per tutte le prove.',
+      'Ogni turno di girone ha la sua prova: ' + elencoConE(nomi.map(function (x) { return x.toLowerCase(); })) + '.',
+      'La finale si disputa a ' + fin.nome.toLowerCase() + '.',
+      'I punti delle prove si sommano in una classifica unica.',
+      'Le regole di ogni singola prova sono qui sotto, una per gioco.'
+    ].concat(V(t.regole, []).filter(function (r) { return /pari|arbitr|organizzat/i.test(r); }));
+    return n;
+  }
+
+  function parolaNumero(n) {
+    return ['zero', 'una', 'due', 'tre', 'quattro', 'cinque'][n] || String(n);
+  }
+
+  /* Dal catalogo dei tornei + la scelta dell'organizzatore esce l'elenco dei
+     tornei che si giocano davvero. Senza scelta si torna al Trittico. */
+  function componiTornei(catalogo, assetto) {
+    var fuori = [];
+    V(catalogo, []).forEach(function (t) {
+      if (t.escluso) return;
+      var tutte = V(t.prove, []);
+      if (tutte.length < 2) { fuori.push(t); return; }   /* burraco e simili: nulla da scegliere */
+
+      var a = assetto || {};
+      var scelte = V(a.prove, null);
+      if (!scelte || !scelte.length) scelte = tutte.map(function (p) { return p.id; });
+      var prove = tutte.filter(function (p) { return scelte.indexOf(p.id) >= 0; });
+      if (!prove.length) prove = tutte.slice();
+
+      if (prove.length === 1) {
+        fuori.push(torneoDiUnaProva(t, prove[0]));
+      } else if (V(a.forma, 'unico') === 'separati') {
+        prove.forEach(function (p) { fuori.push(torneoDiUnaProva(t, p)); });
+      } else {
+        fuori.push(torneoUnico(t, prove, a.provaFinale));
+      }
+    });
+    return fuori;
   }
 
   /* ------------------------- la musica dei giochi ------------------------ */
@@ -493,6 +605,8 @@
     memLeggi: memLeggi, memScrivi: memScrivi, memCancella: memCancella,
     iscrizioniChiuse: iscrizioniChiuse,
     linkMusica: linkMusica, titoloMusica: titoloMusica,
+    componiTornei: componiTornei, assettoPredefinito: assettoPredefinito,
+    elencoConE: elencoConE,
     playlistDi: playlistDi, minutiPlaylist: minutiPlaylist,
     linkPlaylist: linkPlaylist, braniColLink: braniColLink,
     playlistYouTube: playlistYouTube,

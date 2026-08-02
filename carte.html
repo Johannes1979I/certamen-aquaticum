@@ -106,6 +106,11 @@
     <h3 style="text-align:center;margin-bottom:16px;font-size:1.15rem">🕓 I due blocchi di gioco</h3>
     <div class="blocchi" id="blocchi"></div>
 
+    <h3 style="text-align:center;margin:38px 0 10px;font-size:1.15rem">🃏 In quanti modi si possono giocare le carte italiane</h3>
+    <p class="occhiello" id="modiNota" style="margin-bottom:22px"></p>
+    <div class="modi" id="modiCarte"></div>
+    <p class="centro" id="modoScelto" style="margin-top:18px;display:none"></p>
+
     <h3 style="text-align:center;margin:38px 0 10px;font-size:1.15rem">🗂️ Come si decide la formula</h3>
     <p class="occhiello" id="formatiNota" style="margin-bottom:22px"></p>
     <div class="tabella-scroll" style="max-width:860px;margin:0 auto">
@@ -213,6 +218,7 @@ function disegna(){
 
   disegnaGruppi(tornei);
   disegnaBlocchi(tornei);
+  disegnaModi();
   disegnaFormati();
   disegnaPunti(V(area.punteggio, {}));
   disegnaTornei(tornei);
@@ -308,6 +314,62 @@ function disegnaBlocchi(tornei){
 }
 
 /* i criteri con cui gli organizzatori scelgono la formula del torneo */
+/* Le tre carte italiane si possono mettere insieme o dividere: qui si dice
+   quali sono le strade possibili. Quale si prende lo decidono gli
+   organizzatori il giorno stesso, in base a quanti si sono iscritti — e
+   appena l'hanno deciso compare qui sotto, letto dalla bacheca. */
+function disegnaModi(){
+  var base = V(DATI.tornei, []).filter(function(t){ return V(t.prove, []).length > 1; })[0];
+  var el = $('modiCarte');
+  if(!base){ el.parentNode.style.display = 'none'; return; }
+  var prove = V(base.prove, []);
+  var nomi = prove.map(function(p){ return p.nome.toLowerCase(); });
+
+  testo('modiNota', 'Ci si iscrive una volta sola alle carte italiane e si gioca ' +
+    'qualunque cosa venga decisa: non serve reiscriversi. Ecco le strade possibili.');
+
+  var modi = [
+    { emoji: '🏆', tit: V(base.nome, 'Un torneo solo'),
+      sotto: 'tutte e ' + prove.length + ' le prove insieme',
+      testo: 'La coppia gioca ' + CA.elencoConE(nomi) + ', i punti si sommano e la ' +
+             'classifica è una sola. Non vince chi è bravo a un gioco: vince chi se la cava con tutti.' },
+    { emoji: '🎲', tit: 'Due prove su ' + prove.length,
+      sotto: 'per esempio ' + nomi[1] + ' e ' + nomi[2],
+      testo: 'Stessa cosa ma più corta: si lascia fuori un gioco e le altre due fanno ' +
+             'classifica insieme. Utile se il pomeriggio si accorcia.' },
+    { emoji: '🎯', tit: 'Tornei separati',
+      sotto: 'un tabellone e una coppa per gioco',
+      testo: 'Ogni disciplina fa storia a sé: chi vince a ' + nomi[0] + ' porta a casa la ' +
+             'sua coppa, e le classifiche non si mescolano.' },
+    { emoji: '🂱', tit: 'Una disciplina sola',
+      sotto: 'per esempio solo ' + nomi[1],
+      testo: 'Se gli iscritti sono pochi o il tempo è poco, si gioca un torneo unico ' +
+             'della disciplina scelta, con le sue regole e la sua coppa.' }
+  ];
+  el.textContent = '';
+  modi.forEach(function(m){
+    var c = crea('div', 'modo');
+    c.appendChild(crea('div', 'emoji-modo', m.emoji));
+    c.appendChild(crea('b', null, m.tit));
+    c.appendChild(crea('small', 'sotto-modo', m.sotto));
+    c.appendChild(crea('p', null, m.testo));
+    el.appendChild(c);
+  });
+
+  /* se la scelta è già stata fatta, la bacheca la porta con sé */
+  if(!window.FB || !FB.attivo()) return;
+  FB.leggiClassifica().then(function(c){
+    var tornei = V(V(c && c.carte, {}).tornei, []).filter(function(t){ return t.gruppo === base.gruppo; });
+    if(!tornei.length) return;
+    var el2 = $('modoScelto');
+    el2.style.display = '';
+    el2.textContent = '';
+    el2.appendChild(crea('span', 'eti verde', '✅ Deciso: ' +
+      (tornei.length === 1 ? 'si gioca ' + tornei[0].nome
+        : 'si giocano ' + CA.elencoConE(tornei.map(function(t){ return t.nome; })))));
+  }).catch(function(){ /* bacheca non ancora pubblicata: pazienza */ });
+}
+
 function disegnaFormati(){
   var f = V(DATI.formatiTorneo, {});
   testo('formatiNota', V(f.nota, ''));

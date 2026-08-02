@@ -33,7 +33,7 @@
   function statoVuoto() {
     return {
       squadre: [], configSquadre: {}, risultati: {}, titoli: [], tornei: {}, bonus: {},
-      cronometro: cronometroVuoto()
+      cronometro: cronometroVuoto(), assettoCarte: null
     };
   }
   function cronometroVuoto() {
@@ -92,6 +92,7 @@
         if (v === 'squadre') disegnaSquadre();
         if (v === 'tornei') disegnaTornei();
         if (v === 'punteggi') disegnaPunteggi();
+        if (v === 'giochi') disegnaEditGiochi();
       });
     }
 
@@ -219,6 +220,9 @@
         : '⚠️ Non riesco a copiarlo da solo: premi 👁️ Mostra e copialo a mano.', 8000);
     });
     $('btnVaiPubblica').addEventListener('click', function () {
+      document.querySelector('[data-vista="pubblica"]').click();
+    });
+    $('btnVaiPubblica2').addEventListener('click', function () {
       document.querySelector('[data-vista="pubblica"]').click();
     });
     $('btnRiprendiBozza').addEventListener('click', riprendiBozza);
@@ -699,7 +703,8 @@
       },
       risultati: { risultati: STATO.risultati },
       titoli: { titoli: STATO.titoli },
-      cronometro: { cronometro: STATO.cronometro }
+      cronometro: { cronometro: STATO.cronometro },
+      assetto_carte: { assettoCarte: STATO.assettoCarte }
     };
     Object.keys(STATO.tornei || {}).forEach(function (id) {
       p['torneo_' + id] = STATO.tornei[id];
@@ -720,6 +725,8 @@
     } else if (nome === 'cronometro') {
       STATO.cronometro = V(dati.cronometro, cronometroVuoto());
       disegnaCronometro();
+    } else if (nome === 'assetto_carte') {
+      STATO.assettoCarte = V(dati.assettoCarte, null);
     } else if (nome.indexOf('torneo_') === 0) {
       STATO.tornei = STATO.tornei || {};
       STATO.tornei[nome.slice(7)] = dati;
@@ -2190,13 +2197,17 @@
 
   /* ============================ TORNEI DI CARTE ======================== */
   function torneiDelGruppo(idGruppo) {
-    var g = V(DATI.gruppiCarte, []).filter(function (x) { return x.id === idGruppo; })[0];
-    if (!g) return [];
-    return V(DATI.tornei, []).filter(function (t) { return V(g.tornei, []).indexOf(t.id) >= 0; });
+    return torneiAttivi().filter(function (t) { return t.gruppo === idGruppo; });
   }
+  /* Chi gioca un torneo di carte lo dice il **gruppo** in cui si è iscritto,
+     non l'identificativo del torneo: l'organizzatore può decidere il giorno
+     stesso di spezzare le carte italiane in più tornei, e chi si era iscritto
+     «alle carte italiane» li gioca tutti senza doversi reiscrivere. */
   function iscrittiTorneo(idTorneo) {
+    var t = torneoDati(idTorneo);
     return attive('adulti').filter(function (p) {
-      return V(p.tornei, []).some(function (t) { return t.id === idTorneo; });
+      if (t.gruppo && p.gruppo) return p.gruppo === t.gruppo;
+      return V(p.tornei, []).some(function (x) { return x.id === idTorneo; });
     });
   }
   /* i giochi e i tornei che si fanno davvero: quelli esclusi dall'organizzatore
@@ -2204,15 +2215,158 @@
   function giochiAttivi() {
     return V(DATI.giochi, []).filter(function (g) { return !g.escluso; });
   }
+  /* I tornei che si giocano davvero: il catalogo dei contenuti passato
+     attraverso la scelta fatta il giorno della festa (vedi «assetto»). */
   function torneiAttivi() {
-    return V(DATI.tornei, []).filter(function (t) { return !t.escluso; });
+    return CA.componiTornei(DATI.tornei, STATO.assettoCarte);
   }
 
   function torneoDati(id) {
-    return V(DATI.tornei, []).filter(function (t) { return t.id === id; })[0] || {};
+    return torneiAttivi().filter(function (t) { return t.id === id; })[0] || {};
+  }
+
+  /* ------------- come si giocano le carte italiane, oggi -------------- */
+  function catalogoConProve() {
+    return V(DATI.tornei, []).filter(function (t) { return V(t.prove, []).length > 1; })[0] || null;
+  }
+  function assetto() {
+    var base = catalogoConProve();
+    if (!base) return { prove: [], forma: 'unico', provaFinale: '' };
+    if (!STATO.assettoCarte) STATO.assettoCarte = CA.assettoPredefinito(base);
+    return STATO.assettoCarte;
+  }
+
+  /* Le tre prove delle carte italiane si possono mettere insieme o dividere.
+     Qui si sceglie: da questa scelta escono tornei, nomi, regole e coppe. */
+  function disegnaAssetto() {
+    var el = $('assettoCarte');
+    if (!el) return;
+    el.textContent = '';
+    var base = catalogoConProve();
+    if (!base) { el.appendChild(crea('p', 'aiuto', 'Non ci sono tornei a più prove da comporre.')); return; }
+    var a = assetto();
+    var tutte = V(base.prove, []);
+
+    /* --- quali discipline si giocano --- */
+    el.appendChild(crea('h3', null, 'Quali giochi si fanno'));
+    var righe = crea('div', 'filtri');
+    tutte.forEach(function (p) {
+      var dentro = a.prove.indexOf(p.id) >= 0;
+      var b = crea('button', 'btn btn-piccolo ' + (dentro ? 'btn-p' : 'btn-chiaro'),
+        (dentro ? '✅ ' : '') + V(p.emoji, '🃏') + ' ' + p.nome);
+      b.addEventListener('click', function () {
+        if (dentro) {
+          if (a.prove.length <= 1) { CA.toast('Almeno un gioco deve restare.', 4000); return; }
+          a.prove = a.prove.filter(function (x) { return x !== p.id; });
+        } else {
+          a.prove = tutte.map(function (x) { return x.id; })
+            .filter(function (x) { return a.prove.indexOf(x) >= 0 || x === p.id; });
+        }
+        if (a.prove.indexOf(a.provaFinale) < 0) a.provaFinale = a.prove[a.prove.length - 1];
+        applicaAssetto();
+      });
+      righe.appendChild(b);
+    });
+    el.appendChild(righe);
+
+    /* --- tutte insieme o una per una --- */
+    if (a.prove.length > 1) {
+      el.appendChild(crea('h3', null, 'Un torneo solo o tornei separati'));
+      var scelte = [
+        { id: 'unico', tit: '🏆 Un torneo solo', spiega: 'Le prove si alternano turno dopo turno, la coppia resta la stessa e i punti si sommano: una classifica e una coppa sola.' },
+        { id: 'separati', tit: '🎯 Tornei separati', spiega: 'Ogni gioco ha il suo tabellone, la sua classifica e la sua coppa. Le coppie si possono rifare da capo per ognuno.' }
+      ];
+      var box = crea('div', 'scelte-formato');
+      scelte.forEach(function (s) {
+        var scelto = V(a.forma, 'unico') === s.id;
+        var b = crea('button', 'scelta-f' + (scelto ? ' presa' : ''));
+        b.appendChild(crea('b', null, s.tit));
+        b.appendChild(crea('small', null, s.spiega));
+        b.addEventListener('click', function () { a.forma = s.id; applicaAssetto(); });
+        box.appendChild(b);
+      });
+      el.appendChild(box);
+    }
+
+    /* --- con quale gioco si chiude --- */
+    if (a.prove.length > 1 && V(a.forma, 'unico') === 'unico') {
+      var c = crea('div', 'campo');
+      c.style.maxWidth = '340px';
+      var l = document.createElement('label');
+      l.textContent = 'La finale si gioca a';
+      c.appendChild(l);
+      var sel = document.createElement('select');
+      tutte.filter(function (p) { return a.prove.indexOf(p.id) >= 0; }).forEach(function (p) {
+        var o = document.createElement('option');
+        o.value = p.id; o.textContent = p.nome;
+        sel.appendChild(o);
+      });
+      sel.value = a.provaFinale || a.prove[a.prove.length - 1];
+      sel.addEventListener('change', function () { a.provaFinale = sel.value; applicaAssetto(); });
+      c.appendChild(sel);
+      el.appendChild(c);
+    }
+
+    /* --- cosa viene fuori --- */
+    var esito = crea('div', 'nota-box');
+    esito.style.marginTop = '14px';
+    var fatti = torneiAttivi().filter(function (t) { return t.gruppo === base.gruppo; });
+    esito.appendChild(crea('b', null, fatti.length === 1
+      ? 'Verrà fuori un torneo solo:' : 'Verranno fuori ' + fatti.length + ' tornei:'));
+    var ul = document.createElement('ul');
+    ul.style.cssText = 'margin:8px 0 0 20px;font-size:.94rem';
+    fatti.forEach(function (t) {
+      var n = V(STATO.tornei[t.id], {});
+      ul.appendChild(crea('li', null, V(t.emoji, '🃏') + ' ' + t.nome + ' — ' +
+        V(t.premio, 'coppa') + (V(n.coppie, []).length ? ' · ' + n.coppie.length + ' coppie già formate' : '')));
+    });
+    esito.appendChild(ul);
+    esito.appendChild(crea('p', 'aiuto',
+      'Chi si è iscritto alle carte italiane gioca tutti questi tornei: non deve reiscriversi.'));
+    el.appendChild(esito);
+
+    var az = crea('div', 'azioni');
+    az.style.cssText = 'justify-content:flex-start;margin-top:12px';
+    az.appendChild(bottone('↩️ Rimetti il Trittico', 'chiaro btn-piccolo', function () {
+      STATO.assettoCarte = CA.assettoPredefinito(base);
+      applicaAssetto();
+    }));
+    el.appendChild(az);
+  }
+
+  /* Applicata la scelta: si ricalcola tutto e le coppie già formate si
+     portano dietro, perché sono le stesse persone. */
+  function applicaAssetto() {
+    var base = catalogoConProve();
+    if (base) travasaCoppie(base.gruppo);
+    salvaStato();
+    disegnaTornei();          /* ridisegna anche la scelta qui sopra */
+    disegnaPunteggi();
+    disegnaCruscotto();
+  }
+
+  /* Le coppie non si perdono cambiando assetto: se il torneo nuovo non ne ha,
+     si copiano da quello del gruppo che ne aveva di più. */
+  function travasaCoppie(gruppo) {
+    var tornei = torneiAttivi().filter(function (t) { return t.gruppo === gruppo; });
+    if (!tornei.length) return;
+    var migliore = null;
+    Object.keys(STATO.tornei || {}).forEach(function (id) {
+      if (id !== 'trittico' && id.indexOf('trittico_') !== 0) return;
+      var c = V(STATO.tornei[id].coppie, []);
+      if (!migliore || c.length > migliore.length) migliore = c;
+    });
+    if (!migliore || !migliore.length) return;
+    tornei.forEach(function (t) {
+      STATO.tornei[t.id] = STATO.tornei[t.id] || {};
+      if (!V(STATO.tornei[t.id].coppie, []).length) {
+        STATO.tornei[t.id].coppie = JSON.parse(JSON.stringify(migliore));
+      }
+    });
   }
 
   function disegnaTornei() {
+    disegnaAssetto();
     var sc = $('scegliTorneo');
     sc.textContent = '';
     var tornei = torneiAttivi();
@@ -2524,6 +2678,11 @@
      altre finali. */
   function assegnaProve(incontri, prove, idProvaFinale, formato) {
     if (!prove.length) return incontri;
+    /* con una disciplina sola non serve scriverla su ogni turno: si sa */
+    if (prove.length < 2) {
+      incontri.forEach(function (m) { m.prova = prove[0].id; });
+      return incontri;
+    }
     var finale = prove.filter(function (p) { return p.id === idProvaFinale; })[0]
       || prove[prove.length - 1];
     var turni = [];
@@ -3117,6 +3276,7 @@
       var cl = classificaTorneo(t.id);
       tornei.push({
         id: t.id, nome: t.nome, emoji: t.emoji,
+        gruppo: V(t.gruppo, ''), premio: V(t.premio, ''),
         formato: V(st.formato, ''),
         stato: V(st.incontri, []).some(function (m) { return m.puntiA === '' || m.puntiA === undefined; })
           ? 'in corso' : 'concluso',

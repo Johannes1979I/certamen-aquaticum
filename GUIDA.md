@@ -77,7 +77,14 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
    - **a mano**: trascini i nomi, o li tocchi e poi tocchi la squadra.
    Il 🧢 accanto a un nome lo nomina capitano. Nome e grido si scrivono nei
    due campi in cima a ogni colonna.
-3. **Tornei** — scheda `🃏 Tornei`: prima `Forma le coppie` (usa i compagni
+3. **Tornei** — scheda `🃏 Tornei`. In cima decidi **come si giocano le carte
+   italiane**: puoi tenerle insieme nel Trittico, giocarne solo due, oppure
+   fare un torneo separato per ogni disciplina — e persino una disciplina
+   sola. Tocchi i giochi che vuoi, scegli *un torneo solo* o *tornei
+   separati*, e da lì escono da soli nomi, regole, tabelloni, classifiche e
+   coppe. Chi si è iscritto alle carte italiane gioca tutto quello che
+   decidi: non deve reiscriversi, e le coppie già formate si portano dietro.
+   Poi, per ogni torneo: prima `Forma le coppie` (usa i compagni
    dichiarati, poi abbina i rimasti mettendo insieme un esperto e un
    principiante), poi scegli la formula e `Genera il tabellone`.
    Nel **Trittico** ogni turno gioca una prova diversa — briscola, scopone,
@@ -127,6 +134,31 @@ restano nel telefono; appena il segnale torna partono da soli e l'avviso
 diventa *«✅ salvato nel database»*. Non chiudere il sito prima di aver visto
 la spunta verde.
 
+## Come far giocare le carte italiane
+
+Briscola, scopone e tresette sono tre giochi: il giorno della festa decidi tu
+come metterli insieme, in `🃏 Tornei → 🗂️ Come si giocano le carte italiane`.
+
+| Se scegli | Viene fuori |
+|---|---|
+| tutte e tre, **un torneo solo** | *Il Trittico*: le prove si alternano turno dopo turno, punti sommati, una classifica e una coppa |
+| due prove, **un torneo solo** | un torneo che si chiama con i due giochi, per esempio *Scopone scientifico e Tresette* |
+| due o tre prove, **tornei separati** | un torneo per gioco, ognuno col suo tabellone, la sua classifica e la sua coppa |
+| **una disciplina sola** | *Torneo di Scopone*, con le regole di quel gioco e basta |
+
+Quello che cambia da solo: il nome del torneo, la coppa, la descrizione, le
+regole, i turni del tabellone, la prova della finale e le classifiche. Non
+devi toccare nient'altro.
+
+- Chi si è iscritto «alle carte italiane» **gioca tutti i tornei** che decidi:
+  l'iscrizione è al gruppo, non al singolo torneo.
+- Le **coppie già formate si portano dietro**: se cambi idea a metà, non devi
+  rifarle. Nei tornei separati puoi comunque riformarle diverse per ognuno.
+- `↩️ Rimetti il Trittico` riporta tutto com'era.
+- Sul sito, nella pagina degli adulti, sono elencate tutte le strade
+  possibili; appena pubblichi le classifiche compare anche **quale hai
+  scelto**.
+
 ## Il cronometro e la musica
 
 Ogni gioco ha un **tempo massimo**, quello scritto nella sua durata. Il
@@ -159,8 +191,8 @@ cronometro sta in cima alla scheda `🏅 Punteggi`.
 ### La scaletta di ogni gioco
 
 Ogni gioco ha la sua **scaletta**, lunga quanto il gioco: quattro brani per
-dieci minuti, otto per venticinque. Si modifica in `⚙️ Contenuti →
-🎵 La musica dei giochi`: aggiungi brani, li sposti con ▲▼, li togli col
+dieci minuti, otto per venticinque. Si modifica in `🎯 Settaggio giochi acquatici →
+🎵 Musica dei giochi`: aggiungi brani, li sposti con ▲▼, li togli col
 cestino. Sotto il nome del gioco c'è la stima — *«5 brani · circa 17 min —
 coprono i 15 min del gioco»* — che diventa rossa se la scaletta è corta.
 
@@ -223,7 +255,7 @@ si rischierebbe di far tornare in vita gente cancellata.
 
 ## Scegliere i giochi e metterli in ordine
 
-In `⚙️ Contenuti → 🎯 Giochi in acqua` (e lo stesso per i tornei) ogni voce si
+In `🎯 Settaggio giochi acquatici` (e lo stesso per i tornei) ogni voce si
 può **spostare** trascinando la maniglia ⠿ oppure con le frecce ▲▼ — dal
 telefono usa le frecce, il trascinamento col dito è scomodo. Ogni voce ha tre
 stati:
@@ -238,7 +270,7 @@ confrontata con le ore dell'evento: se diventa rossa, hai messo troppa roba.
 ## La musica dei giochi
 
 Ogni gioco dei ragazzi ha la sua canzone con il **collegamento diretto al
-video** su YouTube, modificabile in `⚙️ Contenuti → 🎵 Musica dei giochi`.
+video** su YouTube, modificabile in `🎯 Settaggio giochi acquatici → 🎵 Musica dei giochi`.
 Per cambiare brano incolla l'indirizzo del video nuovo. Se svuoti il campo, il
 sito apre la ricerca del titolo: è la rete di sicurezza nel caso un video venga
 rimosso.
