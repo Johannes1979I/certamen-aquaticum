@@ -997,7 +997,13 @@
       "formazione": "a squadre",
       "partecipanti": "Due squadre che si alternano: una batte, l'altra sta in campo",
       "descrizione": "Il baseball portato dentro la vasca: una squadra batte, l'altra recupera la palla e prova a fermare la corsa. Si gioca con una palla morbida e una mazza di gommapiuma, e le basi sono ciambelle che galleggiano. Le regole della nostra versione le scriviamo qui sotto.",
-      "regole": [],
+      "regole": [
+        "Si gioca in due squadre, che si alternano nei ruoli di battitori e ricevitori.",
+        "Un ricevitore serve la palla al battitore. Se il battitore manca la palla o la colpisce mandandola all’indietro, viene assegnato uno strike. Al terzo strike il battitore è eliminato.",
+        "Dopo aver colpito la palla, il battitore deve raggiungere, nuotando, le quattro basi. Può fermarsi su una base e ripartire quando batte il compagno successivo. Completando il giro conquista 1 punto.",
+        "I ricevitori devono recuperare la palla e passarla al compagno incaricato del servizio, che è l’unico autorizzato a posizionarla sulla basetta. Se la palla viene presa al volo prima che tocchi l’acqua, il battitore è eliminato. Se esce dalla piscina, un ricevitore può uscire dall’acqua per recuperarla.",
+        "Vince la squadra che totalizza il maggior numero di punti."
+      ],
       "varianti": [],
       "punti": "5 / 3 / 2 / 1",
       "musica": {
