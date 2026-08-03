@@ -301,6 +301,19 @@ section{ padding:clamp(40px,6vw,72px) 0; }
 @keyframes battito{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.045); } }
 @media (prefers-reduced-motion:reduce){ .orologio{ animation:none !important; } }
 
+/* ------------- la scaletta del pomeriggio, nell'area organizzatori ------- */
+.linea-tempo{ margin-top:14px; border-left:3px solid var(--linea); padding-left:14px; }
+.linea-tempo .passo{ display:flex; gap:12px; align-items:baseline; padding:5px 0; }
+.linea-tempo .ora-passo{
+  font-variant-numeric:tabular-nums; font-weight:bold; color:var(--c1);
+  flex:0 0 48px; font-size:.94rem;
+}
+.linea-tempo .tit-passo{ font-size:.94rem; }
+.linea-tempo .passo.fisso .ora-passo{ color:var(--muted); }
+.linea-tempo .passo.fisso .tit-passo{ color:var(--muted); font-style:italic; }
+.linea-tempo .aiuto{ margin-top:10px; }
+.linea-tempo .aiuto.sfora{ color:#a30f1a; font-weight:bold; }
+
 /* ------------- i modi possibili di giocare le carte italiane ------------- */
 .modi{ display:grid; gap:14px; max-width:900px; margin:0 auto;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }

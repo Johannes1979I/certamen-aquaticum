@@ -225,6 +225,16 @@
     $('btnVaiPubblica2').addEventListener('click', function () {
       document.querySelector('[data-vista="pubblica"]').click();
     });
+    $('btnRifaiProgramma').addEventListener('click', function () { ricalcolaProgramma(true); });
+    $('pa_inizio').addEventListener('change', function () {
+      DATI.programmaAuto.inizio = this.value.trim(); ricalcolaProgramma(true);
+    });
+    $('pa_pausaMin').addEventListener('change', function () {
+      DATI.programmaAuto.pausaMinuti = Number(this.value) || 0; ricalcolaProgramma(true);
+    });
+    $('pa_pausaDopo').addEventListener('change', function () {
+      DATI.programmaAuto.pausaDopo = this.value; ricalcolaProgramma(true);
+    });
     $('btnRiprendiBozza').addEventListener('click', riprendiBozza);
     $('btnButtaBozza').addEventListener('click', function () {
       if (!confirm('Butto via le modifiche non pubblicate?')) return;
@@ -2939,22 +2949,40 @@
     if (!sel) return;
     var c = cron();
 
-    /* la tendina si rifà solo se l'elenco è cambiato: se no perde il tocco */
+    /* La tendina segue la scaletta: prima le gare in programma nell'ordine
+       vero, con l'ora in cui toccano, poi le riserve in fondo. Si rifà solo
+       se qualcosa è cambiato davvero, se no perde il tocco sotto il dito. */
     var giochi = V(DATI.giochi, []).filter(function (g) { return !g.escluso; });
-    var firma = giochi.map(function (g) { return g.id + ':' + g.nome + ':' + g.durata; }).join('|');
+    var inProg = giochi.filter(function (g) { return !g.riserva; });
+    var riserve = giochi.filter(function (g) { return g.riserva; });
+    var firma = giochi.map(function (g) {
+      return g.id + ':' + g.nome + ':' + g.durata + ':' + V(g.orario, '') + ':' + (g.riserva ? 'r' : 'p');
+    }).join('|');
     if (sel.getAttribute('data-firma') !== firma) {
       sel.setAttribute('data-firma', firma);
       sel.textContent = '';
       var vuoto = document.createElement('option');
       vuoto.value = ''; vuoto.textContent = '— scegli la gara —';
       sel.appendChild(vuoto);
-      giochi.forEach(function (g) {
+      function voce(dove, g, conOra) {
         var o = document.createElement('option');
         o.value = g.id;
-        o.textContent = V(g.emoji, '🎯') + ' ' + g.nome + ' · ' + (g.durata || 0) + ' min' +
-          (g.riserva ? ' (di riserva)' : '');
-        sel.appendChild(o);
-      });
+        o.textContent = (conOra && g.orario ? g.orario + ' · ' : '') +
+          V(g.emoji, '🎯') + ' ' + g.nome + ' · ' + (g.durata || 0) + ' min';
+        dove.appendChild(o);
+      }
+      if (inProg.length) {
+        var gp = document.createElement('optgroup');
+        gp.label = 'In programma';
+        inProg.forEach(function (g) { voce(gp, g, true); });
+        sel.appendChild(gp);
+      }
+      if (riserve.length) {
+        var gr = document.createElement('optgroup');
+        gr.label = 'Di riserva';
+        riserve.forEach(function (g) { voce(gr, g, false); });
+        sel.appendChild(gr);
+      }
     }
     if (sel.value !== V(c.gioco, '')) sel.value = V(c.gioco, '');
 
@@ -3658,19 +3686,161 @@
     var lista = V(DATI.giochi, []);
     elencoOrdinabile($('editGiochi'), lista, function (det, g) {
       var gr = crea('div', 'griglia3');
-      gr.appendChild(campoMini('Nome', g.nome, function (v) { g.nome = v; disegnaEditGiochi(); }));
-      gr.appendChild(campoMini('Orario', g.orario, function (v) { g.orario = v; }));
+      gr.appendChild(campoMini('Nome', g.nome, function (v) { g.nome = v; dopoModificaGiochi(); }));
       gr.appendChild(campoMini('Durata (minuti)', g.durata, function (v) {
-        g.durata = Number(v) || 0; contaGiochi();
+        g.durata = Number(v) || 0; dopoModificaGiochi();
       }));
+      /* l'orario non si scrive più a mano: lo decide la scaletta */
+      var o = crea('div', 'campo');
+      var lo = document.createElement('label'); lo.textContent = 'Quando si gioca';
+      o.appendChild(lo);
+      o.appendChild(crea('p', 'mini', g.riserva ? 'di riserva: fuori scaletta'
+        : (g.escluso ? 'escluso' : (V(g.orario, '') || '—') + ' — lo calcola la scaletta')));
+      gr.appendChild(o);
       gr.appendChild(campoMini('Chi partecipa', g.partecipanti, function (v) { g.partecipanti = v; }));
       det.appendChild(gr);
       det.appendChild(areaMini('Descrizione', g.descrizione, function (v) { g.descrizione = v; }));
       det.appendChild(areaMini('Regole (una per riga)', V(g.regole, []).join('\n'), function (v) { g.regole = righe(v); }));
       det.appendChild(areaMini('Varianti (una per riga)', V(g.varianti, []).join('\n'), function (v) { g.varianti = righe(v); }));
-    }, disegnaEditGiochi);
+    }, dopoModificaGiochi);
     contaGiochi();
+    disegnaLineaTempo();
     disegnaEditMusica();
+  }
+
+  /* Un solo posto da cui passa ogni modifica alla scaletta: ridisegna
+     l'elenco e rifà il programma, così le due cose non possono divergere. */
+  function dopoModificaGiochi() {
+    ricalcolaProgramma();
+    disegnaEditGiochi();
+    disegnaCronometro();
+  }
+
+  /* ==================== IL PROGRAMMA SI RIFÀ DA SOLO ===================
+     La scaletta dei giochi comanda tutto: cambia l'ordine, metti un gioco
+     di riserva, allunghi una durata — e gli orari del programma, quelli
+     scritti su ogni gioco, la pausa e la premiazione si spostano di
+     conseguenza. Restano ferme le righe che non sono giochi: accoglienza,
+     formazione delle squadre e i blocchi degli adulti, che hanno una loro
+     linea del tempo.                                                     */
+  function minuti(o) {
+    var p = String(o || '').split(':');
+    var m = Number(p[0]) * 60 + Number(p[1]);
+    return isFinite(m) ? m : 0;
+  }
+  function orario(m) { return due(Math.floor(m / 60) % 24) + ':' + due(m % 60); }
+
+  function ricalcolaProgramma(conAvviso) {
+    var auto = DATI.programmaAuto = V(DATI.programmaAuto, {});
+    var inizio = minuti(V(auto.inizio, V(V(DATI.evento, {}).orario, '16:00')));
+    var pausaMin = Number(V(auto.pausaMinuti, 10)) || 0;
+    var inProgramma = V(DATI.giochi, []).filter(function (g) { return !g.riserva && !g.escluso; });
+
+    /* dove va la pausa: dopo il gioco scelto, o a metà se quel gioco non si
+       gioca più */
+    var dopo = V(auto.pausaDopo, '');
+    if (!inProgramma.some(function (g) { return g.id === dopo; })) {
+      dopo = inProgramma.length ? inProgramma[Math.max(0, Math.ceil(inProgramma.length / 2) - 1)].id : '';
+      auto.pausaDopo = dopo;
+    }
+
+    var vecchie = V(DATI.programma, []);
+    function rigaDi(id) {
+      return vecchie.filter(function (r) { return r.gioco === id; })[0] || null;
+    }
+    var pausa = vecchie.filter(function (r) { return r.area === 'tutti' && /pausa/i.test(r.titolo); })[0];
+    var premio = vecchie.filter(function (r) { return r.area === 'tutti' && /premiazione/i.test(r.titolo); })[0];
+
+    var t = inizio, nuove = [];
+    inProgramma.forEach(function (g) {
+      var vecchia = rigaDi(g.id);
+      nuove.push({
+        ora: orario(t), area: 'ragazzi', gioco: g.id,
+        /* il titolo scritto a mano si tiene: «Palla bollente — riscaldamento» */
+        titolo: (vecchia && String(vecchia.titolo).indexOf(g.nome) === 0) ? vecchia.titolo : g.nome,
+        nota: vecchia ? V(vecchia.nota, '') : ''
+      });
+      g.orario = orario(t);
+      t += Number(g.durata) || 0;
+      if (g.id === dopo && pausa) { pausa.ora = orario(t); t += pausaMin; }
+    });
+    /* i giochi che non si giocano non hanno orario */
+    V(DATI.giochi, []).forEach(function (g) {
+      if (g.riserva || g.escluso) g.orario = '';
+    });
+    if (premio) premio.ora = orario(t);
+
+    /* si tengono le righe che non sono giochi, si rifanno quelle che lo sono */
+    var ferme = vecchie.filter(function (r) { return !r.gioco; });
+    var tutte = ferme.concat(nuove);
+    tutte.sort(function (a, b) {
+      var d = minuti(a.ora) - minuti(b.ora);
+      if (d) return d;
+      var peso = { tutti: 0, ragazzi: 1, adulti: 2 };
+      return V(peso[a.area], 3) - V(peso[b.area], 3);
+    });
+    DATI.programma = tutte;
+
+    var el = $('c_programma');
+    if (el) el.value = tutte.map(function (r) {
+      return r.ora + ' | ' + r.area + ' | ' + r.titolo + (r.nota ? ' | ' + r.nota : '');
+    }).join('\n');
+
+    disegnaLineaTempo();
+    salvaBozzaFraPoco();
+    if (conAvviso) {
+      CA.toast('🕓 Programma rifatto: ' + nuove.length + ' gare, si finisce alle ' + orario(t) + '.', 6000);
+    }
+    return { gare: nuove.length, fine: orario(t) };
+  }
+
+  /* la scaletta a video, così si vede subito l'effetto di ogni modifica */
+  function disegnaLineaTempo() {
+    var el = $('lineaTempo');
+    if (!el) return;
+    var auto = DATI.programmaAuto = V(DATI.programmaAuto, {});
+    if ($('pa_inizio') && document.activeElement !== $('pa_inizio')) {
+      $('pa_inizio').value = V(auto.inizio, '');
+    }
+    if ($('pa_pausaMin') && document.activeElement !== $('pa_pausaMin')) {
+      $('pa_pausaMin').value = V(auto.pausaMinuti, 10);
+    }
+    var sel = $('pa_pausaDopo');
+    if (sel) {
+      var inProg = V(DATI.giochi, []).filter(function (g) { return !g.riserva && !g.escluso; });
+      var firma = inProg.map(function (g) { return g.id; }).join('|');
+      if (sel.getAttribute('data-firma') !== firma) {
+        sel.setAttribute('data-firma', firma);
+        sel.textContent = '';
+        inProg.forEach(function (g) {
+          var o = document.createElement('option');
+          o.value = g.id; o.textContent = V(g.emoji, '') + ' ' + g.nome;
+          sel.appendChild(o);
+        });
+      }
+      sel.value = V(auto.pausaDopo, '');
+    }
+    el.textContent = '';
+    var ev = V(DATI.evento, {});
+    var fine = minuti(V(ev.orarioFine, '19:00'));
+    var righe = V(DATI.programma, []).filter(function (r) { return r.area !== 'adulti'; });
+    righe.forEach(function (r) {
+      var g = r.gioco ? V(DATI.giochi, []).filter(function (x) { return x.id === r.gioco; })[0] : null;
+      var d = crea('div', 'passo' + (r.gioco ? '' : ' fisso'));
+      d.appendChild(crea('span', 'ora-passo', r.ora));
+      d.appendChild(crea('span', 'tit-passo',
+        (g ? V(g.emoji, '') + ' ' : '') + r.titolo + (g ? ' · ' + g.durata + ' min' : '')));
+      el.appendChild(d);
+    });
+    var ultima = righe[righe.length - 1];
+    var sfora = ultima && minuti(ultima.ora) > fine;
+    var ris = V(DATI.giochi, []).filter(function (g) { return g.riserva && !g.escluso; });
+    var p = crea('p', 'aiuto' + (sfora ? ' sfora' : ''));
+    p.textContent = (sfora
+      ? '⚠️ Si sfora: l\'ultima riga cade dopo le ' + V(ev.orarioFine, '') + '. Togli un gioco o accorcia qualcosa.'
+      : '✅ Tutto dentro le ' + V(ev.orarioFine, '') + '.') +
+      (ris.length ? ' · ' + ris.length + ' giochi di riserva restano fuori dalla scaletta.' : '');
+    el.appendChild(p);
   }
 
   function contaGiochi() {
@@ -3804,10 +3974,29 @@
     d.sicurezza = righe($('c_sicurezza').value);
     d.regolamento = righe($('c_regolamento').value);
     d.foto = righe($('c_foto').value);
-    d.programma = righe($('c_programma').value).map(function (r) {
-      var p = r.split('|').map(function (x) { return x.trim(); });
-      return { ora: p[0] || '', area: p[1] || 'tutti', titolo: p[2] || '', nota: p[3] || '' };
-    }).filter(function (r) { return r.titolo; });
+    /* Il programma porta con sé il legame fra riga e gioco: senza, al giro
+       dopo il ricalcolo non saprebbe più quali righe rifare. Se il testo è
+       stato ritoccato a mano si rilegge da lì, riattaccando i legami per
+       nome; se no si prende quello già calcolato, legami compresi. */
+    var testoOra = righe($('c_programma').value).join('\n');
+    var testoCalcolato = V(DATI.programma, []).map(function (r) {
+      return r.ora + ' | ' + r.area + ' | ' + r.titolo + (r.nota ? ' | ' + r.nota : '');
+    }).join('\n');
+    if (testoOra === testoCalcolato) {
+      d.programma = DATI.programma;
+    } else {
+      d.programma = righe($('c_programma').value).map(function (r) {
+        var p = r.split('|').map(function (x) { return x.trim(); });
+        var riga = { ora: p[0] || '', area: p[1] || 'tutti', titolo: p[2] || '', nota: p[3] || '' };
+        var g = V(DATI.giochi, []).filter(function (x) {
+          return riga.titolo === x.nome || riga.titolo.indexOf(x.nome + ' ') === 0;
+        })[0];
+        if (g) riga.gioco = g.id;
+        return riga;
+      }).filter(function (r) { return r.titolo; });
+      DATI.programma = d.programma;
+    }
+    d.programmaAuto = V(DATI.programmaAuto, {});
     /* giochi e tornei sono già stati modificati in DATI dai campi */
     d.giochi = DATI.giochi;
     d.tornei = DATI.tornei;

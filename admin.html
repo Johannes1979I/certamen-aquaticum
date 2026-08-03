@@ -533,10 +533,37 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
       per spostare un gioco, oppure usa le frecce ▲▼ se sei da telefono.
       <b>In programma</b> = si gioca · <b>Di riserva</b> = solo se avanza tempo ·
       <b>Escluso</b> = sparisce dal sito.</p>
+    <p class="aiuto"><b>Gli orari si rifanno da soli.</b> Sposti un gioco, lo metti di
+      riserva, gli cambi la durata: il programma, la pausa, la premiazione e il
+      cronometro si spostano di conseguenza. Non c'è nessun orario da scrivere a mano.</p>
     <div class="conteggi-ord" id="conteggiGiochi"></div>
     <div id="editGiochi"></div>
     <p class="aiuto" style="margin-top:12px">La durata totale dei giochi in programma è
       <b id="durataTotale">—</b>.</p>
+  </div>
+
+  <div class="card">
+    <h2>🕓 Come viene il pomeriggio</h2>
+    <p class="aiuto">Questa è la scaletta che esce dai giochi qui sopra: è quella che
+      finisce sul sito, nella pagina del programma e nel cronometro.</p>
+    <div class="griglia3">
+      <div class="campo">
+        <label for="pa_inizio">Il primo gioco comincia alle</label>
+        <input type="text" id="pa_inizio" class="mini" placeholder="16:15" />
+      </div>
+      <div class="campo">
+        <label for="pa_pausaDopo">La pausa va dopo</label>
+        <select id="pa_pausaDopo"></select>
+      </div>
+      <div class="campo">
+        <label for="pa_pausaMin">Quanto dura la pausa (minuti)</label>
+        <input type="text" id="pa_pausaMin" class="mini" placeholder="10" />
+      </div>
+    </div>
+    <div class="linea-tempo" id="lineaTempo"></div>
+    <div class="azioni" style="justify-content:flex-start;margin-top:12px">
+      <button class="btn btn-chiaro btn-piccolo" id="btnRifaiProgramma">🕓 Rifai il programma adesso</button>
+    </div>
   </div>
 
   <div class="card">

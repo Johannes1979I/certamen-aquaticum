@@ -1209,7 +1209,8 @@
       "ora": "16:15",
       "area": "ragazzi",
       "titolo": "Palla bollente — riscaldamento",
-      "nota": ""
+      "nota": "",
+      "gioco": "palla-bollente"
     },
     {
       "ora": "16:15",
@@ -1221,13 +1222,15 @@
       "ora": "16:25",
       "area": "ragazzi",
       "titolo": "Staffetta sul materassino",
-      "nota": ""
+      "nota": "",
+      "gioco": "staffetta-materassino"
     },
     {
       "ora": "16:40",
       "area": "ragazzi",
       "titolo": "Staffetta con pallone",
-      "nota": ""
+      "nota": "",
+      "gioco": "staffetta-pallone"
     },
     {
       "ora": "16:50",
@@ -1239,7 +1242,8 @@
       "ora": "16:55",
       "area": "ragazzi",
       "titolo": "Trasporto del compagno",
-      "nota": ""
+      "nota": "",
+      "gioco": "trasporto-compagno"
     },
     {
       "ora": "17:10",
@@ -1251,7 +1255,8 @@
       "ora": "17:20",
       "area": "ragazzi",
       "titolo": "Il materassino traghetto",
-      "nota": ""
+      "nota": "",
+      "gioco": "traghetto"
     },
     {
       "ora": "17:25",
@@ -1263,7 +1268,8 @@
       "ora": "17:35",
       "area": "ragazzi",
       "titolo": "Palla al capitano acquatica",
-      "nota": ""
+      "nota": "",
+      "gioco": "palla-capitano"
     },
     {
       "ora": "17:35",
@@ -1275,13 +1281,15 @@
       "ora": "17:55",
       "area": "ragazzi",
       "titolo": "La catena acquatica",
-      "nota": ""
+      "nota": "",
+      "gioco": "catena"
     },
     {
       "ora": "18:05",
       "area": "ragazzi",
       "titolo": "Pallanuoto semplificata",
-      "nota": "Due mini partite da cinque minuti"
+      "nota": "Due mini partite da cinque minuti",
+      "gioco": "pallanuoto"
     },
     {
       "ora": "18:05",
@@ -1293,13 +1301,15 @@
       "ora": "18:15",
       "area": "ragazzi",
       "titolo": "Baseball in acqua",
-      "nota": "Si batte con la mazza di gommapiuma, si corre alle ciambelle che galleggiano"
+      "nota": "Si batte con la mazza di gommapiuma, si corre alle ciambelle che galleggiano",
+      "gioco": "baseball-acqua"
     },
     {
       "ora": "18:35",
       "area": "ragazzi",
       "titolo": "Super staffetta di Ferragosto",
-      "nota": "Punti doppi: qui si decide tutto"
+      "nota": "Punti doppi: qui si decide tutto",
+      "gioco": "super-staffetta"
     },
     {
       "ora": "18:35",
@@ -1559,5 +1569,10 @@
     "sottotitolo": "Come è andata: i giochi, le squadre, le facce di chi ha vinto e di chi ci ha provato.",
     "nota": "Se in una foto c'è tuo figlio e non vuoi che resti qui, scrivilo agli organizzatori: la togliamo subito.",
     "foto": []
+  },
+  "programmaAuto": {
+    "inizio": "16:15",
+    "pausaDopo": "trasporto-compagno",
+    "pausaMinuti": 10
   }
 }

@@ -134,6 +134,39 @@ restano nel telefono; appena il segnale torna partono da soli e l'avviso
 diventa *«✅ salvato nel database»*. Non chiudere il sito prima di aver visto
 la spunta verde.
 
+## La scaletta comanda tutto
+
+I giochi dei ragazzi si sistemano in `🎯 Settaggio giochi acquatici`. Quello che
+decidi lì **si propaga da solo**: non c'è nessun orario da scrivere a mano.
+
+Sposti un gioco, lo metti di riserva, ne attivi un altro, gli cambi la durata —
+e nello stesso momento si rifanno:
+
+- gli **orari di ogni gioco**, incatenati uno dopo l'altro;
+- il **programma** del pomeriggio, con la pausa e la premiazione che scivolano
+  di conseguenza (le righe che non sono giochi restano dove sono: accoglienza,
+  formazione delle squadre e i blocchi degli adulti);
+- la **tendina del cronometro** in `🏅 Punteggi`, che elenca le gare
+  nell'ordine vero con l'ora in cui toccano, e tiene le riserve in fondo;
+- il **sito**, appena pubblichi: pagina dei giochi, pagina del programma,
+  durate, riserve.
+
+Sotto l'elenco dei giochi c'è **🕓 Come viene il pomeriggio**: la scaletta
+completa, aggiornata a ogni tocco. Ti dice anche se si sfora — *«⚠️ Si sfora:
+l'ultima riga cade dopo le 19:00»* — così te ne accorgi subito e non il giorno
+della festa.
+
+Tre cose si regolano lì:
+
+| Comando | A cosa serve |
+|---|---|
+| **Il primo gioco comincia alle** | sposta in blocco tutto il pomeriggio |
+| **La pausa va dopo** | scegli dopo quale gioco si va all'ombra |
+| **Quanto dura la pausa** | in minuti |
+
+Se un gioco di riserva viene attivato prende il posto che ha nell'elenco: se lo
+vuoi altrove, spostalo con ⠿ o con le frecce ▲▼.
+
 ## Come far giocare le carte italiane
 
 Briscola, scopone e tresette sono tre giochi: il giorno della festa decidi tu
