@@ -529,6 +529,11 @@ input.ko, select.ko{ border-color:#c1121f; }
   max-width:860px; margin:0 auto;
 }
 .nota-box.info{ background:#eaf5ff; border-color:var(--c1); }
+/* stato della bacheca pubblica: verde quando va da sola, rosso se è rimasta
+   indietro, giallo se l'automatismo è spento */
+.nota-box.sereno{ background:#e9f9f0; border-color:#2f9e5b; }
+.nota-box.attenzione{ background:#fff8e5; border-color:var(--c3); }
+.nota-box.allarme{ background:#fdeaea; border-color:#c1121f; color:#7a0d15; }
 .toast{
   position:fixed; left:50%; bottom:22px; transform:translateX(-50%);
   background:var(--ink); color:#fff; padding:14px 20px; border-radius:14px;

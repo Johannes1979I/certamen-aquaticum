@@ -102,15 +102,31 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
    d'arrivo. Sotto, per i ragazzi scegli chi è arrivato primo, secondo,
    terzo…; per le carte scrivi i punti delle partite. Si salva tutto da
    solo nel database.
-5. **Pubblica** — non devi fare niente: con l'interruttore
-   **«Aggiorna la bacheca da sola»** acceso (lo è di serie), ogni punteggio che
-   registri finisce in bacheca entro pochi secondi, e chi guarda le classifiche
-   dal telefono le vede cambiare da sole ogni quindici secondi, con un lampo
-   verde quando arrivano dati nuovi. Il pulsante `Pubblica adesso` serve solo
-   se hai spento l'automatismo o vuoi forzare l'aggiornamento.
+5. **Pubblica** — non devi fare niente. Ogni punteggio che registri arriva
+   sulla pagina pubblica **da solo**, in una ventina di secondi: sei per
+   scrivere nel database e mandare la bacheca, gli altri sono l'attesa del
+   telefono di chi guarda. Vanno online classifiche, ordine d'arrivo di ogni
+   gara, tabelloni partita per partita e il cronometro.
+   In `📣 Pubblica` c'è un riquadro verde che dice *«Vanno da sole»* con l'ora
+   dell'ultimo invio. Se diventa rosso qualcosa non è passato: il sito riprova
+   da solo ogni mezzo minuto, e nel pieghevole lì sotto c'è il pulsante per
+   forzarlo subito.
 6. **Foto** — scheda `📷 Album`, pulsante `📸 Scatta una foto`:
    dal telefono si apre la fotocamera e la foto è **subito** nell'album del
    sito. Vedi sotto.
+
+## I due «pubblica», che non sono la stessa cosa
+
+Si confondono facilmente, ma fanno due mestieri diversi.
+
+| | Cosa manda | Va premuto? |
+|---|---|---|
+| **classifiche, punteggi, tabelloni** | quello che cambia durante la festa | **no**, si fanno da sole |
+| **🌐 Pubblica contenuti.json** | testi, giochi, orari, musica, regole | **sì**, quando cambi i contenuti |
+
+I punteggi viaggiano nel **database**, come le iscrizioni: appena li scrivi
+partono. I contenuti stanno invece in un **file del sito**, e quel file va
+mandato a mano quando lo cambi — è l'unico pulsante che devi ricordarti.
 
 ## Lavorare in più persone
 

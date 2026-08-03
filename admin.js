@@ -185,6 +185,7 @@
     auto.addEventListener('change', function () {
       CA.memScrivi('ca_autopubblica', auto.checked ? '1' : '0');
       if (auto.checked) { aggiornaBachecaSePuoi(); CA.toast('🔄 La bacheca si aggiornerà da sola.', 5000); }
+      else segnalaBacheca('spenta');
     });
     $('btnPubblicaContenuti').addEventListener('click', pubblicaContenuti);
     $('btnScarica').addEventListener('click', scaricaContenuti);
@@ -3342,21 +3343,47 @@
   /* ---- bacheca pubblica aggiornata da sola ----
      Si accoda per qualche secondo: se sto inserendo tre punteggi di fila,
      la bacheca si aggiorna una volta sola alla fine, non tre.            */
-  var timerBacheca = null;
+  var timerBacheca = null, timerRiprovaBacheca = null;
   function aggiornaBachecaSePuoi() {
     var s = $('autoPubblica');
-    if (!s || !s.checked || !SESS) return;
+    if (!s || !s.checked || !SESS) { segnalaBacheca('spenta'); return; }
     if (timerBacheca) clearTimeout(timerBacheca);
     timerBacheca = setTimeout(function () {
       token().then(function (t) { return FB.scriviClassifica(t, costruisciPubblico()); })
         .then(function (ok) {
-          if (!ok) return;
+          if (!ok) throw new Error('la bacheca non ha accettato la scrittura');
+          if (timerRiprovaBacheca) { clearTimeout(timerRiprovaBacheca); timerRiprovaBacheca = null; }
           var d = new Date();
-          testo('statoPubblicazione', '🔄 Bacheca aggiornata da sola alle ' +
-            due(d.getHours()) + ':' + due(d.getMinutes()) + '.');
+          segnalaBacheca('ok', 'Ultimo aggiornamento alle ' +
+            due(d.getHours()) + ':' + due(d.getMinutes()) + '. ' +
+            'Chi guarda le classifiche lo vede entro una quindicina di secondi.');
         })
-        .catch(function () { /* riprova al prossimo salvataggio */ });
+        /* Prima un errore qui non lo sapeva nessuno e si riprovava solo al
+           punteggio successivo: sull'ultimo della giornata la pagina pubblica
+           sarebbe rimasta indietro per sempre. Ora si dice e si riprova. */
+        .catch(function (e) {
+          segnalaBacheca('ko', V(e && e.message, 'non riesco a scrivere in bacheca') +
+            '. Riprovo fra mezzo minuto.');
+          if (!timerRiprovaBacheca) {
+            timerRiprovaBacheca = setTimeout(function () {
+              timerRiprovaBacheca = null;
+              aggiornaBachecaSePuoi();
+            }, 30000);
+          }
+        });
     }, 2500);
+  }
+
+  function segnalaBacheca(come, dettaglio) {
+    var box = $('statoBacheca'), tit = $('titoloBacheca');
+    if (!box || !tit) return;
+    box.className = 'nota-box ' + (come === 'ok' ? 'sereno' : (come === 'ko' ? 'allarme' : 'attenzione'));
+    tit.textContent = come === 'ok' ? '✅ Vanno da sole: non devi premere niente'
+      : (come === 'ko' ? '⚠️ La pagina pubblica è rimasta indietro'
+        : '⏸️ Aggiornamento automatico spento');
+    testo('statoPubblicazione', V(dettaglio, come === 'spenta'
+      ? 'La pagina pubblica resta ferma finché non lo riaccendi qui sotto.'
+      : 'Ogni punteggio che registri arriva sulla pagina pubblica entro una ventina di secondi.'));
   }
 
   function pubblicaClassifiche() {
@@ -3365,11 +3392,20 @@
     CA.toast('Pubblico…', 20000);
     token().then(function (t) { return FB.scriviClassifica(t, doc); })
       .then(function (ok) {
-        testo('statoPubblicazione', ok
-          ? ('✅ Pubblicate alle ' + new Date().toLocaleTimeString('it-IT').slice(0, 5) + '. Chi apre la pagina classifiche le vede subito.')
-          : '⚠️ Non sono riuscito a pubblicarle.');
+        /* riuscita a mano: l'avviso deve tornare sereno, se no resta un
+           allarme rosso su una cosa che ormai è a posto */
+        if (ok) {
+          var d = new Date();
+          segnalaBacheca('ok', 'Mandata a mano alle ' + due(d.getHours()) + ':' + due(d.getMinutes()) +
+            '. Chi guarda le classifiche la vede entro una quindicina di secondi.');
+        } else {
+          segnalaBacheca('ko', 'la bacheca non ha accettato la scrittura.');
+        }
         CA.toast(ok ? '📣 Classifiche pubblicate!' : '⚠️ Pubblicazione non riuscita.', 6000);
-      }).catch(function (e) { CA.toast('⚠️ ' + e.message, 8000); });
+      }).catch(function (e) {
+        segnalaBacheca('ko', V(e && e.message, 'non riesco a scrivere in bacheca') + '.');
+        CA.toast('⚠️ ' + e.message, 8000);
+      });
   }
 
   /* ======================= CONTENUTI E GITHUB ========================= */

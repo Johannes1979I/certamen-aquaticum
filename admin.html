@@ -588,9 +588,13 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
 <!-- ------------------------------ PUBBLICA ----------------------------- -->
 <section class="vista" id="v-pubblica">
   <div class="card">
-    <h2>📣 Pubblica le classifiche</h2>
-    <p class="aiuto">Manda in bacheca quello che vedono tutti nella pagina delle classifiche. Vanno online solo squadre, punti e tabellone: nessun recapito, mai.</p>
-    <div class="campo">
+    <h2>🏆 Classifiche, punteggi e tabelloni</h2>
+    <div class="nota-box sereno" id="statoBacheca">
+      <b id="titoloBacheca">✅ Vanno da sole: non devi premere niente</b>
+      <p id="statoPubblicazione" style="margin-top:5px">Ogni punteggio che registri
+        arriva sulla pagina pubblica entro una ventina di secondi.</p>
+    </div>
+    <div class="campo" style="max-width:460px;margin-top:16px">
       <label for="pubNomi">Come mostrare i nomi dei ragazzi</label>
       <select id="pubNomi">
         <option value="iniziale">Nome e iniziale del cognome (consigliato)</option>
@@ -599,17 +603,23 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
         <option value="niente">Non mostrare i componenti delle squadre</option>
       </select>
     </div>
-    <label class="spunta" for="autoPubblica" style="margin:14px 0">
-      <input type="checkbox" id="autoPubblica" checked />
-      <span><b>Aggiorna la bacheca da sola</b> — ogni volta che registro un punteggio o
-        cambio le squadre, la pagina pubblica si aggiorna entro pochi secondi, senza che
-        io debba premere niente. Consigliato durante la giornata.</span>
-    </label>
     <div class="azioni" style="justify-content:flex-start">
-      <button class="btn btn-p btn-grande" id="btnPubblicaClass">📣 Pubblica adesso</button>
-      <a href="classifiche.html" target="_blank" class="btn btn-chiaro btn-piccolo">👀 Vedi la pagina pubblica</a>
+      <a href="classifiche.html" target="_blank" class="btn btn-p">👀 Vedi la pagina pubblica</a>
     </div>
-    <p class="aiuto" id="statoPubblicazione" style="margin-top:12px"></p>
+
+    <details style="margin-top:16px">
+      <summary style="cursor:pointer;font-size:.9rem;color:var(--muted);padding:6px 0">
+        Se qualcosa non si aggiorna</summary>
+      <label class="spunta" for="autoPubblica" style="margin:12px 0">
+        <input type="checkbox" id="autoPubblica" checked />
+        <span><b>Aggiorna la bacheca da sola</b> — lascialo acceso. Spento, la pagina
+          pubblica resta ferma a quello che c'era.</span>
+      </label>
+      <p class="aiuto">Se la rete fa i capricci proprio sull'ultimo punteggio della
+        giornata, qui sotto c'è il pulsante per rimandarlo a mano. In tutti gli altri
+        casi non serve.</p>
+      <button class="btn btn-chiaro btn-piccolo" id="btnPubblicaClass">🔄 Manda adesso in bacheca</button>
+    </details>
   </div>
 
   <div class="card" id="sec-telegram">
