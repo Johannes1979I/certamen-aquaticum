@@ -912,80 +912,6 @@
       ]
     },
     {
-      "id": "super-staffetta",
-      "nome": "Super staffetta di Ferragosto",
-      "emoji": "🏁",
-      "illustrazione": "super-staffetta",
-      "tipo": "finale",
-      "durata": 20,
-      "orario": "18:35",
-      "riserva": false,
-      "formazione": "a squadre",
-      "partecipanti": "Tutta la squadra, sei frazioni",
-      "descrizione": "Il gran finale che può ribaltare la classifica: sei frazioni, una dietro l'altra, che riassumono tutto il pomeriggio. I punti valgono il doppio.",
-      "regole": [
-        "Prima frazione: nuoto libero con pallone.",
-        "Seconda frazione: attraversamento sopra il materassino.",
-        "Terza frazione: ritorno spingendo il materassino.",
-        "Quarta frazione: trasporto di un compagno sul materassino.",
-        "Quinta frazione: percorso spingendo il pallone con la testa.",
-        "Sesta frazione: ultima vasca del capitano con il pallone in mano.",
-        "Il cambio è valido solo quando il compagno tocca la mano di chi arriva."
-      ],
-      "varianti": [
-        "Frazioni sorteggiate: l'ordine delle sei frazioni si estrae poco prima della partenza.",
-        "Frazione jolly: la squadra sceglie una frazione da far valere doppio.",
-        "Ultima vasca tutti insieme: la squadra chiude nuotando in gruppo, si ferma il tempo sull'ultimo che arriva."
-      ],
-      "punti": "Punteggio doppio: 10 / 6 / 4 / 2",
-      "musica": {
-        "titolo": "Don't Stop Me Now",
-        "artista": "Queen",
-        "perche": "Il gran finale a tutta velocita, senza fermarsi piu.",
-        "url": "https://www.youtube.com/watch?v=HgzGwKwLmgM",
-        "ricerca": "Don't Stop Me Now Queen"
-      },
-      "escluso": false,
-      "playlist": [
-        {
-          "titolo": "Don't Stop Me Now",
-          "artista": "Queen",
-          "url": "https://www.youtube.com/watch?v=HgzGwKwLmgM",
-          "ricerca": "Don't Stop Me Now Queen"
-        },
-        {
-          "titolo": "We Are the Champions",
-          "artista": "Queen",
-          "url": "https://www.youtube.com/watch?v=04854XqcfCY",
-          "ricerca": "We Are the Champions Queen"
-        },
-        {
-          "titolo": "Livin' on a Prayer",
-          "artista": "Bon Jovi",
-          "url": "https://www.youtube.com/watch?v=lDK9QqIzhwk",
-          "ricerca": "Livin' on a Prayer Bon Jovi"
-        },
-        {
-          "titolo": "Hall of Fame",
-          "artista": "The Script",
-          "url": "https://www.youtube.com/watch?v=mk48xRzuNvA",
-          "ricerca": "Hall of Fame The Script"
-        },
-        {
-          "titolo": "Wake Me Up",
-          "artista": "Avicii",
-          "url": "https://www.youtube.com/watch?v=IcrbM1l_BoI",
-          "ricerca": "Wake Me Up Avicii"
-        },
-        {
-          "titolo": "Firework",
-          "artista": "Katy Perry",
-          "url": "https://www.youtube.com/watch?v=QGJuMBdaqIw",
-          "ricerca": "Firework Katy Perry"
-        }
-      ]
-    },
-    {
       "id": "baseball-acqua",
       "nome": "Baseball in acqua",
       "emoji": "⚾",
@@ -1058,6 +984,80 @@
         }
       ],
       "escluso": false
+    },
+    {
+      "id": "super-staffetta",
+      "nome": "Super staffetta di Ferragosto",
+      "emoji": "🏁",
+      "illustrazione": "super-staffetta",
+      "tipo": "finale",
+      "durata": 20,
+      "orario": "18:35",
+      "riserva": false,
+      "formazione": "a squadre",
+      "partecipanti": "Tutta la squadra, sei frazioni",
+      "descrizione": "Il gran finale che può ribaltare la classifica: sei frazioni, una dietro l'altra, che riassumono tutto il pomeriggio. I punti valgono il doppio.",
+      "regole": [
+        "Prima frazione: nuoto libero con pallone.",
+        "Seconda frazione: attraversamento sopra il materassino.",
+        "Terza frazione: ritorno spingendo il materassino.",
+        "Quarta frazione: trasporto di un compagno sul materassino.",
+        "Quinta frazione: percorso spingendo il pallone con la testa.",
+        "Sesta frazione: ultima vasca del capitano con il pallone in mano.",
+        "Il cambio è valido solo quando il compagno tocca la mano di chi arriva."
+      ],
+      "varianti": [
+        "Frazioni sorteggiate: l'ordine delle sei frazioni si estrae poco prima della partenza.",
+        "Frazione jolly: la squadra sceglie una frazione da far valere doppio.",
+        "Ultima vasca tutti insieme: la squadra chiude nuotando in gruppo, si ferma il tempo sull'ultimo che arriva."
+      ],
+      "punti": "Punteggio doppio: 10 / 6 / 4 / 2",
+      "musica": {
+        "titolo": "Don't Stop Me Now",
+        "artista": "Queen",
+        "perche": "Il gran finale a tutta velocita, senza fermarsi piu.",
+        "url": "https://www.youtube.com/watch?v=HgzGwKwLmgM",
+        "ricerca": "Don't Stop Me Now Queen"
+      },
+      "escluso": false,
+      "playlist": [
+        {
+          "titolo": "Don't Stop Me Now",
+          "artista": "Queen",
+          "url": "https://www.youtube.com/watch?v=HgzGwKwLmgM",
+          "ricerca": "Don't Stop Me Now Queen"
+        },
+        {
+          "titolo": "We Are the Champions",
+          "artista": "Queen",
+          "url": "https://www.youtube.com/watch?v=04854XqcfCY",
+          "ricerca": "We Are the Champions Queen"
+        },
+        {
+          "titolo": "Livin' on a Prayer",
+          "artista": "Bon Jovi",
+          "url": "https://www.youtube.com/watch?v=lDK9QqIzhwk",
+          "ricerca": "Livin' on a Prayer Bon Jovi"
+        },
+        {
+          "titolo": "Hall of Fame",
+          "artista": "The Script",
+          "url": "https://www.youtube.com/watch?v=mk48xRzuNvA",
+          "ricerca": "Hall of Fame The Script"
+        },
+        {
+          "titolo": "Wake Me Up",
+          "artista": "Avicii",
+          "url": "https://www.youtube.com/watch?v=IcrbM1l_BoI",
+          "ricerca": "Wake Me Up Avicii"
+        },
+        {
+          "titolo": "Firework",
+          "artista": "Katy Perry",
+          "url": "https://www.youtube.com/watch?v=QGJuMBdaqIw",
+          "ricerca": "Firework Katy Perry"
+        }
+      ]
     }
   ],
   "tornei": [
@@ -1214,9 +1214,9 @@
     {
       "ora": "16:15",
       "area": "ragazzi",
+      "gioco": "palla-bollente",
       "titolo": "Palla bollente — riscaldamento",
-      "nota": "",
-      "gioco": "palla-bollente"
+      "nota": ""
     },
     {
       "ora": "16:15",
@@ -1227,16 +1227,16 @@
     {
       "ora": "16:25",
       "area": "ragazzi",
+      "gioco": "staffetta-materassino",
       "titolo": "Staffetta sul materassino",
-      "nota": "",
-      "gioco": "staffetta-materassino"
+      "nota": ""
     },
     {
       "ora": "16:40",
       "area": "ragazzi",
+      "gioco": "staffetta-pallone",
       "titolo": "Staffetta con pallone",
-      "nota": "",
-      "gioco": "staffetta-pallone"
+      "nota": ""
     },
     {
       "ora": "16:50",
@@ -1247,9 +1247,9 @@
     {
       "ora": "16:55",
       "area": "ragazzi",
+      "gioco": "trasporto-compagno",
       "titolo": "Trasporto del compagno",
-      "nota": "",
-      "gioco": "trasporto-compagno"
+      "nota": ""
     },
     {
       "ora": "17:10",
@@ -1260,9 +1260,9 @@
     {
       "ora": "17:20",
       "area": "ragazzi",
+      "gioco": "traghetto",
       "titolo": "Il materassino traghetto",
-      "nota": "",
-      "gioco": "traghetto"
+      "nota": ""
     },
     {
       "ora": "17:25",
@@ -1273,9 +1273,9 @@
     {
       "ora": "17:35",
       "area": "ragazzi",
+      "gioco": "palla-capitano",
       "titolo": "Palla al capitano acquatica",
-      "nota": "",
-      "gioco": "palla-capitano"
+      "nota": ""
     },
     {
       "ora": "17:35",
@@ -1286,16 +1286,16 @@
     {
       "ora": "17:55",
       "area": "ragazzi",
+      "gioco": "catena",
       "titolo": "La catena acquatica",
-      "nota": "",
-      "gioco": "catena"
+      "nota": ""
     },
     {
       "ora": "18:05",
       "area": "ragazzi",
+      "gioco": "pallanuoto",
       "titolo": "Pallanuoto semplificata",
-      "nota": "Due mini partite da cinque minuti",
-      "gioco": "pallanuoto"
+      "nota": "Due mini partite da cinque minuti"
     },
     {
       "ora": "18:05",
@@ -1306,16 +1306,16 @@
     {
       "ora": "18:15",
       "area": "ragazzi",
+      "gioco": "baseball-acqua",
       "titolo": "Baseball in acqua",
-      "nota": "Si batte con la mazza di gommapiuma, si corre alle ciambelle che galleggiano",
-      "gioco": "baseball-acqua"
+      "nota": "Si batte con la mazza di gommapiuma, si corre alle ciambelle che galleggiano"
     },
     {
       "ora": "18:35",
       "area": "ragazzi",
+      "gioco": "super-staffetta",
       "titolo": "Super staffetta di Ferragosto",
-      "nota": "Punti doppi: qui si decide tutto",
-      "gioco": "super-staffetta"
+      "nota": "Punti doppi: qui si decide tutto"
     },
     {
       "ora": "18:35",
