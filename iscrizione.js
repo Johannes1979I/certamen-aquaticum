@@ -629,6 +629,7 @@
     if (p.area === 'ragazzi') {
       r.push('Età: ' + p.eta + ' anni');
       r.push('In acqua: ' + etichettaNuoto(p.nuoto));
+      if (p.sesso) r.push('Categoria: ' + (p.sesso === 'f' ? 'ragazza' : 'ragazzo'));
       r.push('Genitore: ' + p.genitore);
       if (p.amico) r.push('Vorrebbe stare con: ' + p.amico);
       r.push('Gare individuali: ' + (p.gare.length ? p.gare.map(function (g) { return g.nome; }).join(', ') : 'nessuna'));

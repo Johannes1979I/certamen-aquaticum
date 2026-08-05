@@ -301,6 +301,14 @@ section{ padding:clamp(40px,6vw,72px) 0; }
 @keyframes battito{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.045); } }
 @media (prefers-reduced-motion:reduce){ .orologio{ animation:none !important; } }
 
+/* ------- categoria mancante: due tocchi per ognuno, senza aprire nulla --- */
+.riga-cat{
+  display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+  padding:7px 0; border-top:1px solid rgba(0,0,0,.08);
+}
+.riga-cat:first-child{ border-top:none; }
+.riga-cat .chi-cat{ flex:1 1 190px; font-size:.94rem; }
+
 /* ------------- la scaletta del pomeriggio, nell'area organizzatori ------- */
 .linea-tempo{ margin-top:14px; border-left:3px solid var(--linea); padding-left:14px; }
 .linea-tempo .passo{ display:flex; gap:12px; align-items:baseline; padding:5px 0; }

@@ -375,6 +375,11 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
     <h3>🚩 Procedura guidata: forma le squadre</h3>
     <p class="mini">Quante squadre fare dipende da quanti si sono iscritti. Qui sotto il consiglio, ma decidi tu.</p>
     <div class="consiglio" id="consiglioSquadre">—</div>
+    <div class="nota-box attenzione" id="boxCategorie" style="display:none;margin:14px 0">
+      <b>👥 Maschi e femmine da spartire</b>
+      <p class="aiuto" id="notaCategorie" style="margin:5px 0 10px"></p>
+      <div id="elencoCategorie"></div>
+    </div>
     <div class="griglia3">
       <div class="campo"><label for="sqNumero">Quante squadre</label><input type="number" id="sqNumero" min="2" max="8" class="mini" /></div>
       <div class="campo"><label for="sqPer">Componenti per squadra</label><input type="number" id="sqPer" min="2" max="12" class="mini" /><div class="aiuto" id="sqPerNota"></div></div>

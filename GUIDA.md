@@ -62,8 +62,10 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
      2. si mettono tutti in fila dal più forte al più debole e si dividono a
         **scaglioni**: dai primi due uno per squadra, dai secondi due uno per
         squadra, e così via — nessuno può prendersi la fascia alta;
-     3. si pareggiano le **fasce**: i ragazzi dai 15 in su, i più piccoli
-        fino a 10 anni e chi nuota poco, mai più di uno di differenza;
+     3. si pareggiano le **fasce**, mai più di uno di differenza fra una
+        squadra e l'altra: i ragazzi dai 15 in su, i più piccoli fino a 10
+        anni, chi nuota poco e — se la categoria è indicata — **maschi e
+        femmine**;
      4. **solo alla fine** le preferenze, e solo se non rovinano niente: le
         squadre si fanno due volte, una tenendo insieme gli amici e una
         ignorandoli, e vince la più equilibrata. Due amichetti di otto anni
@@ -149,6 +151,25 @@ fosse. In alto compare *«⏳ da mandare quando torna la rete»* e i punteggi
 restano nel telefono; appena il segnale torna partono da soli e l'avviso
 diventa *«✅ salvato nel database»*. Non chiudere il sito prima di aver visto
 la spunta verde.
+
+## Maschi e femmine nelle squadre
+
+All'iscrizione la **categoria** è facoltativa («preferisco non dirlo»), ma se
+c'è viene usata: ragazze e ragazzi si spartiscono fra le squadre come le fasce
+d'età, mai più di uno di differenza.
+
+Chi non l'ha detta la completi in un attimo: in `🚩 Squadre`, sopra la
+procedura guidata, compare un riquadro giallo con i nomi che mancano e due
+pulsanti a testa, **♀ Ragazza** e **♂ Ragazzo**. Un tocco e via, senza aprire
+la scheda di nessuno. Quando non ne manca più nessuno il riquadro diventa
+verde e dice quante sono e quanti sono.
+
+- Se **nessuno** l'ha indicata, il criterio resta fuori: le squadre si fanno
+  come prima, su età e capacità.
+- Se l'hanno indicata **in parte**, chi manca viene comunque distribuito in
+  modo da non finire tutto nella stessa squadra — ma alla cieca.
+- Sotto ogni squadra compare il conto: *♀ 3 · ♂ 2*.
+- Lasciarla in bianco non esclude nessuno da niente: serve solo a spartire.
 
 ## La scaletta comanda tutto
 

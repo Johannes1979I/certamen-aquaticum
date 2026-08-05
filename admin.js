@@ -982,6 +982,7 @@
     if (p.area === 'ragazzi') {
       var g = V(p.gare, []).map(function (x) { return x.nome; }).join(', ');
       return p.eta + ' anni · ' + etichettaNuoto(p.nuoto) +
+        (p.sesso === 'f' ? ' · ♀' : (p.sesso === 'm' ? ' · ♂' : '')) +
         (p.genitore ? ' · genitore: ' + p.genitore : '') +
         (p.amico ? ' · con: ' + p.amico : '') +
         (g ? ' · gare: ' + g : '');
@@ -1068,6 +1069,16 @@
     });
     ss.value = p ? V(p.nuoto, '') : '';
     sn.appendChild(ss); g.appendChild(sn);
+    /* serve solo a spartire maschi e femmine fra le squadre: all'iscrizione
+       è facoltativo, e chi non l'ha detto si può completare da qui */
+    var sc = crea('div', 'campo');
+    var lc = document.createElement('label'); lc.textContent = 'Categoria (solo ragazzi)'; sc.appendChild(lc);
+    var sx = document.createElement('select'); sx.id = 'mSesso'; sx.className = 'mini';
+    [['', 'Non indicata'], ['f', 'Ragazza'], ['m', 'Ragazzo']].forEach(function (o) {
+      var op = document.createElement('option'); op.value = o[0]; op.textContent = o[1]; sx.appendChild(op);
+    });
+    sx.value = p ? V(p.sesso, '') : '';
+    sc.appendChild(sx); g.appendChild(sc);
     campo('mCompagno', 'Compagno (solo carte)', p ? p.compagno : '');
     campo('mNote', 'Note', p ? p.note : '');
     c.appendChild(g);
@@ -1103,6 +1114,7 @@
     if (p.area === 'ragazzi') {
       p.eta = Number($('mEta').value) || 0;
       p.nuoto = $('mNuoto').value;
+      p.sesso = $('mSesso').value;
       p.gare = V(p.gare, []);
     } else {
       p.compagno = $('mCompagno').value.trim();
@@ -1410,7 +1422,67 @@
     return r.length ? r[r.length - 1] : { squadre: 4, descrizione: '' };
   }
 
+  /* Chi non ha detto la categoria all'iscrizione la si completa da qui, con
+     due tocchi a testa: aprire la scheda di ognuno sarebbe troppo lento a
+     bordo vasca. Non si indovina dal nome — sbagliare su un ragazzino vero
+     è peggio che chiedere. */
+  function disegnaCategorie() {
+    var box = $('boxCategorie');
+    if (!box) return;
+    var rag = attive('ragazzi');
+    var senza = rag.filter(senzaCategoria);
+    var f = rag.filter(eFemmina).length, m = rag.filter(eMaschio).length;
+
+    if (!rag.length || !senza.length) {
+      box.style.display = 'none';
+      if (rag.length && (f || m)) {
+        box.style.display = '';
+        box.className = 'nota-box sereno';
+        box.querySelector('b').textContent = '👥 Categorie a posto';
+        testo('notaCategorie', f + ' ragazze e ' + m + ' ragazzi: li spartisco fra le squadre ' +
+          'insieme a età e capacità in acqua.');
+        $('elencoCategorie').textContent = '';
+      }
+      return;
+    }
+    box.style.display = '';
+    box.className = 'nota-box attenzione';
+    box.querySelector('b').textContent = '👥 Manca la categoria a ' + senza.length +
+      (senza.length === 1 ? ' ragazzo' : ' ragazzi');
+    testo('notaCategorie', 'All\'iscrizione era facoltativa. Segnala qui e le squadre ' +
+      'verranno spartite anche per questo; se la lasci in bianco non è un problema, ' +
+      'ma quei nomi vengono distribuiti alla cieca. Finora: ' + f + ' ragazze, ' + m + ' ragazzi.');
+
+    var el = $('elencoCategorie');
+    el.textContent = '';
+    senza.forEach(function (p) {
+      var r = crea('div', 'riga-cat');
+      r.appendChild(crea('span', 'chi-cat', p.nome + ' · ' + p.eta + ' anni'));
+      [['f', '♀ Ragazza'], ['m', '♂ Ragazzo']].forEach(function (o) {
+        r.appendChild(bottone(o[1], 'chiaro btn-piccolo', function () { segnaCategoria(p, o[0]); }));
+      });
+      el.appendChild(r);
+    });
+  }
+
+  function segnaCategoria(p, valore) {
+    if (!SESS) { CA.toast('Prima entra nel database.', 6000); return; }
+    var copia = JSON.parse(JSON.stringify(p));
+    copia.sesso = valore;
+    token().then(function (t) {
+      return FB.aggiorna(t, p._id, {
+        nome: copia.nome, area: copia.area, gruppo: V(copia.gruppo, ''), codice: copia.codice,
+        stato: V(copia.stato, 'attiva'), creatoIl: copia.creatoIl, json: JSON.stringify(pulita(copia))
+      });
+    }).then(function () {
+      p.sesso = valore;                 /* subito a video, senza rileggere tutto */
+      disegnaCategorie();
+      disegnaIscritti();
+    }).catch(function (e) { CA.toast('⚠️ ' + e.message, 8000); });
+  }
+
   function disegnaSquadre() {
+    disegnaCategorie();
     var rag = ragazziIscritti();
     var c = consiglioNumeroSquadre(rag.length);
     var f = V(DATI.formatiSquadre, {});
@@ -1503,9 +1575,21 @@
   function mediaForza(s) {
     return s.componenti.length ? forzaSquadra(s) / s.componenti.length : 0;
   }
-  /* le due fasce che sbilanciano davvero una gara in piscina */
+  /* le fasce che sbilanciano davvero una gara in piscina */
   function eGrande(p) { return etaDi(p) >= 15; }
   function ePiccolo(p) { return etaDi(p) <= 10; }
+  /* Maschi e femmine spartiti fra le squadre: una squadra di sole ragazze
+     contro una di soli ragazzi non è una bella gara per nessuno. Chi non
+     l'ha detto non viene indovinato dal nome: fa gruppo a sé e viene
+     distribuito lo stesso, così non finiscono tutti nella stessa squadra. */
+  function eFemmina(p) { return !!p && p.sesso === 'f'; }
+  function eMaschio(p) { return !!p && p.sesso === 'm'; }
+  function senzaCategoria(p) { return !!p && p.sesso !== 'f' && p.sesso !== 'm'; }
+  /* si pareggia solo se qualcuno l'ha detto: con l'elenco tutto vuoto non
+     avrebbe senso muovere niente */
+  function categorieDichiarate() {
+    return attive('ragazzi').some(function (p) { return p.sesso === 'f' || p.sesso === 'm'; });
+  }
 
   /* Le squadre si fanno due volte: una tenendo insieme gli amici, una
      ignorandoli del tutto. Poi si guarda quale delle due è più equilibrata e
@@ -1589,10 +1673,13 @@
     pareggiaDimensioni(squadre);
     /* le fasce prima di tutto: i grandi e i piccoli vanno spartiti, altrimenti
        una squadra parte già vinta anche se le medie tornano */
-    pareggiaFascia(squadre, eGrande);
-    pareggiaFascia(squadre, ePiccolo);
+    pareggiaFasce(squadre);
     pareggiaScaglioni(squadre);
     sparpagliaDeboli(squadre);
+    /* e di nuovo alla fine: scaglioni e nuotatori deboli spostano gente, e
+       senza questo secondo giro una fascia già sistemata si ritrovava
+       sbilanciata proprio all'ultimo (i maschi finivano 1-2-3) */
+    pareggiaFasce(squadre);
     affinaForza(squadre);
     return squadre.map(function (s) {
       return { componenti: s.componenti.slice(), capitano: s.capitano };
@@ -1612,7 +1699,9 @@
      ballano le forze medie. Meno è, meglio è. */
   function misuraPiano(squadre) {
     var violazioni = 0;
-    [eGrande, ePiccolo, nuotaPoco].forEach(function (test) {
+    var prove = [eGrande, ePiccolo, nuotaPoco];
+    if (categorieDichiarate()) prove = prove.concat([eFemmina, eMaschio]);
+    prove.forEach(function (test) {
       var c = squadre.map(function (s) {
         return s.componenti.filter(function (id) { return test(perId(id)); }).length;
       });
@@ -1656,9 +1745,16 @@
      i primi quattro due per squadra, e così via. È il modo per dire «nessuna
      squadra si prende i più forti»: senza, l'equilibrio dei totali si può
      ottenere anche caricando una squadra in cima e compensando in fondo. */
-  function prefissiOk(squadre) {
+  function prefissiOk(squadre) { return prefissiRotti(squadre) === 0; }
+
+  /* Quante volte la fascia alta è spartita male. Serve un conteggio e non un
+     sì/no perché con squadre di misura diversa (15 ragazzi in 4 squadre) una
+     divisione perfetta non esiste: pretenderla bloccava ogni scambio e le
+     forze restavano sbilanciate. Meglio «non peggiorare» che «essere
+     perfetti o non muoversi». */
+  function prefissiRotti(squadre) {
     var n = squadre.length;
-    if (n < 2) return true;
+    if (n < 2) return 0;
     var tutti = [];
     squadre.forEach(function (s, idx) {
       s.componenti.forEach(function (id) { tutti.push({ sq: idx, f: forza(perId(id)) }); });
@@ -1669,14 +1765,16 @@
     /* si controlla solo la metà alta: chi si prende i più forti conta, come
        sono spartiti gli ultimi no, e pretenderlo bloccherebbe scambi utili */
     var finoA = Math.ceil(tutti.length / 2);
+    var rotti = 0;
     for (var i = 0; i < tutti.length; i++) {
       conta[tutti[i].sq]++;
       if (i + 1 > finoA) break;
       if ((i + 1) % n === 0) {
-        if (Math.max.apply(null, conta) - Math.min.apply(null, conta) > 1) return false;
+        var d = Math.max.apply(null, conta) - Math.min.apply(null, conta);
+        if (d > 1) rotti += d - 1;
       }
     }
-    return true;
+    return rotti;
   }
 
   /* La regola che conta più di tutte.
@@ -1744,6 +1842,18 @@
   /* Fa in modo che ogni squadra abbia lo stesso numero di ragazzi di una
      fascia (i grandi, i piccoli): al massimo uno di scarto. Si scambia con
      qualcuno che NON è di quella fascia, così le dimensioni non cambiano. */
+  /* tutte le fasce da spartire, nell'ordine in cui contano */
+  function pareggiaFasce(squadre) {
+    pareggiaFascia(squadre, eGrande);
+    pareggiaFascia(squadre, ePiccolo);
+    if (!categorieDichiarate()) return;
+    /* prima chi non l'ha detta, così non si ammucchiano tutti insieme; poi
+       le due categorie vere, che devono avere l'ultima parola */
+    pareggiaFascia(squadre, senzaCategoria);
+    pareggiaFascia(squadre, eFemmina);
+    pareggiaFascia(squadre, eMaschio);
+  }
+
   function pareggiaFascia(squadre, appartiene) {
     for (var giro = 0; giro < 40; giro++) {
       var conta = squadre.map(function (s) {
@@ -1755,14 +1865,24 @@
         if (conta[i] < conta[min]) min = i;
       }
       if (conta[max] - conta[min] <= 1) return;
-      var daSpostare = squadre[max].componenti.filter(function (id) {
+      var esce = squadre[max].componenti.filter(function (id) {
         return appartiene(perId(id)) && !LEGATI[id];
-      })[0];
-      var inCambio = squadre[min].componenti.filter(function (id) {
+      });
+      var entra = squadre[min].componenti.filter(function (id) {
         return !appartiene(perId(id)) && !LEGATI[id];
-      })[0];
-      if (!daSpostare || !inCambio) return;   /* solo gente legata: non si tocca */
-      scambia(squadre[max], squadre[min], daSpostare, inCambio);
+      });
+      if (!esce.length || !entra.length) return;   /* solo gente legata: non si tocca */
+      /* Fra tutti gli scambi che sistemano la fascia si prende quello fra due
+         ragazzi di forza simile: prima si prendeva il primo che capitava, e
+         raddrizzare una fascia poteva sbilanciare le squadre di brutto. */
+      var meglio = null;
+      esce.forEach(function (a) {
+        entra.forEach(function (b) {
+          var costo = Math.abs(forza(perId(a)) - forza(perId(b)));
+          if (!meglio || costo < meglio.costo) meglio = { a: a, b: b, costo: costo };
+        });
+      });
+      scambia(squadre[max], squadre[min], meglio.a, meglio.b);
     }
   }
 
@@ -1946,19 +2066,30 @@
       var m = squadre.map(mediaForza);
       return Math.max.apply(null, m) - Math.min.apply(null, m);
     }
-    function fasceOk() {
-      return [eGrande, ePiccolo].every(function (test) {
+    function scartiFasce() {
+      var prove = [eGrande, ePiccolo];
+      if (categorieDichiarate()) prove = prove.concat([eFemmina, eMaschio]);
+      return prove.map(function (test) {
         var c = squadre.map(function (s) {
           return s.componenti.filter(function (id) { return test(perId(id)); }).length;
         });
-        return Math.max.apply(null, c) - Math.min.apply(null, c) <= 1;
+        return Math.max.apply(null, c) - Math.min.apply(null, c);
       });
+    }
+    /* Uno scambio va bene se nessuna fascia peggiora. Pretendere che siano
+       tutte perfette bloccava quasi ogni mossa quando le squadre non sono
+       tutte della stessa misura, e le forze restavano sbilanciatissime. */
+    function fasceNonPeggio(prima) {
+      var dopo = scartiFasce();
+      return dopo.every(function (d, i) { return d <= Math.max(1, prima[i]); });
     }
     for (var giro = 0; giro < 120; giro++) {
       var prima = scarto();
       /* si insiste finché c'è margine: spesso esiste una divisione perfetta
          e fermarsi a mezzo punto vuol dire lasciarla lì */
       if (prima < 0.05) break;
+      var fasceDiPartenza = scartiFasce();
+      var prefissiDiPartenza = prefissiRotti(squadre);
       var m = squadre.map(mediaForza);
       var alta = 0, bassa = 0;
       for (var i = 1; i < m.length; i++) {
@@ -1972,7 +2103,9 @@
           if (LEGATI[ib]) return;
           if (forza(perId(ia)) <= forza(perId(ib))) return;
           scambia(squadre[alta], squadre[bassa], ia, ib);
-          var dopo = scarto(), ok = fasceOk() && prefissiOk(squadre);
+          var dopo = scarto();
+          var ok = fasceNonPeggio(fasceDiPartenza) &&
+            prefissiRotti(squadre) <= prefissiDiPartenza;
           scambia(squadre[alta], squadre[bassa], ib, ia);   /* rimetto a posto */
           if (ok && dopo < prima && (!migliore || dopo < migliore.v)) {
             migliore = { a: ia, b: ib, v: dopo };
@@ -2024,6 +2157,13 @@
         ' · età media ' + (eta ? eta.toFixed(1) : '—')));
       col.appendChild(crea('div', 'dati-sq',
         '💪 ' + grandi + ' dai 15 in su · 🧒 ' + piccoli + ' fino a 10 anni · 🛟 ' + deboli + ' nuotano poco'));
+      if (categorieDichiarate()) {
+        var femmine = sq.componenti.filter(function (id) { return eFemmina(perId(id)); }).length;
+        var maschi = sq.componenti.filter(function (id) { return eMaschio(perId(id)); }).length;
+        var muti = sq.componenti.length - femmine - maschi;
+        col.appendChild(crea('div', 'dati-sq',
+          '♀ ' + femmine + ' · ♂ ' + maschi + (muti ? ' · ? ' + muti + ' senza categoria' : '')));
+      }
 
       sq.componenti.forEach(function (id) {
         col.appendChild(pedina(id, sq));
