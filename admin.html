@@ -440,6 +440,15 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
 
 <!-- ------------------------------ PUNTEGGI ----------------------------- -->
 <section class="vista" id="v-punteggi">
+  <div class="card" id="sec-audio">
+    <h2>🎶 La musica della giornata</h2>
+    <p class="aiuto">La sigla e il jingle, pronti da far partire dall'altoparlante.
+      Restano qui: non serve cercarli sul telefono nel momento sbagliato.</p>
+    <div id="lettoriAudio"></div>
+    <input type="file" id="fileAudio" accept="audio/*" style="display:none" />
+    <p class="aiuto" id="statoAudio"></p>
+  </div>
+
   <div class="card" id="sec-cronometro">
     <h2>⏱️ Cronometro della gara</h2>
     <p class="aiuto">Scegli la gara e premi <b>Via</b>: il tempo scorre uguale per tutti

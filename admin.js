@@ -189,6 +189,9 @@
     });
     $('btnPubblicaContenuti').addEventListener('click', pubblicaContenuti);
     $('btnScarica').addEventListener('click', scaricaContenuti);
+    $('fileAudio').addEventListener('change', function () {
+      if (this.files && this.files[0]) caricaAudio(this.files[0]);
+    });
     $('cronGioco').addEventListener('change', function () { scegliGiocoCron(this.value); });
     /* Col telefono in tasca o la pagina in secondo piano il browser rallenta
        i timer fino a un giro al minuto: il conto resta giusto (si calcola
@@ -2978,6 +2981,115 @@
     return scroll;
   }
 
+  /* ====================== LA MUSICA DELLA GIORNATA =====================
+     Sigla e jingle a portata di dito, senza doverli cercare nel telefono
+     mentre quindici ragazzi aspettano a bordo vasca. I file stanno nel
+     sito, in «audio/»: si possono caricare da qui, dal telefono, come le
+     foto dell'album.                                                     */
+  var POSTI_AUDIO = [
+    { id: 'sigla', emoji: '🎵', cosa: 'la sigla' },
+    { id: 'jingle', emoji: '📣', cosa: 'il jingle' }
+  ];
+  var AUDIO_DA_CARICARE = '';
+
+  function disegnaAudio() {
+    var el = $('lettoriAudio');
+    if (!el) return;
+    el.textContent = '';
+    DATI.audio = V(DATI.audio, {});
+    POSTI_AUDIO.forEach(function (posto) {
+      var a = DATI.audio[posto.id] = V(DATI.audio[posto.id], {});
+      var box = crea('div', 'posto-audio');
+
+      var t = crea('div', 'testa-audio');
+      t.appendChild(crea('b', null, posto.emoji + ' ' + V(a.titolo, posto.cosa)));
+      if (a.sottotitolo) t.appendChild(crea('small', null, a.sottotitolo));
+      box.appendChild(t);
+
+      if (V(a.file, '')) {
+        var p = document.createElement('audio');
+        p.controls = true;
+        p.preload = 'none';       /* non scarica 4 MB a ogni apertura della pagina */
+        p.src = a.file;
+        p.style.cssText = 'width:100%;max-width:520px;margin:8px 0';
+        box.appendChild(p);
+      } else {
+        box.appendChild(crea('p', 'aiuto',
+          'Non c\'è ancora. Caricalo da qui, oppure mettilo nel sito come ' +
+          '«audio/' + posto.id + '.mp3» e scrivi quel nome nei contenuti.'));
+      }
+
+      var az = crea('div', 'azioni');
+      az.style.cssText = 'justify-content:flex-start;margin-top:4px';
+      az.appendChild(bottone((V(a.file, '') ? '🔁 Sostituisci' : '⬆️ Carica') + ' ' + posto.cosa,
+        'chiaro btn-piccolo', function () {
+          AUDIO_DA_CARICARE = posto.id;
+          $('fileAudio').value = '';
+          $('fileAudio').click();
+        }));
+      if (V(a.file, '')) {
+        az.appendChild(bottone('🗑️ Togli', 'rosso btn-piccolo', function () {
+          if (!confirm('Tolgo ' + posto.cosa + ' dalla pagina?')) return;
+          a.file = '';
+          salvaBozzaFraPoco();
+          disegnaAudio();
+        }));
+      }
+      box.appendChild(az);
+      el.appendChild(box);
+    });
+  }
+
+  function caricaAudio(file) {
+    var posto = AUDIO_DA_CARICARE;
+    if (!posto || !file) return;
+    if (!/^audio\//.test(file.type || '') && !/\.(mp3|m4a|ogg|wav)$/i.test(file.name || '')) {
+      testo('statoAudio', '⚠️ Questo non sembra un file audio.');
+      return;
+    }
+    if (!ghPronto()) {
+      testo('statoAudio', '⚠️ Manca il token di GitHub: serve per mettere il file nel sito. ' +
+        'Ti porto nella scheda 📣 Pubblica.');
+      chiediGh();
+      return;
+    }
+    /* venti megabyte è già tantissimo per un pezzo: oltre, quasi certamente
+       è il file sbagliato */
+    if (file.size > 20 * 1024 * 1024) {
+      testo('statoAudio', '⚠️ Il file pesa ' + Math.round(file.size / 1024 / 1024) +
+        ' MB: troppo. Esporta una versione più leggera.');
+      return;
+    }
+    testo('statoAudio', '⏳ Preparo ' + file.name + '…');
+    leggiBase64(file).then(function (b64) {
+      var nome = 'audio/' + posto + estensione(file.name);
+      testo('statoAudio', '📤 Sto caricando ' + nome + ' (' +
+        Math.round(file.size / 1024 / 1024 * 10) / 10 + ' MB)…');
+      return ghPut(nome, b64, 'Audio: ' + nome).then(function () {
+        DATI.audio[posto].file = nome;
+        salvaBozzaFraPoco();
+        disegnaAudio();
+        testo('statoAudio', '✅ Caricato. Adesso premi «Pubblica contenuti.json» ' +
+          'nella scheda 📣 Pubblica, se no il sito non sa che c\'è.');
+      });
+    }).catch(function (e) {
+      testo('statoAudio', '⚠️ ' + e.message);
+    });
+  }
+
+  function estensione(nome) {
+    var m = String(nome || '').match(/(\.[a-z0-9]{2,4})$/i);
+    return m ? m[1].toLowerCase() : '.mp3';
+  }
+  function leggiBase64(file) {
+    return new Promise(function (ok, ko) {
+      var l = new FileReader();
+      l.onerror = function () { ko(new Error('non riesco a leggere il file')); };
+      l.onload = function () { ok(String(l.result).split(',')[1]); };
+      l.readAsDataURL(file);
+    });
+  }
+
   /* ========================= CRONOMETRO DELLA GARA =====================
      Ogni gioco ha il suo tempo massimo. Il conto alla rovescia non si
      scala di secondo in secondo: si ricalcola ogni volta dall'orario di
@@ -3194,6 +3306,7 @@
 
   /* ============================== PUNTEGGI ============================= */
   function disegnaPunteggi() {
+    disegnaAudio();
     disegnaCronometro();
     disegnaPuntiRagazzi();
     disegnaPuntiCarte();

@@ -97,7 +97,9 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
    - 3–6 coppie → girone all'italiana
    - 7–12 coppie → due gironi, semifinali e finale
    - 13 e più → tabellone a eliminazione diretta
-4. **Punteggi** — scheda `🏅 Punteggi`: in cima c'è il **cronometro della
+4. **Punteggi** — scheda `🏅 Punteggi`. In cima trovi **la sigla e il
+   jingle**, pronti da far partire sull'altoparlante senza cercarli nel
+   telefono. Subito sotto c'è il **cronometro della
    gara**. Scegli la gara, premi **▶ Via** e il tempo scorre; 🎵 apre la
    scaletta di quel gioco. Quando scade suona la sirena: se nessuna squadra
    ha già vinto, vince chi è avanti in quel momento e scrivi tu l'ordine
@@ -257,6 +259,19 @@ cronometro sta in cima alla scheda `🏅 Punteggi`.
   sola lettura: i comandi restano solo qui nell'admin. Un tablet appoggiato
   al bordo vasca su quella pagina fa da tabellone. Sparisce da sola tre
   minuti dopo la fine della gara.
+
+### La sigla e il jingle
+
+In `🏅 Punteggi`, in cima, ci sono due lettori: **la sigla** dell'estate 2026 e
+**il jingle** di apertura. Si premono e partono, senza cercare niente nel
+telefono. I file stanno nel sito, dentro `audio/`.
+
+- Per **cambiarli o aggiungerli** c'è il pulsante sotto ogni lettore: scegli il
+  file dal telefono, sale nel sito da solo. Poi va premuto una volta
+  `🌐 Pubblica contenuti.json`, se no il sito non sa che c'è.
+- Il jingle è **predisposto ma vuoto**: appena lo generi, caricalo lì.
+- Il testo della canzone e i prompt per Suno sono in `CANZONE.md`, dentro il
+  progetto.
 
 ### La scaletta di ogni gioco
 

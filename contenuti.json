@@ -1580,5 +1580,17 @@
     "inizio": "16:15",
     "pausaDopo": "trasporto-compagno",
     "pausaMinuti": 10
+  },
+  "audio": {
+    "sigla": {
+      "titolo": "Estate duemilaventisei",
+      "sottotitolo": "La sigla del Certamen Aquaticum",
+      "file": "audio/sigla.mp3"
+    },
+    "jingle": {
+      "titolo": "Certamen Aquaticum",
+      "sottotitolo": "Il jingle di apertura, otto secondi",
+      "file": ""
+    }
   }
 }

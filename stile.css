@@ -301,6 +301,15 @@ section{ padding:clamp(40px,6vw,72px) 0; }
 @keyframes battito{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.045); } }
 @media (prefers-reduced-motion:reduce){ .orologio{ animation:none !important; } }
 
+/* ------------------- sigla e jingle, pronti da premere ------------------ */
+.posto-audio{
+  border:1px solid var(--linea); border-radius:16px; padding:14px 16px; margin-bottom:12px;
+  background:#fff;
+}
+.posto-audio .testa-audio b{ display:block; font-size:1.02rem; }
+.posto-audio .testa-audio small{ display:block; color:var(--muted); font-size:.86rem; }
+.posto-audio audio{ display:block; }
+
 /* ------- categoria mancante: due tocchi per ognuno, senza aprire nulla --- */
 .riga-cat{
   display:flex; flex-wrap:wrap; align-items:center; gap:8px;
