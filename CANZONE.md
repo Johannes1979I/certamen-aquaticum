@@ -137,3 +137,74 @@ sunny, celebratory, made for singing along around a swimming pool.
   è quello che i ragazzi canteranno a bordo vasca.
 - Per la **sigla d'apertura** basta un taglio di 40-50 secondi: intro +
   primo ritornello. Suno esporta il brano intero, poi lo accorci.
+
+---
+
+# IL JINGLE (8-12 secondi)
+
+Solo due parole, quelle che devono restare in testa. Serve per aprire
+l'altoparlante prima di ogni gara, o come sigletta prima della canzone.
+
+## Testo
+
+```
+[Intro: brass fanfare, whistle]
+
+[Hook]
+Certamen Aquaticum!
+Residence Holiday!
+
+[End]
+Holiday!
+```
+
+## Prompt musicale — versione «hit dell'estate»
+
+Da usare se il jingle deve stare accanto alla canzone: stesso mondo sonoro.
+
+```
+Short 10 second Italian summer jingle, sung in Italian, upbeat
+reggaeton-pop, 102 BPM, bright brass stabs, tropical plucks, handclaps,
+whistle, gang vocals shouting the hook, huge and punchy, ends on a
+cymbal crash. Radio ident, no verses, no instrumental intro longer than
+one bar.
+```
+
+## Prompt alternativo — versione «stadio»
+
+Più ruvida, da coro sugli spalti: funziona bene urlata a bordo vasca.
+
+```
+Short 8 second stadium chant jingle, sung in Italian, crowd of kids and
+adults chanting in unison, big drums, air horn, handclaps, whistle,
+football terrace energy, raw and loud, no melody instruments.
+```
+
+## Prompt alternativo — versione «annuncio»
+
+Solenne, tipo apertura delle Olimpiadi: bella per la premiazione.
+
+```
+Short 12 second epic sports intro, brass fanfare and timpani, choir
+singing the words in Latin style, cinematic and triumphant, big
+reverb, ends on a sustained chord.
+```
+
+## Impostazioni
+
+| Campo | Cosa mettere |
+|---|---|
+| Title | `Certamen Aquaticum — jingle` |
+| Lyrics | solo le righe qui sopra, tag compresi |
+| Exclude styles | `long intro, verse, ballad, slow, ambient` |
+| Instrumental | no |
+
+## Consigli pratici
+
+- Suno tende a **fare più lungo del richiesto**: genera, poi tieni i primi
+  otto-dieci secondi. Scrivere `10 second` nel prompt aiuta ma non basta.
+- Con testi cortissimi conviene generare **quattro o cinque volte**: cambia
+  molto da una all'altra ed è questione di fortuna.
+- Se pronuncia male *Aquaticum*, scrivilo nel testo come
+  `A-qua-ti-cum` oppure `Akuàticum`.
+- Tienine **due diverse**: una per l'apertura, una per la premiazione.
