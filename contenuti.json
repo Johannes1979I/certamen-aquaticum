@@ -1589,8 +1589,8 @@
     },
     "jingle": {
       "titolo": "Certamen Aquaticum",
-      "sottotitolo": "Il jingle di apertura, otto secondi",
-      "file": ""
+      "sottotitolo": "Il jingle di apertura, tredici secondi",
+      "file": "audio/jingle.mp3"
     }
   }
 }
