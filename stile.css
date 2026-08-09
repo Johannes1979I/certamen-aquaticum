@@ -301,6 +301,13 @@ section{ padding:clamp(40px,6vw,72px) 0; }
 @keyframes battito{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.045); } }
 @media (prefers-reduced-motion:reduce){ .orologio{ animation:none !important; } }
 
+/* --------- rifare il token: si deve trovare anche cercandolo di fretta --- */
+.nota-box.rifai-token{
+  background:#eef6ff; border-color:var(--c1); margin:12px 0;
+}
+.nota-box.rifai-token > b{ font-size:1.05rem; }
+.nota-box.rifai-token .nota-box{ max-width:none; }
+
 /* ------------------- sigla e jingle, pronti da premere ------------------ */
 .posto-audio{
   border:1px solid var(--linea); border-radius:16px; padding:14px 16px; margin-bottom:12px;

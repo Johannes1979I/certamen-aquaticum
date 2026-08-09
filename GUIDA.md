@@ -290,6 +290,31 @@ coprono i 15 min del gioco»* — che diventa rossa se la scaletta è corta.
   automatica, incolla gli indirizzi degli altri.
 - Sono **solo proposte**: cambiale tutte, sono lì per non partire dal vuoto.
 
+## Il token di GitHub, quando sparisce
+
+Sta in `📣 Pubblica → 🔑 Collegamento a GitHub`, nel riquadro azzurro
+**«Rifare il token al volo»**. Serve per pubblicare i contenuti e per caricare
+foto e musica.
+
+- **⚡ Fai un token nuovo** apre GitHub con nome e permesso già impostati: ti
+  resta da scegliere la scadenza e premere *Generate token*. Poi copi la sigla
+  che comincia con `ghp_` e la incolli nel campo qui sotto.
+- **📋 Copia il token** copia quello già salvato in questo browser, per
+  passarlo dal computer al telefono senza rigenerarlo. Se non c'è niente da
+  copiare te lo dice, invece di non fare niente.
+- Nel pieghevole c'è anche il **token «fine-grained»**: più prudente ma più
+  scomodo dal telefono. Il primo vale per tutti i tuoi repository ma è
+  immediato, il secondo vale solo per `certamen-aquaticum`. Per un sito di
+  condominio il primo va benissimo.
+
+**Perché dal telefono sparisce di continuo**: Safari e Chrome cancellano i dati
+dei siti che non apri da qualche giorno. Il rimedio è aprire l'admin, fare
+**Condividi → Aggiungi a Home** e usare da lì in poi quell'icona: il telefono lo
+tratta come un'app e il token resta molto più a lungo.
+
+Il token **non lascia mai il browser**: non finisce nel sito, non va nel
+database, non lo vede nessun altro.
+
 ## L'album della giornata
 
 Scheda **`📷 Album`**, nel menù in cima alla pagina. Dal telefono premi **📸 Scatta una foto**: si apre
@@ -307,11 +332,7 @@ una volta.
 - Servono le impostazioni di GitHub in `📣 Pubblica` (le stesse che usi per
   pubblicare): la foto vera finisce nel sito, il suo indirizzo nel database.
   **Il token vale per un browser solo**: la prima volta che scatti dal telefono
-  ti dirà che manca e ti porterà nel riquadro giusto. Lì lo incolli una volta e
-  non ci pensi più. Per averlo sul telefono: dal computer, in `📣 Pubblica →
-  🔑 Collegamento a GitHub`, premi `📋 Copia` e mandatelo con un messaggio a te
-  stesso (poi cancella il messaggio); oppure rifai i tre passi di GitHub
-  direttamente dal telefono, che è altrettanto veloce.
+  ti dirà che manca e ti porterà nel riquadro giusto. Vedi qui sotto.
 - Le foto stanno nel database, che è più veloce ma non è per sempre: quando la
   festa è finita premi **`📥 Porta le foto nei contenuti`** e poi
   `Pubblica contenuti.json`. Da quel momento l'album è dentro al sito e resta

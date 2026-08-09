@@ -695,15 +695,47 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
     <p class="aiuto">Serve solo quando cambi testi, giochi, orari o foto nella scheda «Contenuti». Le iscrizioni e i punteggi non passano da qui: quelli stanno nel database.</p>
     <details id="dettagliGh">
       <summary style="cursor:pointer;font-weight:bold;padding:6px 0">🔑 Collegamento a GitHub (serve una volta sola)</summary>
-      <div class="nota-box" style="margin:12px 0">
-        <b>Come si prende il token, in tre passi:</b>
-        <ol style="margin:8px 0 0 20px;font-size:.92rem">
-          <li>Apri <a href="https://github.com/settings/tokens/new?scopes=repo&amp;description=Certamen%20Aquaticum" target="_blank" rel="noopener">questa pagina di GitHub</a> (sei già dentro come Johannes1979I).</li>
-          <li>In fondo premi <b>Generate token</b>: la spunta su <b>repo</b> è già messa.</li>
-          <li>Copia la sigla che compare (comincia con <code>ghp_</code>) e incollala qui sotto.</li>
-        </ol>
-        <p style="margin-top:8px;font-size:.9rem">Il token resta solo in questo browser: non finisce nel sito e non lo vede nessun altro. Se scade, rifai gli stessi tre passi.</p>
+      <div class="nota-box rifai-token">
+        <b>🔑 Rifare il token al volo</b>
+        <p class="aiuto" style="margin:6px 0 12px">Dal telefono sparisce spesso. Da qui lo
+          rifai in mezzo minuto, oppure recuperi quello che hai già sul computer.</p>
+
+        <div class="azioni" style="justify-content:flex-start;margin-bottom:10px">
+          <a class="btn btn-p" target="_blank" rel="noopener"
+             href="https://github.com/settings/tokens/new?description=Certamen%20Aquaticum%20-%20admin&amp;scopes=repo">
+            ⚡ Fai un token nuovo</a>
+          <button class="btn btn-chiaro" id="btnCopiaToken">📋 Copia il token</button>
+        </div>
+        <p class="aiuto" style="margin:0 0 12px">Il link apre GitHub con nome e permesso
+          già messi: ti resta solo da scegliere la scadenza e premere <b>Generate token</b>.
+          Poi copi la sigla che comincia con <code>ghp_</code> e la incolli qui sotto.</p>
+
+        <details>
+          <summary style="cursor:pointer;font-size:.9rem;color:var(--muted);padding:4px 0">
+            Preferisco un token limitato a questo solo sito</summary>
+          <p class="aiuto" style="margin:8px 0">
+            <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Token
+            «fine-grained»</a> — più prudente ma più scomodo dal telefono, perché devi
+            scegliere a mano il repository <code>certamen-aquaticum</code> e mettere
+            <b>Contents: Read and write</b>.</p>
+          <p class="aiuto" style="margin:0">La differenza in una riga: <b>il primo vale per
+            tutti i tuoi repository ma è immediato, il secondo vale solo per
+            <code>certamen-aquaticum</code></b>. Per un sito di condominio il primo va
+            benissimo.</p>
+        </details>
+
+        <p class="aiuto" id="statoCopiaToken" style="margin:10px 0 0"></p>
+
+        <div class="nota-box info" style="margin-top:12px">
+          <b>📱 Perché dal telefono sparisce</b>
+          <p class="aiuto" style="margin:5px 0 0">Safari e Chrome <b>cancellano i dati dei
+            siti che non apri da qualche giorno</b>, e il token se ne va con loro. Il
+            rimedio: apri l'admin, fai <b>Condividi → Aggiungi a Home</b> e da lì in poi usa
+            quell'icona. Così il telefono lo tratta come un'app e il token resta molto
+            più a lungo.</p>
+        </div>
       </div>
+
       <div class="griglia2" style="margin-top:12px">
         <div class="campo"><label for="gh_owner">Utente</label><input type="text" id="gh_owner" value="Johannes1979I" class="mini" /></div>
         <div class="campo"><label for="gh_repo">Repository</label><input type="text" id="gh_repo" value="certamen-aquaticum" class="mini" /></div>
@@ -711,13 +743,13 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
         <div class="campo"><label for="gh_token">Token</label><input type="password" id="gh_token" class="mini" placeholder="ghp_…" /></div>
       </div>
       <div class="azioni" style="justify-content:flex-start">
-        <button class="btn btn-chiaro btn-piccolo" id="btnSalvaGh">Salva in questo browser</button>
+        <button class="btn btn-p btn-piccolo" id="btnSalvaGh">Salva in questo browser</button>
         <button class="btn btn-chiaro btn-piccolo" id="btnVediToken">👁️ Mostra</button>
-        <button class="btn btn-chiaro btn-piccolo" id="btnCopiaToken">📋 Copia</button>
       </div>
-      <p class="aiuto" style="margin-top:8px">Il token vale <b>per un browser solo</b>: se
-        usi anche il telefono va incollato pure lì. Copialo da qui e mandatelo con un
-        messaggio a te stesso, oppure rifai i tre passi direttamente dal telefono.</p>
+      <p class="aiuto" style="margin-top:8px">Il token resta <b>solo in questo browser</b>:
+        non finisce nel sito, non va nel database e non lo vede nessun altro. Vale per un
+        browser solo, quindi computer e telefono ne vogliono uno per uno — o lo stesso,
+        copiato da qui.</p>
     </details>
 
     <div class="nota-box" id="avvisoBozza" style="display:none;margin-top:14px">

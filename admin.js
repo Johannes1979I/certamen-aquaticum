@@ -212,16 +212,27 @@
       c.type = nascosto ? 'text' : 'password';
       $('btnVediToken').textContent = nascosto ? '🙈 Nascondi' : '👁️ Mostra';
     });
+    /* Copiare il token serve a passarlo dal computer al telefono senza
+       rigenerarlo. Se non c'è, lo si dice: un pulsante che non fa niente e
+       non spiega perché è la cosa più fastidiosa che ci sia. */
     $('btnCopiaToken').addEventListener('click', function () {
-      var c = $('gh_token');
-      if (!c.value) { CA.toast('Non c\'è nessun token da copiare in questo browser.', 5000); return; }
-      var prima = c.type; c.type = 'text';
-      c.select(); c.setSelectionRange(0, 99999);
-      var fatto = false;
-      try { fatto = document.execCommand('copy'); } catch (e) { }
-      c.type = prima;
-      CA.toast(fatto ? '📋 Token copiato: incollalo nell\'admin del telefono, poi cancella il messaggio.'
-        : '⚠️ Non riesco a copiarlo da solo: premi 👁️ Mostra e copialo a mano.', 8000);
+      var salvato = gh().token;
+      if (!salvato) {
+        testo('statoCopiaToken', '⚠️ In questo browser non c\'è nessun token salvato: ' +
+          'non ho niente da copiare. Fanne uno nuovo col pulsante qui sopra.');
+        CA.toast('Nessun token salvato in questo browser.', 6000);
+        return;
+      }
+      copiaTesto(salvato).then(function (fatto) {
+        if (fatto) {
+          testo('statoCopiaToken', '📋 Copiato. Incollalo nell\'admin del telefono e premi ' +
+            '«Salva in questo browser». Se lo mandi con un messaggio, poi cancellalo.');
+          CA.toast('📋 Token copiato.', 5000);
+        } else {
+          testo('statoCopiaToken', '⚠️ Il browser non mi lascia copiare da solo: ' +
+            'premi 👁️ Mostra e copialo a mano dal campo qui sotto.');
+        }
+      });
     });
     $('btnVaiPubblica').addEventListener('click', function () {
       document.querySelector('[data-vista="pubblica"]').click();
@@ -4552,6 +4563,36 @@
     var uguale = JSON.stringify(b.dati) === JSON.stringify(DATI);
     if (uguale) { buttaBozza(); return; }
     mostraAvvisoBozza(false);
+  }
+
+  /* Copia negli appunti. Il modo moderno funziona solo in pagine sicure,
+     e dal telefono capita di stare su http: allora si ripiega sul vecchio
+     campo nascosto, che va quasi sempre. */
+  function copiaTesto(testoDaCopiare) {
+    /* Prima il modo vecchio, e subito: funziona solo finché il dito è
+       ancora "caldo" sul pulsante, e aspettare una promessa lo raffredda.
+       Se non riesce si prova quello moderno, che su iPhone recente va
+       meglio ma vuole una pagina sicura. */
+    if (copiaAllaVecchia(testoDaCopiare)) return Promise.resolve(true);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(testoDaCopiare)
+        .then(function () { return true; })
+        .catch(function () { return false; });
+    }
+    return Promise.resolve(false);
+  }
+  function copiaAllaVecchia(testoDaCopiare) {
+    var a = document.createElement('textarea');
+    a.value = testoDaCopiare;
+    a.setAttribute('readonly', '');
+    a.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+    document.body.appendChild(a);
+    a.select();
+    a.setSelectionRange(0, 99999);          /* su iPhone senza questo non prende */
+    var fatto = false;
+    try { fatto = document.execCommand('copy'); } catch (e) { }
+    a.remove();
+    return fatto;
   }
 
   /* ---- GitHub ---- */
