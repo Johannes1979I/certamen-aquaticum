@@ -257,6 +257,8 @@
     $('btnVaiPubblica2').addEventListener('click', function () {
       document.querySelector('[data-vista="pubblica"]').click();
     });
+    $('btnAzzeraPunteggi').addEventListener('click', function () { azzeraGiornata(false); });
+    $('btnAzzeraTutto').addEventListener('click', function () { azzeraGiornata(true); });
     $('mgChiudi').addEventListener('click', chiudiModaleGara);
     $('mgSalva').addEventListener('click', salvaModaleGara);
     $('mgAzzera').addEventListener('click', function () {
@@ -5811,6 +5813,59 @@
   function aggiornaLinkGuida() {
     var a = $('btnGuidaWa');
     if (a) a.href = CA.linkWhatsApp(testoRiassunto());
+  }
+
+  /* ==================== AZZERARE DOPO LA PROVA GENERALE ===============
+     Provare tutto per davvero — squadre, gare, punteggi, tabelloni — e poi
+     rimettere il contatore a zero. Le iscrizioni stanno in un'altra
+     collezione del database e non vengono sfiorate: qui si cancella solo
+     il lavoro della giornata. Anche la bacheca pubblica va ripulita, se
+     no il sito continua a mostrare i punteggi della prova.            */
+  function azzeraGiornata(ancheSquadre) {
+    if (!SESS) { CA.toast('Prima entra nel database.', 6000); return; }
+    var quante = STATO.squadre.length;
+    var gare = Object.keys(STATO.risultati || {}).length;
+    var avviso = ancheSquadre
+      ? ('Cancello TUTTA la giornata: ' + quante + ' squadre, ' + gare + ' gare segnate, ' +
+        'tabelloni, coppie, appello e menzioni.\n\nLe iscrizioni restano tutte. Procedo?')
+      : ('Cancello punteggi, tabelloni e menzioni (' + gare + ' gare segnate).\n\n' +
+        'Le ' + quante + ' squadre e le coppie restano. Procedo?');
+    if (!confirm(avviso)) return;
+
+    STATO.risultati = {};
+    STATO.titoli = [];
+    STATO.bonus = {};
+    STATO.menzioni = {};
+    STATO.cronometro = cronometroVuoto();
+    STATO.torneoRagazzi = { attivo: false, turni: [] };
+    if (ancheSquadre) {
+      STATO.squadre = [];
+      STATO.configSquadre = {};
+      STATO.tornei = {};
+      STATO.presenze = {};
+      STATO.assettoCarte = null;
+      PRESENZE_MIE = {};
+      sqToccato = false;
+    } else {
+      /* le coppie restano, i tabelloni no: si rigenerano in un tocco */
+      Object.keys(STATO.tornei || {}).forEach(function (id) {
+        STATO.tornei[id].incontri = [];
+      });
+    }
+    salvaStato(true);
+
+    /* la bacheca deve tornare pulita anche per chi guarda da fuori */
+    token().then(function (t) { return FB.scriviClassifica(t, costruisciPubblico()); })
+      .then(function () {
+        testo('statoAzzera', '✅ Azzerato' + (ancheSquadre ? ' tutto' : ' punteggi e tabelloni') +
+          '. Anche la pagina pubblica è tornata pulita. Le iscrizioni sono tutte al loro posto.');
+      })
+      .catch(function (e) {
+        testo('statoAzzera', '⚠️ Azzerato qui, ma la pagina pubblica non si è aggiornata: ' +
+          V(e && e.message, 'errore') + '. Riprova da 📣 Pubblica.');
+      });
+    disegnaTutto();
+    CA.toast('🧹 Fatto: si riparte da zero.', 6000);
   }
 
   /* ========================= COPIA DI SICUREZZA ========================

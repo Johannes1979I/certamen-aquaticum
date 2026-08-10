@@ -628,6 +628,30 @@ service cloud.firestore {
 - Mobile-first, ma a piena larghezza su ogni schermo.
 - Mai `innerHTML` con dati che arrivano da fuori.
 
+## Provare tutto, e poi ricominciare da zero
+
+Prima del 15 agosto conviene fare una prova generale: formare le squadre,
+segnare qualche gara, generare un tabellone, guardare come vengono le
+classifiche sul sito. Poi si azzera.
+
+In `🖨️ Stampe → 🧹 Prova generale` ci sono due pulsanti:
+
+| | Cosa cancella | Cosa resta |
+|---|---|---|
+| **🏁 Azzera punteggi e tabelloni** | risultati, menzioni, tabelloni, cronometro, calendario degli scontri | squadre, coppie, appello |
+| **🧹 Azzera tutta la giornata** | tutto quanto sopra, più squadre, coppie, appello e assetto delle carte | — |
+
+**Le iscrizioni non si toccano mai**, con nessuno dei due: nomi, recapiti e
+codici restano tutti. Nemmeno i contenuti del sito vengono sfiorati — giochi,
+orari, musica, foto, regole.
+
+Tutti e due chiedono conferma dicendo esattamente quante squadre e quante gare
+stanno per sparire, e tutti e due **ripuliscono anche la pagina pubblica**: se
+no il sito resterebbe a mostrare i punteggi della prova.
+
+Prima di azzerare, scarica la **copia di sicurezza** (è il riquadro subito
+sotto): se cancelli per sbaglio, da lì rimetti tutto com'era.
+
 ## Se qualcosa non va
 
 Prima cosa in assoluto: **📊 Cruscotto → 🩺 Stato del database →

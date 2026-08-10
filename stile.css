@@ -301,6 +301,10 @@ section{ padding:clamp(40px,6vw,72px) 0; }
 @keyframes battito{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.045); } }
 @media (prefers-reduced-motion:reduce){ .orologio{ animation:none !important; } }
 
+/* pulsante di quelli da pensarci due volte */
+.btn.btn-rosso{ background:#c1121f; color:#fff; border-color:#c1121f; }
+.btn.btn-rosso:hover{ background:#a30f1a; }
+
 /* ---------- finestra del risultato: si tocca, non si scrive ------------- */
 .modale{
   position:fixed; inset:0; background:rgba(10,37,64,.6); z-index:300;
