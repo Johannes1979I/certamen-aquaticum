@@ -5369,6 +5369,19 @@
       el.appendChild(crea('p', 'aiuto', 'Nessun ruolo definito nei contenuti.'));
       return;
     }
+    /* quello che vale per tutti, prima dei ruoli: così si legge una volta
+       sola e non va ripetuto in ogni scheda */
+    if (V(c.comuni, []).length) {
+      var tutti = crea('div', 'nota-box info');
+      tutti.style.marginBottom = '14px';
+      tutti.appendChild(crea('b', null, '🤝 Questo lo fanno tutti'));
+      var ut = document.createElement('ul');
+      ut.style.cssText = 'margin:8px 0 0 20px;font-size:.92rem';
+      c.comuni.forEach(function (x) { ut.appendChild(crea('li', null, x)); });
+      tutti.appendChild(ut);
+      el.appendChild(tutti);
+    }
+
     ruoli.forEach(function (r, i) {
       var box = crea('div', 'ruolo-card');
       var t = crea('div', 'testa-ruolo');
@@ -5393,6 +5406,22 @@
       V(r.compiti, []).forEach(function (x) { ul.appendChild(crea('li', null, x)); });
       box.appendChild(ul);
       if (r.chiave) box.appendChild(crea('p', 'aiuto', '👉 ' + r.chiave));
+      /* la guida intera non entra in un messaggio: a ognuno si manda la sua
+         scheda, che è anche l'unica cosa che gli serve davvero */
+      var az = crea('div', 'azioni');
+      az.style.cssText = 'justify-content:flex-start;margin-top:8px';
+      var wa = crea('a', 'btn btn-chiaro btn-piccolo',
+        '💬 Manda' + (r.nome ? ' a ' + r.nome : ' questa scheda'));
+      wa.target = '_blank'; wa.rel = 'noopener';
+      wa.href = CA.linkWhatsApp(testoRuolo(r));
+      az.appendChild(wa);
+      az.appendChild(bottone('📋 Copia', 'chiaro btn-piccolo', function () {
+        copiaTesto(testoRuolo(r)).then(function (fatto) {
+          testo('statoGuida', fatto ? '📋 Copiata la scheda di ' + (r.nome || 'questo ruolo') + '.'
+            : '⚠️ Il browser non mi lascia copiare da solo.');
+        });
+      }));
+      box.appendChild(az);
       el.appendChild(box);
     });
     aggiornaLinkGuida();
@@ -5407,6 +5436,11 @@
     if (ev.data) righe.push(CA.dataIt(ev.data, true) + ', dalle ' + V(ev.orario, '') + ' alle ' + V(ev.orarioFine, ''));
     righe.push('');
     if (c.introduzione) { righe.push(c.introduzione); righe.push(''); }
+    if (V(c.comuni, []).length) {
+      righe.push('QUESTO LO FANNO TUTTI:');
+      c.comuni.forEach(function (x) { righe.push('  • ' + x); });
+      righe.push('');
+    }
     V(c.ruoli, []).forEach(function (r) {
       righe.push('— ' + (V(r.nome, '') || '(da assegnare)') + ' · ' + V(r.ruolo, ''));
       righe.push('  Quando: ' + V(r.quando, '') + '. Dove: ' + V(r.dove, '') + '.');
@@ -5428,9 +5462,45 @@
     return righe.join('\n');
   }
 
+  /* la scheda di una persona sola: sta comoda in un messaggio */
+  function testoRuolo(r) {
+    var c = V(DATI.collaboratori, {});
+    var righe = [];
+    righe.push((V(r.nome, '') || 'Da assegnare') + ' — ' + V(r.ruolo, ''));
+    righe.push('Certamen Aquaticum, sabato 15 agosto');
+    righe.push('Quando: ' + V(r.quando, '') + '. Dove: ' + V(r.dove, '') + '.');
+    righe.push('');
+    V(r.compiti, []).forEach(function (x) { righe.push('• ' + x); });
+    if (r.chiave) { righe.push(''); righe.push(r.chiave); }
+    if (V(c.comuni, []).length) {
+      righe.push('');
+      righe.push('E questo lo facciamo tutti:');
+      c.comuni.slice(0, 4).forEach(function (x) { righe.push('• ' + x); });
+    }
+    righe.push('');
+    righe.push('Area organizzatori: ' + CA.urlSito() + 'admin.html');
+    return righe.join('\n');
+  }
+
+  /* il riassunto per il gruppo: chi fa cosa in una riga a testa. La guida
+     intera in un indirizzo di WhatsApp non ci sta — verrebbe troncata. */
+  function testoRiassunto() {
+    var c = V(DATI.collaboratori, {});
+    var righe = [V(c.titolo, 'Chi fa cosa') + ' — Certamen Aquaticum, sabato 15 agosto'];
+    righe.push('');
+    V(c.ruoli, []).forEach(function (r) {
+      righe.push((V(r.nome, '') || '(da assegnare)') + ': ' + V(r.ruolo, '') +
+        ' — ' + V(r.quando, ''));
+    });
+    righe.push('');
+    righe.push('A ognuno mando la sua scheda con i dettagli. Il programma completo è sul sito:');
+    righe.push(CA.urlSito() + 'programma.html');
+    return righe.join('\n');
+  }
+
   function aggiornaLinkGuida() {
     var a = $('btnGuidaWa');
-    if (a) a.href = CA.linkWhatsApp(testoGuida());
+    if (a) a.href = CA.linkWhatsApp(testoRiassunto());
   }
 
   /* ========================= COPIA DI SICUREZZA ========================
@@ -5604,6 +5674,15 @@
         var intro = crea('p', null, c4.introduzione);
         intro.style.cssText = 'font-size:.95rem;margin-bottom:14px';
         b4.appendChild(intro);
+      }
+      if (V(c4.comuni, []).length) {
+        var ht = crea('h3', null, '🤝 Questo lo fanno tutti');
+        ht.style.cssText = 'font-size:1.05rem;margin:0 0 4px';
+        b4.appendChild(ht);
+        var ult = document.createElement('ul');
+        ult.style.cssText = 'margin:0 0 14px 18px;font-size:.92rem';
+        c4.comuni.forEach(function (x) { ult.appendChild(crea('li', null, x)); });
+        b4.appendChild(ult);
       }
       V(c4.ruoli, []).forEach(function (r) {
         var box = crea('div');

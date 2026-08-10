@@ -214,17 +214,24 @@ stampata e il messaggio da mandare.
 
 | | Chi | Cosa fa |
 |---|---|---|
-| 🎤 | **Gianpaolo** | microfono e tablet in giro, computer a bordo vasca: annunci, cronometro, musica, punteggi |
-| 🏊 | **Laura** | arbitro in acqua: spiega, dà il via, decide, alza il braccio della squadra che vince |
-| 📷 | **Serena** | raduna le due squadre del turno dopo mentre si gioca, e scatta le foto |
-| 🛟 | **Simona** | accoglienza fino alle 16:15, poi attrezzatura: prepara il materiale della gara successiva |
-| 🃏 | **Veronica** | tavoli delle carte: coppie, tabellone, punteggi, chiama i turni |
+| 🎤 | **Gianpaolo** | regia: microfono, cronometro, musica, punteggi — e fra una gara e l'altra i tavoli delle carte |
+| 🛟 | **Laura** | arbitra la gara col materassino |
+| ⚽ | **Veronica** | arbitra l'altra gara, quella in parallelo |
+| 🤿 | **Simona** | accoglienza fino alle 16:15, poi in acqua vicino ai più piccoli |
+| 📷 | **Serena** | raduna le squadre del turno dopo mentre si gioca, e scatta le foto |
 
-Tre modi per mandarla: **🖨️ Stampa la guida** (un foglio a testa),
-**📋 Copia il testo** (da incollare dove vuoi) e **💬 Manda su WhatsApp**.
+**Servono due arbitri** perché a scontri le gare vanno a due per volta: una
+persona sola non le copre. Il **materiale non è di nessuno**: c'è un elenco di
+cose che fanno tutti, in cima alla guida, e la prima è preparare la gara
+successiva se hai le mani libere.
 
-Il segnale fra Laura e Gianpaolo è il braccio alzato: è l'unica cosa da
-concordare prima, e fa funzionare tutto il resto.
+Come mandarla: **🖨️ Stampa la guida intera** (un foglio da appendere),
+**💬 Riassunto al gruppo** (chi fa cosa in una riga) e, sotto ogni nome,
+**💬 Manda a…** con la sua scheda. La guida intera in un messaggio non ci sta:
+WhatsApp la troncherebbe.
+
+Il segnale fra arbitri e regia è il braccio alzato verso la squadra che ha
+vinto: è l'unica cosa da concordare prima, e fa funzionare tutto il resto.
 
 ## Gare a scontri, quando l'attrezzatura non basta
 
