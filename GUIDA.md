@@ -206,6 +206,42 @@ Tre cose si regolano lì:
 Se un gioco di riserva viene attivato prende il posto che ha nell'elenco: se lo
 vuoi altrove, spostalo con ⠿ o con le frecce ▲▼.
 
+## Gare a scontri, quando l'attrezzatura non basta
+
+Con quattro squadre e **due materassini** non si può far giocare tutti insieme
+ai giochi che li usano. In `🏅 Punteggi` c'è l'interruttore **«Gioca a scontri
+invece che tutti insieme»**: due squadre si sfidano al gioco col materassino,
+le altre due a un gioco che non ne ha bisogno, e al turno dopo si scambiano.
+
+Premi **🎲 Genera il calendario** e viene fuori tutto: turni, accoppiamenti,
+chi gioca a cosa. Poi durante la festa **tocchi la squadra che ha vinto** —
+niente da scrivere, con le mani bagnate — e prende i punti del primo, l'altra
+quelli del secondo. La classifica generale si aggiorna sotto i tuoi occhi e
+finisce in bacheca come sempre. Toccando di nuovo la stessa squadra si annulla.
+
+Cosa fa da solo:
+
+- **gli accoppiamenti** girano come in un girone all'italiana, così ogni
+  squadra incontra tutte le altre;
+- **il materassino** tocca a turno a chi l'ha usato di meno: in fondo alla
+  pagina c'è il conto, squadra per squadra;
+- se le squadre sono **dispari**, a ogni turno una riposa — e c'è scritto chi;
+- con **due squadre sole** non serve nessun turno: le gare si mettono in fila
+  nell'ordine del programma, una dopo l'altra.
+
+Due cose restano fuori dal calendario, apposta:
+
+- il **riscaldamento**, che non dà punti;
+- la **finale**, che vale doppio: ridurla a due squadre mentre le altre
+  guardano sarebbe il modo peggiore di chiudere la giornata. Si segna sotto il
+  calendario, con l'ordine d'arrivo di tutte.
+
+Quanti materassini avete si scrive in `🎯 Settaggio giochi acquatici → 🕓 Come
+viene il pomeriggio`. E se un gioco vuole il materassino o no lo dici tu, dalla
+sua scheda: la spunta *«Serve il materassino»*. Se un giorno ne comprate altri
+due, cambi il numero e il calendario si rifà con due gare col materassino in
+parallelo.
+
 ## Come far giocare le carte italiane
 
 Briscola, scopone e tresette sono tre giochi: il giorno della festa decidi tu

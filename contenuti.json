@@ -132,7 +132,8 @@
           "ricerca": "Sarà perché ti amo Ricchi e Poveri"
         }
       ],
-      "escluso": false
+      "escluso": false,
+      "attrezzo": ""
     },
     {
       "id": "staffetta-materassino",
@@ -198,7 +199,8 @@
           "ricerca": "Rock Lobster The B-52's"
         }
       ],
-      "escluso": false
+      "escluso": false,
+      "attrezzo": "materassino"
     },
     {
       "id": "staffetta-pallone",
@@ -264,7 +266,8 @@
           "ricerca": "Freed from Desire Gala"
         }
       ],
-      "escluso": false
+      "escluso": false,
+      "attrezzo": ""
     },
     {
       "id": "trasporto-compagno",
@@ -329,7 +332,8 @@
           "url": "https://www.youtube.com/watch?v=1MPZRcyTrcU",
           "ricerca": "You've Got a Friend in Me Randy Newman"
         }
-      ]
+      ],
+      "attrezzo": "materassino"
     },
     {
       "id": "traghetto",
@@ -394,7 +398,8 @@
           "ricerca": "Maracaibo Lu Colombo"
         }
       ],
-      "escluso": false
+      "escluso": false,
+      "attrezzo": "materassino"
     },
     {
       "id": "palla-capitano",
@@ -466,7 +471,8 @@
           "ricerca": "I Gotta Feeling The Black Eyed Peas"
         }
       ],
-      "escluso": false
+      "escluso": false,
+      "attrezzo": "materassino"
     },
     {
       "id": "catena",
@@ -519,7 +525,8 @@
           "ricerca": "Vamos a bailar Paola e Chiara"
         }
       ],
-      "escluso": false
+      "escluso": false,
+      "attrezzo": ""
     },
     {
       "id": "pallanuoto",
@@ -603,7 +610,8 @@
           "ricerca": "Sandstorm Darude"
         }
       ],
-      "escluso": false
+      "escluso": false,
+      "attrezzo": ""
     },
     {
       "id": "passaggi-materassino",
@@ -667,7 +675,8 @@
           "url": "https://www.youtube.com/watch?v=VHcAusNO3L4",
           "ricerca": "L'estate addosso Jovanotti"
         }
-      ]
+      ],
+      "attrezzo": "materassino"
     },
     {
       "id": "re-materassino",
@@ -732,7 +741,8 @@
           "url": "https://www.youtube.com/watch?v=bjnFXgdyyLw",
           "ricerca": "Kung Fu Fighting Carl Douglas"
         }
-      ]
+      ],
+      "attrezzo": "materassino"
     },
     {
       "id": "nuoto-pallone",
@@ -784,7 +794,8 @@
           "url": "https://www.youtube.com/watch?v=efXPVisZ33o",
           "ricerca": "Momenti di gloria Vangelis"
         }
-      ]
+      ],
+      "attrezzo": ""
     },
     {
       "id": "cavalca-materassino",
@@ -836,7 +847,8 @@
           "url": "https://www.youtube.com/watch?v=MxT5sfhP_Y0",
           "ricerca": "Hawaii Five-O (tema) The Ventures"
         }
-      ]
+      ],
+      "attrezzo": "materassino"
     },
     {
       "id": "king-of-the-mat",
@@ -909,7 +921,8 @@
           "url": "https://www.youtube.com/watch?v=UsuF4jJ4sgA",
           "ricerca": "Whatever It Takes Imagine Dragons"
         }
-      ]
+      ],
+      "attrezzo": "materassino"
     },
     {
       "id": "baseball-acqua",
@@ -983,7 +996,8 @@
           "ricerca": "Don't Stop Believin' Journey"
         }
       ],
-      "escluso": false
+      "escluso": false,
+      "attrezzo": ""
     },
     {
       "id": "super-staffetta",
@@ -1057,7 +1071,8 @@
           "url": "https://www.youtube.com/watch?v=QGJuMBdaqIw",
           "ricerca": "Firework Katy Perry"
         }
-      ]
+      ],
+      "attrezzo": "materassino"
     }
   ],
   "tornei": [
@@ -1592,5 +1607,8 @@
       "sottotitolo": "Il jingle di apertura, tredici secondi",
       "file": "audio/jingle.mp3"
     }
+  },
+  "attrezzi": {
+    "materassino": 2
   }
 }

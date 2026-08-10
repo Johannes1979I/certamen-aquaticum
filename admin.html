@@ -449,6 +449,22 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
     <p class="aiuto" id="statoAudio"></p>
   </div>
 
+  <div class="card" id="sec-scontri">
+    <h2>🆚 Gare a scontri fra squadre</h2>
+    <p class="aiuto">Serve quando l'attrezzatura non basta per tutti: con
+      <b>due materassini</b> e quattro squadre, due si sfidano al gioco col materassino
+      mentre le altre due giocano a qualcosa che non ne ha bisogno. Al turno dopo si
+      scambiano. Con due sole squadre si gioca una gara per volta, senza turni.</p>
+    <label class="spunta" for="scontriAttivi" style="margin:12px 0">
+      <input type="checkbox" id="scontriAttivi" />
+      <span><b>Gioca a scontri invece che tutti insieme</b></span>
+    </label>
+    <div id="statoScontri"></div>
+    <div class="azioni" style="justify-content:flex-start">
+      <button class="btn btn-p" id="btnGeneraScontri">🎲 Genera il calendario</button>
+    </div>
+  </div>
+
   <div class="card" id="sec-cronometro">
     <h2>⏱️ Cronometro della gara</h2>
     <p class="aiuto">Scegli la gara e premi <b>Via</b>: il tempo scorre uguale per tutti
@@ -572,6 +588,11 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
       <div class="campo">
         <label for="pa_pausaMin">Quanto dura la pausa (minuti)</label>
         <input type="text" id="pa_pausaMin" class="mini" placeholder="10" />
+      </div>
+      <div class="campo">
+        <label for="pa_materassini">Quanti materassini avete</label>
+        <input type="text" id="pa_materassini" class="mini" placeholder="2" />
+        <div class="aiuto">Serve alle gare a scontri: uno per squadra in campo.</div>
       </div>
     </div>
     <div class="linea-tempo" id="lineaTempo"></div>

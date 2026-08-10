@@ -33,7 +33,8 @@
   function statoVuoto() {
     return {
       squadre: [], configSquadre: {}, risultati: {}, titoli: [], tornei: {}, bonus: {},
-      cronometro: cronometroVuoto(), assettoCarte: null
+      cronometro: cronometroVuoto(), assettoCarte: null,
+      torneoRagazzi: { attivo: false, turni: [] }
     };
   }
   function cronometroVuoto() {
@@ -189,6 +190,18 @@
     });
     $('btnPubblicaContenuti').addEventListener('click', pubblicaContenuti);
     $('btnScarica').addEventListener('click', scaricaContenuti);
+    $('scontriAttivi').addEventListener('change', function () {
+      if (this.checked) {
+        if (!torneoR().turni.length) generaTorneoRagazzi();
+        else { torneoR().attivo = true; salvaStato(); disegnaPunteggi(); }
+      } else spegniTorneoRagazzi();
+    });
+    $('btnGeneraScontri').addEventListener('click', function () {
+      if (torneoR().turni.length &&
+        !confirm('Rifaccio il calendario da capo. I risultati già segnati restano, ' +
+          'ma gli accoppiamenti cambiano. Procedo?')) return;
+      generaTorneoRagazzi();
+    });
     $('fileAudio').addEventListener('change', function () {
       if (this.files && this.files[0]) caricaAudio(this.files[0]);
     });
@@ -249,6 +262,13 @@
     });
     $('pa_pausaDopo').addEventListener('change', function () {
       DATI.programmaAuto.pausaDopo = this.value; ricalcolaProgramma(true);
+    });
+    $('pa_materassini').addEventListener('change', function () {
+      DATI.attrezzi = V(DATI.attrezzi, {});
+      DATI.attrezzi.materassino = Math.max(0, Number(this.value) || 0);
+      salvaBozzaFraPoco();
+      disegnaScontri();
+      CA.toast('🛟 ' + DATI.attrezzi.materassino + ' materassini: le gare a scontri si regolano su questo.', 5000);
     });
     $('btnRiprendiBozza').addEventListener('click', riprendiBozza);
     $('btnButtaBozza').addEventListener('click', function () {
@@ -726,7 +746,7 @@
         configSquadre: STATO.configSquadre,
         bonus: STATO.bonus
       },
-      risultati: { risultati: STATO.risultati },
+      risultati: { risultati: STATO.risultati, torneoRagazzi: STATO.torneoRagazzi },
       titoli: { titoli: STATO.titoli },
       cronometro: { cronometro: STATO.cronometro },
       assetto_carte: { assettoCarte: STATO.assettoCarte }
@@ -745,6 +765,7 @@
       STATO.bonus = V(dati.bonus, {});
     } else if (nome === 'risultati') {
       STATO.risultati = V(dati.risultati, {});
+      STATO.torneoRagazzi = V(dati.torneoRagazzi, { attivo: false, turni: [] });
     } else if (nome === 'titoli') {
       STATO.titoli = V(dati.titoli, []);
     } else if (nome === 'cronometro') {
@@ -2992,6 +3013,300 @@
     return scroll;
   }
 
+  /* ==================== GARE A SCONTRI FRA SQUADRE =====================
+     Con quattro squadre e due materassini soli non si può far giocare
+     tutti insieme ai giochi che li usano. Allora si divide: due squadre
+     si sfidano al gioco col materassino, le altre due a un gioco che non
+     ne ha bisogno, e al turno dopo si scambiano. Da qui escono gli
+     accoppiamenti, il calendario e i punteggi; con due squadre sole si
+     gioca e basta, una gara dopo l'altra.                                */
+
+  function vuoleAttrezzo(g) { return String(V(g && g.attrezzo, '')).trim(); }
+  function quantiAttrezzi(nome) {
+    var a = V(DATI.attrezzi, {});
+    var n = Number(a[nome]);
+    return isFinite(n) ? n : 0;
+  }
+  /* un materassino a testa: due squadre in campo, due materassini */
+  function partiteInParallelo(gioco) {
+    var att = vuoleAttrezzo(gioco);
+    if (!att) return 99;                       /* niente da spartire */
+    return Math.floor(quantiAttrezzi(att) / 2);
+  }
+  function torneoR() {
+    STATO.torneoRagazzi = STATO.torneoRagazzi || { attivo: false, turni: [] };
+    return STATO.torneoRagazzi;
+  }
+
+  /* I giochi che entrano in calendario sono quelli che danno punti e che ha
+     senso giocare due squadre alla volta. Restano fuori il riscaldamento e
+     le gare individuali (come nella schermata normale) e soprattutto la
+     **finale**: vale doppio, e ridurla a uno scontro fra due squadre
+     mentre le altre guardano sarebbe il modo peggiore di chiudere. Quella
+     si segna a parte, con l'ordine d'arrivo di tutte. */
+  function giochiDaScontro() {
+    return giochiAttivi().filter(function (g) {
+      return !g.riserva && g.tipo !== 'riscaldamento' &&
+        g.tipo !== 'individuale' && g.tipo !== 'finale';
+    });
+  }
+  function inCalendario(idGioco) {
+    return torneoR().turni.some(function (t) {
+      return t.incontri.some(function (i) { return i.gioco === idGioco; });
+    });
+  }
+
+  /* Il girone all'italiana col metodo del cerchio: una squadra sta ferma
+     e le altre ruotano. Con un numero dispari una riposa a ogni turno. */
+  function giraSquadre(n) {
+    var ids = [];
+    for (var i = 0; i < n; i++) ids.push(i);
+    if (ids.length % 2) ids.push(-1);          /* il posto di chi riposa */
+    var m = ids.length, turni = [];
+    for (var t = 0; t < m - 1; t++) {
+      var coppie = [];
+      for (var k = 0; k < m / 2; k++) {
+        var a = ids[k], b = ids[m - 1 - k];
+        if (a >= 0 && b >= 0) coppie.push([a, b]);
+      }
+      turni.push(coppie);
+      ids.splice(1, 0, ids.pop());             /* ruota tenendo fermo il primo */
+    }
+    return turni;
+  }
+
+  function generaTorneoRagazzi() {
+    var squadre = STATO.squadre;
+    if (squadre.length < 2) { CA.toast('Servono almeno due squadre.', 5000); return; }
+    var giochi = giochiDaScontro();
+    if (!giochi.length) { CA.toast('Non c\'è nessun gioco da mettere in calendario.', 5000); return; }
+
+    /* Con due squadre si gioca una gara per volta e l'attrezzatura basta
+       sempre: allora si segue l'ordine del programma, che è quello che
+       l'organizzatore ha deciso. Il taglio fra giochi con e senza
+       attrezzo serve solo quando ci sono partite in parallelo. */
+    var parallele = Math.floor(squadre.length / 2);
+    var conAttrezzo = parallele < 2 ? [] : giochi.filter(function (g) { return vuoleAttrezzo(g); });
+    var liberi = parallele < 2 ? giochi.slice() : giochi.filter(function (g) { return !vuoleAttrezzo(g); });
+    var giri = giraSquadre(squadre.length);
+    var usiAttrezzo = {};                      /* quante volte una squadra l'ha avuto */
+    squadre.forEach(function (s) { usiAttrezzo[s.id] = 0; });
+
+    var turni = [], giro = 0;
+    while (conAttrezzo.length || liberi.length) {
+      var coppie = giri[giro % giri.length].slice();
+      giro++;
+      var incontri = [];
+
+      /* il gioco con l'attrezzo tocca a una coppia sola: quella che finora
+         l'ha usato di meno, così alla fine è girato più o meno per tutti */
+      if (conAttrezzo.length) {
+        var g = conAttrezzo[0];
+        var quante = partiteInParallelo(g);
+        coppie.sort(function (x, y) {
+          var cx = usiAttrezzo[squadre[x[0]].id] + usiAttrezzo[squadre[x[1]].id];
+          var cy = usiAttrezzo[squadre[y[0]].id] + usiAttrezzo[squadre[y[1]].id];
+          return cx - cy;
+        });
+        for (var i = 0; i < quante && coppie.length && conAttrezzo.length; i++) {
+          var c = coppie.shift();
+          var gioco = conAttrezzo.shift();
+          incontri.push({ gioco: gioco.id, a: squadre[c[0]].id, b: squadre[c[1]].id });
+          usiAttrezzo[squadre[c[0]].id]++;
+          usiAttrezzo[squadre[c[1]].id]++;
+        }
+      }
+      /* le coppie rimaste giocano a qualcosa che non ha bisogno di niente */
+      while (coppie.length && liberi.length) {
+        var c2 = coppie.shift();
+        var g2 = liberi.shift();
+        incontri.push({ gioco: g2.id, a: squadre[c2[0]].id, b: squadre[c2[1]].id });
+      }
+      if (!incontri.length) break;             /* finiti i giochi */
+      turni.push({ n: turni.length + 1, incontri: incontri });
+      /* chi resta senza gioco in questo turno riposa: è normale quando i
+         giochi liberi finiscono prima di quelli con l'attrezzo */
+    }
+
+    var t = torneoR();
+    t.attivo = true;
+    t.turni = turni;
+    t.usiAttrezzo = usiAttrezzo;
+    salvaStato();
+    disegnaPunteggi();
+    CA.toast('🆚 Calendario pronto: ' + turni.length + ' turni, ' +
+      turni.reduce(function (n, x) { return n + x.incontri.length; }, 0) + ' scontri.', 7000);
+  }
+
+  function disegnaScontri() {
+    var sw = $('scontriAttivi');
+    if (!sw) return;
+    var t = torneoR();
+    sw.checked = !!t.attivo;
+    var el = $('statoScontri');
+    el.textContent = '';
+
+    var n = STATO.squadre.length;
+    if (n < 2) {
+      el.appendChild(crea('p', 'aiuto', 'Prima forma le squadre nella scheda 🚩 Squadre.'));
+      return;
+    }
+    var giochi = giochiDaScontro();
+    var conA = giochi.filter(function (g) { return vuoleAttrezzo(g); }).length;
+    var finali = giochiAttivi().filter(function (g) {
+      return !g.riserva && g.tipo === 'finale';
+    }).length;
+
+    var box = crea('div', 'nota-box' + (t.attivo ? ' sereno' : ' info'));
+    box.appendChild(crea('b', null, t.attivo
+      ? '🆚 Si gioca a scontri'
+      : (n === 2 ? '👥 Due squadre: si gioca una gara per volta'
+        : '👥 ' + n + ' squadre, tutte insieme a ogni gara')));
+    var righe = [];
+    if (n === 2) {
+      righe.push('Con due squadre ogni gioco è già uno scontro diretto: il calendario ' +
+        'mette in fila le ' + giochi.length + ' gare nell\'ordine del programma, una dopo ' +
+        'l\'altra. L\'attrezzatura basta sempre.');
+    } else {
+      var par = Math.floor(n / 2);
+      righe.push(n + ' squadre, ' + (par === 1 ? 'uno scontro' : par + ' scontri') + ' per turno' +
+        (n % 2 ? ' e una squadra a riposo' : '') + '. ' +
+        'Delle ' + giochi.length + ' gare da mettere in calendario, ' + conA + ' vogliono il ' +
+        'materassino e se ne può fare una per volta: ci sono ' +
+        quantiAttrezzi('materassino') + ' materassini.');
+    }
+    if (finali) {
+      righe.push('La finale resta fuori dal calendario e si segna a parte, con l\'ordine ' +
+        'd\'arrivo di tutte le squadre: vale doppio, ridurla a due squadre sarebbe un peccato.');
+    }
+    if (t.attivo && t.turni.length) {
+      var fatti = 0, tot = 0;
+      t.turni.forEach(function (x) {
+        x.incontri.forEach(function (i) { tot++; if (vincitoreDi(i.gioco)) fatti++; });
+      });
+      righe.push('Calendario: ' + t.turni.length + ' turni, ' + tot + ' scontri, ' +
+        fatti + ' già giocati.');
+    }
+    righe.forEach(function (r) { box.appendChild(crea('p', 'aiuto', r)); });
+    el.appendChild(box);
+  }
+
+  function spegniTorneoRagazzi() {
+    var t = torneoR();
+    t.attivo = false;
+    salvaStato();
+    disegnaPunteggi();
+  }
+
+  /* Il risultato di uno scontro si scrive nella stessa forma di una gara
+     normale — primo e secondo — così classifiche, bacheca, stampe e sito
+     continuano a funzionare senza sapere niente del torneo. */
+  function segnaScontro(inc, vincitore) {
+    var g = V(DATI.giochi, []).filter(function (x) { return x.id === inc.gioco; })[0] || {};
+    var scala = String(V(g.punti, '')).split('/').map(function (x) {
+      return Number(String(x).replace(/\D/g, '')) || 0;
+    });
+    /* se il gioco non dichiara un punteggio suo si usa quello dell'area:
+       meglio dei punti di scorta che una vittoria che vale zero */
+    var pun = V(V(V(DATI.aree, {}).ragazzi, {}).punteggio, {});
+    var primo = scala[0] || V(pun.primo, 5);
+    var secondo = scala[1] || V(pun.secondo, 3);
+    if (!vincitore) { delete STATO.risultati[inc.gioco]; }
+    else {
+      var perdente = (vincitore === inc.a) ? inc.b : inc.a;
+      STATO.risultati[inc.gioco] = [
+        { squadra: vincitore, posizione: 1, punti: primo },
+        { squadra: perdente, posizione: 2, punti: secondo }
+      ];
+    }
+    salvaStato();
+    aggiornaClassificaRagazziAVideo();
+  }
+
+  /* Il calendario: un riquadro per turno, dentro gli scontri in parallelo.
+     Si tocca la squadra che ha vinto e basta — a bordo vasca, con le mani
+     bagnate, non si scrivono numeri. */
+  function disegnaCalendarioScontri(el) {
+    var t = torneoR();
+    var nome = {};
+    STATO.squadre.forEach(function (s) { nome[s.id] = s.nome; });
+
+    if (!t.turni.length) {
+      var v = crea('div', 'card');
+      v.appendChild(crea('p', 'aiuto', 'Il calendario non c\'è ancora: generalo qui sopra.'));
+      el.appendChild(v);
+      return;
+    }
+
+    t.turni.forEach(function (turno) {
+      var c = crea('div', 'gioco-punti');
+      var fatti = turno.incontri.filter(function (i) { return !!vincitoreDi(i.gioco); }).length;
+      c.appendChild(crea('h3', null, 'Turno ' + turno.n +
+        ' — ' + fatti + ' su ' + turno.incontri.length + ' giocati'));
+      /* chi non è in campo in questo turno guarda: meglio dirlo che
+         lasciare due squadre a chiedersi se le abbiamo dimenticate */
+      var inCampo = {};
+      turno.incontri.forEach(function (i) { inCampo[i.a] = true; inCampo[i.b] = true; });
+      var fermi = STATO.squadre.filter(function (s) { return !inCampo[s.id]; });
+      if (fermi.length) {
+        c.appendChild(crea('p', 'aiuto', '⏸️ Riposano: ' +
+          fermi.map(function (s) { return s.nome; }).join(', ') + '.'));
+      }
+
+      turno.incontri.forEach(function (inc) {
+        var g = V(DATI.giochi, []).filter(function (x) { return x.id === inc.gioco; })[0] || {};
+        var riga = crea('div', 'scontro');
+        riga.appendChild(crea('div', 'gioco-scontro',
+          V(g.emoji, '🎯') + ' ' + V(g.nome, inc.gioco) +
+          (vuoleAttrezzo(g) ? ' · 🛟 ' + vuoleAttrezzo(g) : '')));
+
+        var vinto = vincitoreDi(inc.gioco);
+        var sfida = crea('div', 'due-squadre');
+        [inc.a, inc.b].forEach(function (id, i) {
+          var b = crea('button', 'squadra-scontro' + (vinto === id ? ' vince' : ''),
+            (vinto === id ? '🏆 ' : '') + V(nome[id], '—'));
+          b.addEventListener('click', function () {
+            segnaScontro(inc, vinto === id ? '' : id);   /* ritocca: annulla */
+            disegnaCalendarioAVideo();
+          });
+          sfida.appendChild(b);
+          if (i === 0) sfida.appendChild(crea('span', 'contro', 'contro'));
+        });
+        riga.appendChild(sfida);
+        c.appendChild(riga);
+      });
+      el.appendChild(c);
+    });
+
+    var nota = crea('div', 'card');
+    nota.appendChild(crea('p', 'aiuto',
+      'Tocca la squadra che ha vinto: prende ' + 'i punti del primo, l\'altra quelli del ' +
+      'secondo, e la classifica qui sopra si aggiorna da sola. Toccando di nuovo la stessa ' +
+      'squadra si annulla il risultato.'));
+    if (t.usiAttrezzo) {
+      var conti = STATO.squadre.map(function (s) {
+        return s.nome + ': ' + V(t.usiAttrezzo[s.id], 0);
+      }).join(' · ');
+      nota.appendChild(crea('p', 'aiuto', '🛟 Quante volte tocca il materassino a ognuna — ' + conti));
+    }
+    el.appendChild(nota);
+  }
+
+  /* si ridisegna solo il calendario e la classifica, non tutta la scheda:
+     se no sotto il dito sparisce quello che si sta toccando */
+  function disegnaCalendarioAVideo() {
+    disegnaPuntiRagazzi();
+  }
+  function aggiornaClassificaRagazziAVideo() {
+    aggiornaBachecaSePuoi();
+  }
+
+  function vincitoreDi(idGioco) {
+    var r = V(STATO.risultati[idGioco], []).filter(Boolean);
+    var primo = r.filter(function (x) { return x.posizione === 1; })[0];
+    return primo ? primo.squadra : '';
+  }
+
   /* ====================== LA MUSICA DELLA GIORNATA =====================
      Sigla e jingle a portata di dito, senza doverli cercare nel telefono
      mentre quindici ragazzi aspettano a bordo vasca. I file stanno nel
@@ -3317,6 +3632,7 @@
 
   /* ============================== PUNTEGGI ============================= */
   function disegnaPunteggi() {
+    disegnaScontri();
     disegnaAudio();
     disegnaCronometro();
     disegnaPuntiRagazzi();
@@ -3372,11 +3688,19 @@
     });
     el.appendChild(cc);
 
+    /* a scontri il calendario prende il posto delle schede gioco per gioco,
+       ma quelle che restano fuori dal calendario (la finale) si segnano
+       lo stesso, con l'ordine d'arrivo di tutte le squadre */
+    var aScontri = torneoR().attivo;
+    if (aScontri) disegnaCalendarioScontri(el);
+
     /* una scheda per gioco (saltando quelli esclusi dal programma) */
     V(DATI.giochi, []).forEach(function (g) {
       if (g.escluso) return;
       if (g.tipo === 'riscaldamento') return;
       if (g.tipo === 'individuale') return;
+      if (aScontri && inCalendario(g.id)) return;
+      if (aScontri && g.riserva) return;
       var c = crea('div', 'gioco-punti');
       var doppio = (g.tipo === 'finale');
       var h = crea('h3', null, V(g.emoji, '🎯') + ' ' + g.nome + (doppio ? '  (punti doppi)' : ''));
@@ -3999,6 +4323,20 @@
       gr.appendChild(o);
       gr.appendChild(campoMini('Chi partecipa', g.partecipanti, function (v) { g.partecipanti = v; }));
       det.appendChild(gr);
+      /* serve al calendario a scontri: due materassini e quattro squadre
+         vogliono dire una gara col materassino per volta */
+      var sm = crea('label', 'spunta');
+      sm.style.margin = '4px 0 10px';
+      var cm = document.createElement('input');
+      cm.type = 'checkbox';
+      cm.checked = (V(g.attrezzo, '') === 'materassino');
+      cm.addEventListener('change', function () {
+        g.attrezzo = cm.checked ? 'materassino' : '';
+        salvaBozzaFraPoco();
+      });
+      sm.appendChild(cm);
+      sm.appendChild(crea('span', null, 'Serve il materassino'));
+      det.appendChild(sm);
       det.appendChild(areaMini('Descrizione', g.descrizione, function (v) { g.descrizione = v; }));
       det.appendChild(areaMini('Regole (una per riga)', V(g.regole, []).join('\n'), function (v) { g.regole = righe(v); }));
       det.appendChild(areaMini('Varianti (una per riga)', V(g.varianti, []).join('\n'), function (v) { g.varianti = righe(v); }));
@@ -4104,6 +4442,9 @@
     }
     if ($('pa_pausaMin') && document.activeElement !== $('pa_pausaMin')) {
       $('pa_pausaMin').value = V(auto.pausaMinuti, 10);
+    }
+    if ($('pa_materassini') && document.activeElement !== $('pa_materassini')) {
+      $('pa_materassini').value = quantiAttrezzi('materassino');
     }
     var sel = $('pa_pausaDopo');
     if (sel) {
@@ -4297,6 +4638,7 @@
       DATI.programma = d.programma;
     }
     d.programmaAuto = V(DATI.programmaAuto, {});
+    d.attrezzi = V(DATI.attrezzi, {});
     /* giochi e tornei sono già stati modificati in DATI dai campi */
     d.giochi = DATI.giochi;
     d.tornei = DATI.tornei;

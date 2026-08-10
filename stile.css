@@ -301,6 +301,20 @@ section{ padding:clamp(40px,6vw,72px) 0; }
 @keyframes battito{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.045); } }
 @media (prefers-reduced-motion:reduce){ .orologio{ animation:none !important; } }
 
+/* ------------- scontri fra squadre: si tocca chi ha vinto --------------- */
+.scontro{ padding:10px 0; border-top:1px solid var(--linea); }
+.scontro:first-of-type{ border-top:none; }
+.gioco-scontro{ font-size:.92rem; color:var(--muted); margin-bottom:8px; }
+.due-squadre{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.due-squadre .contro{ font-size:.84rem; color:var(--muted); }
+.squadra-scontro{
+  flex:1 1 140px; min-height:52px; padding:10px 14px; border-radius:14px;
+  border:2px solid var(--linea); background:#fff; color:var(--ink);
+  font-size:1rem; font-weight:bold; cursor:pointer; text-align:center;
+}
+.squadra-scontro:hover{ border-color:var(--c1); }
+.squadra-scontro.vince{ background:#e9f9f0; border-color:#2f9e5b; color:#0f7a4a; }
+
 /* --------- rifare il token: si deve trovare anche cercandolo di fretta --- */
 .nota-box.rifai-token{
   background:#eef6ff; border-color:var(--c1); margin:12px 0;
