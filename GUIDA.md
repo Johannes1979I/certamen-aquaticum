@@ -214,24 +214,27 @@ stampata e il messaggio da mandare.
 
 | | Chi | Cosa fa |
 |---|---|---|
-| 🎤 | **Gianpaolo** | regia: microfono, cronometro, musica, punteggi — e fra una gara e l'altra i tavoli delle carte |
-| 🛟 | **Laura** | arbitra la gara col materassino |
-| ⚽ | **Veronica** | arbitra l'altra gara, quella in parallelo |
-| 🤿 | **Simona** | accoglienza fino alle 16:15, poi in acqua vicino ai più piccoli |
-| 📷 | **Serena** | raduna le squadre del turno dopo mentre si gioca, e scatta le foto |
+| 🎤 | **Gianpaolo** | Regia: microfono, cronometro, musica, punteggi |
+| 🛟 | **Laura** | Arbitra la gara col materassino |
+| 🤝 | **Simona** | Assiste la stessa gara: conta, tiene in riga, e dice a Gianpaolo chi ha vinto |
+| ⚽ | **Veronica** | Arbitra l'altra gara, in parallelo |
+| 🃏 | **Serena** | Assiste l'altra gara, e tiene i tavoli delle carte fra un turno e l'altro |
 
-**Servono due arbitri** perché a scontri le gare vanno a due per volta: una
-persona sola non le copre. Il **materiale non è di nessuno**: c'è un elenco di
-cose che fanno tutti, in cima alla guida, e la prima è preparare la gara
-successiva se hai le mani libere.
+**Ogni gara ha due persone**: una arbitra e guarda solo la gara, l'altra conta,
+tiene in ordine chi aspetta e porta il risultato a Gianpaolo. Se scoppia il
+caos si è in due: una ferma tutto, l'altra rimette in fila.
+
+**Accoglienza, materiale e raduno delle squadre non sono di nessuno**: c'è un
+elenco di otto cose che fanno tutti, in cima alla guida, e la regola è sempre
+la stessa — le fa chi in quel momento ha le mani libere.
 
 Come mandarla: **🖨️ Stampa la guida intera** (un foglio da appendere),
 **💬 Riassunto al gruppo** (chi fa cosa in una riga) e, sotto ogni nome,
 **💬 Manda a…** con la sua scheda. La guida intera in un messaggio non ci sta:
 WhatsApp la troncherebbe.
 
-Il segnale fra arbitri e regia è il braccio alzato verso la squadra che ha
-vinto: è l'unica cosa da concordare prima, e fa funzionare tutto il resto.
+Il segnale è il braccio alzato dell'arbitro verso la squadra che ha vinto: è
+l'unica cosa da concordare prima, e fa funzionare tutto il resto.
 
 ## Gare a scontri, quando l'attrezzatura non basta
 
