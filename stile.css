@@ -301,6 +301,17 @@ section{ padding:clamp(40px,6vw,72px) 0; }
 @keyframes battito{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.045); } }
 @media (prefers-reduced-motion:reduce){ .orologio{ animation:none !important; } }
 
+/* ------------------ chi fa cosa: una scheda per persona ----------------- */
+.ruolo-card{
+  border:1px solid var(--linea); border-radius:16px; padding:14px 16px;
+  margin-bottom:12px; background:#fff;
+}
+.testa-ruolo{ display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
+.testa-ruolo .emoji-ruolo{ font-size:1.6rem; line-height:1; }
+.testa-ruolo .cnt{ flex:1 1 200px; }
+.testa-ruolo b{ display:block; font-size:1.02rem; }
+.testa-ruolo small{ display:block; color:var(--muted); font-size:.84rem; }
+
 /* ------------- scontri fra squadre: si tocca chi ha vinto --------------- */
 .scontro{ padding:10px 0; border-top:1px solid var(--linea); }
 .scontro:first-of-type{ border-top:none; }

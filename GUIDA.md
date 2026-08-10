@@ -206,6 +206,26 @@ Tre cose si regolano lì:
 Se un gioco di riserva viene attivato prende il posto che ha nell'elenco: se lo
 vuoi altrove, spostalo con ⠿ o con le frecce ▲▼.
 
+## Chi fa cosa, e la guida da mandare ai collaboratori
+
+In `🖨️ Stampe → 👥 Chi fa cosa il giorno della festa` c'è la divisione dei
+ruoli, con i nomi modificabili. Cambi un nome e si riscrive tutto: la guida
+stampata e il messaggio da mandare.
+
+| | Chi | Cosa fa |
+|---|---|---|
+| 🎤 | **Gianpaolo** | microfono e tablet in giro, computer a bordo vasca: annunci, cronometro, musica, punteggi |
+| 🏊 | **Laura** | arbitro in acqua: spiega, dà il via, decide, alza il braccio della squadra che vince |
+| 📷 | **Serena** | raduna le due squadre del turno dopo mentre si gioca, e scatta le foto |
+| 🛟 | **Simona** | accoglienza fino alle 16:15, poi attrezzatura: prepara il materiale della gara successiva |
+| 🃏 | **Veronica** | tavoli delle carte: coppie, tabellone, punteggi, chiama i turni |
+
+Tre modi per mandarla: **🖨️ Stampa la guida** (un foglio a testa),
+**📋 Copia il testo** (da incollare dove vuoi) e **💬 Manda su WhatsApp**.
+
+Il segnale fra Laura e Gianpaolo è il braccio alzato: è l'unica cosa da
+concordare prima, e fa funzionare tutto il resto.
+
 ## Gare a scontri, quando l'attrezzatura non basta
 
 Con quattro squadre e **due materassini** non si può far giocare tutti insieme

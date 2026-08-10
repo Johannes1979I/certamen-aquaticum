@@ -94,6 +94,7 @@
         if (v === 'tornei') disegnaTornei();
         if (v === 'punteggi') disegnaPunteggi();
         if (v === 'giochi') disegnaEditGiochi();
+        if (v === 'stampe') disegnaRuoli();
       });
     }
 
@@ -252,6 +253,13 @@
     });
     $('btnVaiPubblica2').addEventListener('click', function () {
       document.querySelector('[data-vista="pubblica"]').click();
+    });
+    $('btnCopiaGuida').addEventListener('click', function () {
+      copiaTesto(testoGuida()).then(function (fatto) {
+        testo('statoGuida', fatto
+          ? '📋 Copiata: incollala dove vuoi, va bene anche in un messaggio di gruppo.'
+          : '⚠️ Il browser non mi lascia copiare da solo: usa «Stampa la guida» e mandala come foto.');
+      });
     });
     $('btnRifaiProgramma').addEventListener('click', function () { ricalcolaProgramma(true); });
     $('pa_inizio').addEventListener('change', function () {
@@ -4754,6 +4762,7 @@
     }
     d.programmaAuto = V(DATI.programmaAuto, {});
     d.attrezzi = V(DATI.attrezzi, {});
+    d.collaboratori = V(DATI.collaboratori, {});
     /* giochi e tornei sono già stati modificati in DATI dai campi */
     d.giochi = DATI.giochi;
     d.tornei = DATI.tornei;
@@ -5346,6 +5355,84 @@
     });
   }
 
+  /* ==================== CHI FA COSA IL GIORNO DELLA FESTA ==============
+     Una guida da mandare a chi dà una mano: ruolo, posto, compiti. I nomi
+     si cambiano qui e tutto il resto si riscrive da solo, guida stampata
+     e messaggio compresi.                                                */
+  function disegnaRuoli() {
+    var el = $('elencoRuoli');
+    if (!el) return;
+    el.textContent = '';
+    var c = DATI.collaboratori = V(DATI.collaboratori, {});
+    var ruoli = V(c.ruoli, []);
+    if (!ruoli.length) {
+      el.appendChild(crea('p', 'aiuto', 'Nessun ruolo definito nei contenuti.'));
+      return;
+    }
+    ruoli.forEach(function (r, i) {
+      var box = crea('div', 'ruolo-card');
+      var t = crea('div', 'testa-ruolo');
+      t.appendChild(crea('span', 'emoji-ruolo', V(r.emoji, '👤')));
+      var c2 = crea('div', 'cnt');
+      c2.appendChild(crea('b', null, V(r.ruolo, 'Ruolo ' + (i + 1))));
+      c2.appendChild(crea('small', null, V(r.quando, '') + ' · ' + V(r.dove, '')));
+      t.appendChild(c2);
+      var inp = document.createElement('input');
+      inp.type = 'text'; inp.className = 'mini'; inp.placeholder = 'nome';
+      inp.value = V(r.nome, '');
+      inp.style.cssText = 'max-width:190px';
+      inp.addEventListener('change', function () {
+        r.nome = inp.value.trim();
+        salvaBozzaFraPoco();
+        aggiornaLinkGuida();
+      });
+      t.appendChild(inp);
+      box.appendChild(t);
+      var ul = document.createElement('ul');
+      ul.style.cssText = 'margin:8px 0 0 20px;font-size:.92rem';
+      V(r.compiti, []).forEach(function (x) { ul.appendChild(crea('li', null, x)); });
+      box.appendChild(ul);
+      if (r.chiave) box.appendChild(crea('p', 'aiuto', '👉 ' + r.chiave));
+      el.appendChild(box);
+    });
+    aggiornaLinkGuida();
+  }
+
+  /* il testo da mandare: lo stesso che si stampa, ma da incollare */
+  function testoGuida() {
+    var c = V(DATI.collaboratori, {});
+    var ev = V(DATI.evento, {});
+    var righe = [];
+    righe.push(V(c.titolo, 'Chi fa cosa') + ' — ' + V(V(DATI.tema, {}).titolo, 'Certamen Aquaticum'));
+    if (ev.data) righe.push(CA.dataIt(ev.data, true) + ', dalle ' + V(ev.orario, '') + ' alle ' + V(ev.orarioFine, ''));
+    righe.push('');
+    if (c.introduzione) { righe.push(c.introduzione); righe.push(''); }
+    V(c.ruoli, []).forEach(function (r) {
+      righe.push('— ' + (V(r.nome, '') || '(da assegnare)') + ' · ' + V(r.ruolo, ''));
+      righe.push('  Quando: ' + V(r.quando, '') + '. Dove: ' + V(r.dove, '') + '.');
+      V(r.compiti, []).forEach(function (x) { righe.push('  • ' + x); });
+      if (r.chiave) righe.push('  ' + r.chiave);
+      righe.push('');
+    });
+    if (V(c.prima, []).length) {
+      righe.push('Da controllare prima di cominciare:');
+      c.prima.forEach(function (x) { righe.push('  • ' + x); });
+      righe.push('');
+    }
+    if (V(c.regoleDoro, []).length) {
+      righe.push('Le regole d\'oro:');
+      c.regoleDoro.forEach(function (x) { righe.push('  • ' + x); });
+      righe.push('');
+    }
+    righe.push('Area organizzatori: ' + CA.urlSito() + 'admin.html');
+    return righe.join('\n');
+  }
+
+  function aggiornaLinkGuida() {
+    var a = $('btnGuidaWa');
+    if (a) a.href = CA.linkWhatsApp(testoGuida());
+  }
+
   /* ========================= COPIA DI SICUREZZA ========================
      Tutto quello che serve per ricostruire la giornata, in un file solo.
      Contiene nomi e recapiti, quindi resta sul telefono dell'organizzatore:
@@ -5508,6 +5595,49 @@
       }
       if (!trovato) b2.appendChild(crea('p', null, 'Nessun tabellone generato.'));
       apriFoglio('Tabelloni e calendari', b2);
+      return;
+    }
+    if (quale === 'collaboratori') {
+      var c4 = V(DATI.collaboratori, {});
+      var b4 = crea('div');
+      if (c4.introduzione) {
+        var intro = crea('p', null, c4.introduzione);
+        intro.style.cssText = 'font-size:.95rem;margin-bottom:14px';
+        b4.appendChild(intro);
+      }
+      V(c4.ruoli, []).forEach(function (r) {
+        var box = crea('div');
+        box.style.cssText = 'border:1px solid #ccc;border-radius:10px;padding:10px 14px;margin-bottom:10px;break-inside:avoid';
+        var h = crea('h3', null, V(r.emoji, '👤') + ' ' + (V(r.nome, '') || '(da assegnare)') +
+          ' — ' + V(r.ruolo, ''));
+        h.style.cssText = 'font-size:1.05rem;margin:0 0 4px';
+        box.appendChild(h);
+        var q = crea('p', null, V(r.quando, '') + ' · ' + V(r.dove, ''));
+        q.style.cssText = 'font-size:.85rem;color:#555;margin:0 0 6px';
+        box.appendChild(q);
+        var ul = document.createElement('ul');
+        ul.style.cssText = 'margin:0 0 0 18px;font-size:.92rem';
+        V(r.compiti, []).forEach(function (x) { ul.appendChild(crea('li', null, x)); });
+        box.appendChild(ul);
+        if (r.chiave) {
+          var k = crea('p', null, '👉 ' + r.chiave);
+          k.style.cssText = 'font-size:.88rem;font-style:italic;margin:6px 0 0';
+          box.appendChild(k);
+        }
+        b4.appendChild(box);
+      });
+      [['Da controllare prima di cominciare', V(c4.prima, [])],
+      ['Le regole d\'oro', V(c4.regoleDoro, [])]].forEach(function (par) {
+        if (!par[1].length) return;
+        var h2 = crea('h3', null, par[0]);
+        h2.style.cssText = 'font-size:1.05rem;margin:14px 0 4px';
+        b4.appendChild(h2);
+        var u2 = document.createElement('ul');
+        u2.style.cssText = 'margin:0 0 0 18px;font-size:.92rem';
+        par[1].forEach(function (x) { u2.appendChild(crea('li', null, x)); });
+        b4.appendChild(u2);
+      });
+      apriFoglio(V(c4.titolo, 'Chi fa cosa'), b4);
       return;
     }
     if (quale === 'classifiche') {

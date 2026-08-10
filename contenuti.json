@@ -1610,5 +1610,104 @@
   },
   "attrezzi": {
     "materassino": 2
+  },
+  "collaboratori": {
+    "titolo": "Chi fa cosa il 15 agosto",
+    "introduzione": "Siamo in cinque. Gianpaolo gira con il microfono e il tablet, e ha il computer a bordo vasca: da lì fa partire le gare, la musica e segna i punti. Gli altri quattro hanno una cosa sola da fare bene ciascuno, così i ragazzi non aspettano mai fra una gara e l'altra. Tutti possono aprire l'area organizzatori dal telefono: si sincronizza da sola ogni dieci secondi e nessuno cancella il lavoro degli altri.",
+    "ruoli": [
+      {
+        "emoji": "🎤",
+        "ruolo": "Microfono, regia e punteggi",
+        "nome": "Gianpaolo",
+        "quando": "dalle 16:00 alla premiazione",
+        "dove": "in giro per la piscina col microfono e il tablet, computer a bordo vasca",
+        "chiave": "Tablet e computer scrivono nello stesso posto: usa quello che hai in mano, si allineano da soli.",
+        "compiti": [
+          "Annunci al microfono cosa si gioca e quali squadre si sfidano, prima di ogni gara.",
+          "Dal tablet o dal computer: scegli la gara e premi Via. Quando suona la sirena, la gara finisce lì.",
+          "Fai partire la sigla all'inizio e il jingle prima di ogni gara.",
+          "Appena Laura alza il braccio, tocchi sul tablet la squadra che ha vinto: un tocco e basta.",
+          "Tieni d'occhio la scaletta: se siete indietro, salti un gioco di riserva e lo annunci.",
+          "Alla fine chiami le squadre per la premiazione, dall'ultima alla prima."
+        ]
+      },
+      {
+        "emoji": "🏊",
+        "ruolo": "Arbitro in acqua",
+        "nome": "Laura",
+        "quando": "durante tutte le gare dei ragazzi",
+        "dove": "in acqua o sul bordo, in mezzo ai ragazzi",
+        "chiave": "La tua parola è definitiva: sull'arbitro non si discute, nemmeno per scherzo.",
+        "compiti": [
+          "Prima di ogni gara spieghi la regola in mezzo minuto: poche parole, chiare.",
+          "Dai tu il via, e durante la gara decidi tu: partenze, falli, chi ha toccato prima.",
+          "Alla fine alzi il braccio verso la squadra che ha vinto, bello alto: è il segnale.",
+          "Se un ragazzo è in difficoltà fermi tutto, senza pensarci due volte.",
+          "Se una gara si allunga, la chiudi al suono del cronometro: vince chi è avanti."
+        ]
+      },
+      {
+        "emoji": "📷",
+        "ruolo": "Foto e raduno delle squadre",
+        "nome": "Serena",
+        "quando": "durante tutto il pomeriggio",
+        "dove": "in mezzo ai ragazzi, con il telefono",
+        "chiave": "Se le squadre sono già pronte quando finisce la gara prima, il pomeriggio scorre senza vuoti.",
+        "compiti": [
+          "Mentre una gara è in corso, raduni le due squadre del turno dopo e le porti al punto di partenza.",
+          "Guardi il calendario appeso per sapere chi tocca: è il tuo unico foglio.",
+          "Nel frattempo scatti le foto dalla scheda 📷 Album: vanno online da sole, i nonni le vedono subito.",
+          "Chiedi ai genitori se qualcuno non vuole il figlio in foto, e segnalo a Gianpaolo.",
+          "Alla premiazione: foto di ogni squadra con la coppa, e una di gruppo con tutti."
+        ]
+      },
+      {
+        "emoji": "🛟",
+        "ruolo": "Accoglienza e attrezzatura",
+        "nome": "Simona",
+        "quando": "accoglienza 16:00-16:15, poi attrezzatura",
+        "dove": "prima al cancello, poi fra il magazzino e il bordo vasca",
+        "chiave": "È il ruolo che fa risparmiare più tempo: senza, fra una gara e l'altra se ne perdono cinque.",
+        "compiti": [
+          "Dalle 16:00 spunti chi arriva sull'elenco stampato e consegni i pass.",
+          "Poi, mentre si gioca una gara, prepari già il materiale di quella dopo.",
+          "I due materassini: li porti alle due squadre che tocca, secondo il calendario appeso.",
+          "A fine gara recuperi palloni e materassini e li rimetti da parte.",
+          "Controlla che ci sia sempre acqua all'ombra: è la prima cosa che finisce."
+        ]
+      },
+      {
+        "emoji": "🃏",
+        "ruolo": "Tavoli delle carte",
+        "nome": "Veronica",
+        "quando": "dalle 16:15 alla premiazione",
+        "dove": "all'ombra, lontano dagli schizzi",
+        "chiave": "Il Trittico e il Burraco vanno in parallelo ai giochi in acqua: sono un mondo a sé, ed è tuo.",
+        "compiti": [
+          "Sistema tavoli e sedie prima che arrivino gli adulti.",
+          "Forma le coppie e genera il tabellone dal telefono, scheda 🃏 Tornei.",
+          "Segna i punti di ogni partita appena finisce.",
+          "Chiama le coppie per il turno successivo: senza qualcuno che chiama, i tavoli si fermano.",
+          "A gironi finiti il sito ti dice da solo chi va in semifinale: non devi calcolare niente."
+        ]
+      }
+    ],
+    "prima": [
+      "Computer a bordo vasca, carico e collegato alla cassa",
+      "Tablet carico, con l'area organizzatori già aperta",
+      "Microfono acceso e provato",
+      "Materassini gonfi e palloni in ordine",
+      "Elenco degli iscritti stampato, con la penna",
+      "Calendario degli scontri stampato e appeso",
+      "Coppe e medaglie nascoste fino alla premiazione",
+      "Acqua e ombra"
+    ],
+    "regoleDoro": [
+      "L'assistente bagnanti ha sempre l'ultima parola: se dice di fermarsi, ci si ferma.",
+      "Nessuno entra in acqua prima che l'arbitro dia il via.",
+      "Se una gara si allunga, la chiude il cronometro: vince chi è avanti in quel momento.",
+      "Un ragazzo che non se la sente non gioca: nessuno insiste.",
+      "Alla fine i punti contano poco: contano le facce nelle foto."
+    ]
   }
 }

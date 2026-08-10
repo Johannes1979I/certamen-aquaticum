@@ -892,8 +892,23 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
       <button class="btn btn-chiaro" data-stampa="tabelloni">🃏 Tabelloni dei tornei</button>
       <button class="btn btn-chiaro" data-stampa="classifiche">🏆 Classifiche finali</button>
       <button class="btn btn-chiaro" data-stampa="programma">🕓 Programma del pomeriggio</button>
+      <button class="btn btn-chiaro" data-stampa="collaboratori">👥 Guida per i collaboratori</button>
       <a class="btn btn-chiaro" href="locandina.html" target="_blank">🖼️ Locandina A4 con QR</a>
     </div>
+  </div>
+
+  <div class="card" id="sec-collaboratori">
+    <h2>👥 Chi fa cosa il giorno della festa</h2>
+    <p class="aiuto">La guida da mandare a chi ti dà una mano: ognuno riceve il suo ruolo,
+      dove stare, cosa fare. Cambia i nomi se cambia la squadra — quello che c'è scritto
+      sotto si aggiorna da solo.</p>
+    <div id="elencoRuoli"></div>
+    <div class="azioni" style="justify-content:flex-start;margin-top:14px">
+      <button class="btn btn-p" data-stampa="collaboratori">🖨️ Stampa la guida</button>
+      <button class="btn btn-chiaro" id="btnCopiaGuida">📋 Copia il testo</button>
+      <a class="btn btn-chiaro" id="btnGuidaWa" target="_blank" rel="noopener">💬 Manda su WhatsApp</a>
+    </div>
+    <p class="aiuto" id="statoGuida" style="margin-top:10px"></p>
   </div>
 
   <div class="card">
