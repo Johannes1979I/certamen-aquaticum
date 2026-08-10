@@ -301,6 +301,50 @@ section{ padding:clamp(40px,6vw,72px) 0; }
 @keyframes battito{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.045); } }
 @media (prefers-reduced-motion:reduce){ .orologio{ animation:none !important; } }
 
+/* ---------- finestra del risultato: si tocca, non si scrive ------------- */
+.modale{
+  position:fixed; inset:0; background:rgba(10,37,64,.6); z-index:300;
+  display:none; align-items:flex-end; justify-content:center; padding:0;
+}
+.modale.aperta{ display:flex; }
+@media(min-width:700px){ .modale{ align-items:center; padding:20px; } }
+.modale-dentro{
+  background:#fff; width:min(680px,100%); max-height:92vh; display:flex; flex-direction:column;
+  border-radius:22px 22px 0 0; box-shadow:var(--shadow);
+}
+@media(min-width:700px){ .modale-dentro{ border-radius:22px; } }
+.modale-testa{
+  display:flex; align-items:center; gap:12px; padding:16px 20px;
+  border-bottom:1px solid var(--linea);
+}
+.modale-testa h2{ flex:1; font-size:1.15rem; margin:0; }
+.modale-corpo{ overflow-y:auto; padding:16px 20px; }
+.modale-piede{
+  display:flex; gap:10px; justify-content:flex-end; padding:14px 20px;
+  border-top:1px solid var(--linea);
+}
+.modale-piede .btn{ flex:1; }
+@media(min-width:700px){ .modale-piede .btn{ flex:0 0 auto; } }
+
+.squadre-ordine{ display:grid; gap:10px; }
+.bottone-squadra{
+  display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+  border:2px solid var(--linea); background:#fff; color:var(--ink);
+  border-radius:16px; padding:14px 16px; font:inherit; cursor:pointer; min-height:64px;
+}
+.bottone-squadra:hover{ border-color:var(--c1); }
+.bottone-squadra .posto{
+  flex:0 0 46px; height:46px; border-radius:999px; background:rgba(10,37,64,.08);
+  display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:bold;
+}
+.bottone-squadra .nome-sq{ flex:1; font-weight:bold; font-size:1.05rem; }
+.bottone-squadra .punti-sq{
+  background:var(--ink); color:#fff; border-radius:999px; padding:6px 13px;
+  font-weight:bold; font-size:.9rem;
+}
+.bottone-squadra.presa{ border-color:#2f9e5b; background:#e9f9f0; }
+.bottone-squadra.presa .posto{ background:#2f9e5b; color:#fff; }
+
 /* ------------------- appello: si tocca il nome e basta ------------------ */
 .gruppo-appello{ margin-bottom:16px; }
 .gruppo-appello h3{ font-size:1rem; margin:0 0 6px; }

@@ -34,7 +34,7 @@
     return {
       squadre: [], configSquadre: {}, risultati: {}, titoli: [], tornei: {}, bonus: {},
       cronometro: cronometroVuoto(), assettoCarte: null,
-      torneoRagazzi: { attivo: false, turni: [] }, presenze: {}
+      torneoRagazzi: { attivo: false, turni: [] }, presenze: {}, menzioni: {}
     };
   }
   function cronometroVuoto() {
@@ -256,6 +256,18 @@
     });
     $('btnVaiPubblica2').addEventListener('click', function () {
       document.querySelector('[data-vista="pubblica"]').click();
+    });
+    $('mgChiudi').addEventListener('click', chiudiModaleGara);
+    $('mgSalva').addEventListener('click', salvaModaleGara);
+    $('mgAzzera').addEventListener('click', function () {
+      ORDINE_TEMP = []; MENZIONI_TEMP = {};
+      disegnaModaleGara();
+    });
+    $('modaleGara').addEventListener('click', function (e) {
+      if (e.target === $('modaleGara')) chiudiModaleGara();   /* fuori: si chiude */
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && GARA_APERTA) chiudiModaleGara();
     });
     $('btnTuttiPresenti').addEventListener('click', function () {
       if (!confirm('Segno presenti tutti quelli non ancora spuntati?')) return;
@@ -774,7 +786,10 @@
         configSquadre: STATO.configSquadre,
         bonus: STATO.bonus
       },
-      risultati: { risultati: STATO.risultati, torneoRagazzi: STATO.torneoRagazzi },
+      risultati: {
+        risultati: STATO.risultati, torneoRagazzi: STATO.torneoRagazzi,
+        menzioni: STATO.menzioni
+      },
       titoli: { titoli: STATO.titoli },
       cronometro: { cronometro: STATO.cronometro },
       presenze: { presenze: STATO.presenze },
@@ -795,6 +810,7 @@
     } else if (nome === 'risultati') {
       STATO.risultati = V(dati.risultati, {});
       STATO.torneoRagazzi = V(dati.torneoRagazzi, { attivo: false, turni: [] });
+      STATO.menzioni = V(dati.menzioni, {});
     } else if (nome === 'titoli') {
       STATO.titoli = V(dati.titoli, []);
     } else if (nome === 'cronometro') {
@@ -1558,6 +1574,167 @@
       disegnaCategorie();
       disegnaIscritti();
     }).catch(function (e) { CA.toast('⚠️ ' + e.message, 8000); });
+  }
+
+  /* ================= LA FINESTRA DEL RISULTATO DI UNA GARA =============
+     A bordo vasca non si scrive e non si aprono tendine: si toccano le
+     squadre nell'ordine in cui sono arrivate, e i punti li mette il
+     programma. Sotto, le menzioni della gara — il migliore, il più
+     simpatico — che a fine giornata suggeriscono i premi.              */
+  var GARA_APERTA = null, ORDINE_TEMP = [], MENZIONI_TEMP = {};
+
+  function menzioni() {
+    STATO.menzioni = STATO.menzioni || {};
+    return STATO.menzioni;
+  }
+  function scalaGara(g) {
+    var pun = V(V(V(DATI.aree, {}).ragazzi, {}).punteggio, {});
+    var base = [V(pun.primo, 5), V(pun.secondo, 3), V(pun.terzo, 2), V(pun.quarto, 1)];
+    var doppio = (g && g.tipo === 'finale');
+    return STATO.squadre.map(function (s, i) {
+      var p = (base[i] !== undefined ? base[i] : 1);
+      return p * (doppio ? 2 : 1);
+    });
+  }
+
+  function apriModaleGara(idGioco) {
+    var g = V(DATI.giochi, []).filter(function (x) { return x.id === idGioco; })[0];
+    if (!g) return;
+    if (!STATO.squadre.length) { CA.toast('Prima forma le squadre.', 5000); return; }
+    GARA_APERTA = idGioco;
+    ORDINE_TEMP = V(STATO.risultati[idGioco], []).filter(Boolean)
+      .slice().sort(function (a, b) { return a.posizione - b.posizione; })
+      .map(function (x) { return x.squadra; });
+    var m = V(menzioni()[idGioco], {});
+    MENZIONI_TEMP = {};
+    Object.keys(m).forEach(function (k) { MENZIONI_TEMP[k] = m[k]; });
+    testo('mgTitolo', V(g.emoji, '🎯') + ' ' + g.nome +
+      (g.tipo === 'finale' ? ' — punti doppi' : ''));
+    disegnaModaleGara();
+    $('modaleGara').classList.add('aperta');
+  }
+  function chiudiModaleGara() {
+    $('modaleGara').classList.remove('aperta');
+    GARA_APERTA = null;
+  }
+
+  function disegnaModaleGara() {
+    var el = $('mgCorpo');
+    el.textContent = '';
+    var g = V(DATI.giochi, []).filter(function (x) { return x.id === GARA_APERTA; })[0] || {};
+    var scala = scalaGara(g);
+
+    el.appendChild(crea('p', 'aiuto',
+      'Tocca le squadre nell\'ordine in cui sono arrivate. Il primo tocco è il primo posto. ' +
+      'Se sbagli, tocchi di nuovo la squadra e torna in fondo.'));
+
+    var box = crea('div', 'squadre-ordine');
+    STATO.squadre.forEach(function (s) {
+      var pos = ORDINE_TEMP.indexOf(s.id);
+      var b = crea('button', 'bottone-squadra' + (pos >= 0 ? ' presa' : ''));
+      b.appendChild(crea('span', 'posto', pos >= 0 ? (['🥇', '🥈', '🥉'][pos] || (pos + 1) + '°') : '·'));
+      var n = crea('span', 'nome-sq', s.nome);
+      if (s.colore) n.style.borderLeft = '5px solid ' + s.colore, n.style.paddingLeft = '9px';
+      b.appendChild(n);
+      b.appendChild(crea('span', 'punti-sq', pos >= 0 ? '+' + V(scala[pos], 1) : '—'));
+      b.addEventListener('click', function () {
+        var i = ORDINE_TEMP.indexOf(s.id);
+        if (i >= 0) ORDINE_TEMP.splice(i, 1);
+        else ORDINE_TEMP.push(s.id);
+        disegnaModaleGara();
+      });
+      box.appendChild(b);
+    });
+    el.appendChild(box);
+
+    /* le menzioni della gara */
+    var elenco = V(DATI.menzioniGara, []);
+    if (elenco.length) {
+      el.appendChild(crea('h3', null, 'Menzioni di questa gara'));
+      el.appendChild(crea('p', 'aiuto',
+        'Facoltative. A fine giornata ti dicono chi le ha prese di più, così i premi si scelgono da soli.'));
+      elenco.forEach(function (mz) {
+        var c = crea('div', 'campo');
+        var l = document.createElement('label');
+        l.textContent = V(mz.emoji, '🏅') + ' ' + V(mz.nome, mz.id);
+        c.appendChild(l);
+        var sel = document.createElement('select');
+        var vuota = document.createElement('option');
+        vuota.value = ''; vuota.textContent = '— nessuno —';
+        sel.appendChild(vuota);
+        if (mz.tipo === 'squadra') {
+          STATO.squadre.forEach(function (s) {
+            var o = document.createElement('option');
+            o.value = 'sq:' + s.id; o.textContent = s.nome;
+            sel.appendChild(o);
+          });
+        } else {
+          STATO.squadre.forEach(function (s) {
+            var gr = document.createElement('optgroup');
+            gr.label = s.nome;
+            s.componenti.forEach(function (id) {
+              var p = perId(id);
+              if (!p) return;
+              var o = document.createElement('option');
+              o.value = 'p:' + id; o.textContent = p.nome;
+              gr.appendChild(o);
+            });
+            if (gr.children.length) sel.appendChild(gr);
+          });
+        }
+        sel.value = V(MENZIONI_TEMP[mz.id], '');
+        sel.addEventListener('change', function () { MENZIONI_TEMP[mz.id] = sel.value; });
+        c.appendChild(sel);
+        el.appendChild(c);
+      });
+    }
+  }
+
+  function salvaModaleGara() {
+    if (!GARA_APERTA) return;
+    var g = V(DATI.giochi, []).filter(function (x) { return x.id === GARA_APERTA; })[0] || {};
+    var scala = scalaGara(g);
+    if (!ORDINE_TEMP.length) delete STATO.risultati[GARA_APERTA];
+    else {
+      STATO.risultati[GARA_APERTA] = ORDINE_TEMP.map(function (idSq, i) {
+        return { squadra: idSq, posizione: i + 1, punti: V(scala[i], 1) };
+      });
+    }
+    var m = menzioni();
+    var tenute = {};
+    Object.keys(MENZIONI_TEMP).forEach(function (k) {
+      if (MENZIONI_TEMP[k]) tenute[k] = MENZIONI_TEMP[k];
+    });
+    if (Object.keys(tenute).length) m[GARA_APERTA] = tenute;
+    else delete m[GARA_APERTA];
+    salvaStato();
+    chiudiModaleGara();
+    disegnaPunteggi();
+    CA.toast('✅ Risultato segnato: la classifica è già aggiornata.', 5000);
+  }
+
+  /* chi ha collezionato più menzioni: serve a scegliere i premi finali */
+  function contoMenzioni() {
+    var conta = {};
+    var m = menzioni();
+    Object.keys(m).forEach(function (idGioco) {
+      Object.keys(m[idGioco]).forEach(function (idMz) {
+        var v = m[idGioco][idMz];
+        if (!v) return;
+        conta[idMz] = conta[idMz] || {};
+        conta[idMz][v] = (conta[idMz][v] || 0) + 1;
+      });
+    });
+    return conta;
+  }
+  function nomeDiRiferimento(chiave) {
+    if (!chiave) return '';
+    if (chiave.indexOf('sq:') === 0) {
+      var s = STATO.squadre.filter(function (x) { return x.id === chiave.slice(3); })[0];
+      return s ? s.nome : '';
+    }
+    var p = perId(chiave.slice(2));
+    return p ? p.nome : '';
   }
 
   /* =============================== APPELLO ============================
@@ -3955,49 +4132,36 @@
       var h = crea('h3', null, V(g.emoji, '🎯') + ' ' + g.nome + (doppio ? '  (punti doppi)' : ''));
       c.appendChild(h);
 
-      var ordine = V(STATO.risultati[g.id], []);
-      var box = crea('div', 'ordine-sq');
-      for (var pos = 0; pos < STATO.squadre.length; pos++) {
-        (function (pos) {
+      /* Niente tendine: si apre la finestra e si toccano le squadre
+         nell'ordine d'arrivo. Qui resta solo il riassunto di com'è finita. */
+      var ordine = V(STATO.risultati[g.id], []).filter(Boolean)
+        .slice().sort(function (a, b) { return a.posizione - b.posizione; });
+      var riass = crea('div', 'ordine-sq');
+      if (ordine.length) {
+        ordine.forEach(function (x, i) {
+          var sq = STATO.squadre.filter(function (s) { return s.id === x.squadra; })[0];
           var riga = crea('div', 'posto-riga');
-          riga.appendChild(crea('span', 'medaglia', ['🥇', '🥈', '🥉'][pos] || (pos + 1) + '°'));
-          var sel = document.createElement('select');
-          var vuota = document.createElement('option');
-          vuota.value = ''; vuota.textContent = '— chi è arrivato ' + (pos + 1) + '° —';
-          sel.appendChild(vuota);
-          STATO.squadre.forEach(function (sq) {
-            var op = document.createElement('option');
-            op.value = sq.id; op.textContent = sq.nome;
-            sel.appendChild(op);
-          });
-          var gia = ordine[pos];
-          sel.value = gia ? gia.squadra : '';
-          sel.addEventListener('change', function () {
-            var nuovo = V(STATO.risultati[g.id], []).slice();
-            /* la stessa squadra non può essere prima e terza: se la scelgo
-               qui, la tolgo dalla posizione in cui stava prima */
-            if (sel.value) {
-              for (var k = 0; k < nuovo.length; k++) {
-                if (k !== pos && nuovo[k] && nuovo[k].squadra === sel.value) nuovo[k] = null;
-              }
-            }
-            nuovo[pos] = sel.value ? {
-              squadra: sel.value, posizione: pos + 1,
-              punti: (scala[pos] !== undefined ? scala[pos] : 1) * (doppio ? 2 : 1)
-            } : null;
-            STATO.risultati[g.id] = nuovo;
-            salvaStato();
-            var dove = window.pageYOffset;
-            disegnaPuntiRagazzi();
-            window.scrollTo(0, dove);      /* non far saltare la pagina sotto le dita */
-          });
-          riga.appendChild(sel);
-          riga.appendChild(crea('span', 'tondo-punti',
-            String((scala[pos] !== undefined ? scala[pos] : 1) * (doppio ? 2 : 1))));
-          box.appendChild(riga);
-        })(pos);
+          riga.appendChild(crea('span', 'medaglia', ['🥇', '🥈', '🥉'][i] || (i + 1) + '°'));
+          var nn = crea('span', null, sq ? sq.nome : '—');
+          nn.style.flex = '1';
+          riga.appendChild(nn);
+          riga.appendChild(crea('span', 'tondo-punti', '+' + V(x.punti, 0)));
+          riass.appendChild(riga);
+        });
+        var mz = V(menzioni()[g.id], {});
+        var scritte = V(DATI.menzioniGara, []).filter(function (m) { return mz[m.id]; })
+          .map(function (m) { return V(m.emoji, '🏅') + ' ' + nomeDiRiferimento(mz[m.id]); });
+        if (scritte.length) riass.appendChild(crea('p', 'aiuto', scritte.join(' · ')));
+      } else {
+        riass.appendChild(crea('p', 'aiuto', 'Non ancora giocata.'));
       }
-      c.appendChild(box);
+      c.appendChild(riass);
+
+      var azg = crea('div', 'azioni');
+      azg.style.cssText = 'justify-content:flex-start;margin-top:10px';
+      azg.appendChild(bottone(ordine.length ? '✏️ Correggi il risultato' : '🏁 Segna il risultato',
+        ordine.length ? 'chiaro' : 'verde', function () { apriModaleGara(g.id); }));
+      c.appendChild(azg);
       el.appendChild(c);
     });
   }
@@ -4073,6 +4237,25 @@
       riga.appendChild(i);
       c.appendChild(riga);
     });
+
+    /* chi ha collezionato più menzioni durante il pomeriggio: è il modo più
+       veloce per decidere i premi finali senza starci a pensare */
+    var conta = contoMenzioni();
+    var righeMz = [];
+    V(DATI.menzioniGara, []).forEach(function (mz) {
+      var q = conta[mz.id];
+      if (!q) return;
+      var ordinati = Object.keys(q).sort(function (a, b) { return q[b] - q[a]; });
+      righeMz.push(V(mz.emoji, '🏅') + ' ' + mz.nome + ': ' +
+        ordinati.slice(0, 3).map(function (k) {
+          return nomeDiRiferimento(k) + ' (' + q[k] + ')';
+        }).join(', '));
+    });
+    if (righeMz.length) {
+      c.appendChild(crea('h3', null, '📊 Le menzioni raccolte gara per gara'));
+      c.appendChild(crea('p', 'aiuto', 'Chi le ha prese più volte: da qui si scelgono i premi.'));
+      righeMz.forEach(function (r) { c.appendChild(crea('p', 'aiuto', r)); });
+    }
     el.appendChild(c);
   }
 

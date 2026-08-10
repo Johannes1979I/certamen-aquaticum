@@ -1721,5 +1721,25 @@
       "Un ragazzo che non se la sente non gioca: nessuno insiste.",
       "Alla fine i punti contano poco: contano le facce nelle foto."
     ]
-  }
+  },
+  "menzioniGara": [
+    {
+      "id": "migliore",
+      "emoji": "⭐",
+      "nome": "Migliore in gioco",
+      "tipo": "persona"
+    },
+    {
+      "id": "simpatico",
+      "emoji": "😄",
+      "nome": "Il più simpatico",
+      "tipo": "persona"
+    },
+    {
+      "id": "corretta",
+      "emoji": "🤝",
+      "nome": "Squadra più corretta",
+      "tipo": "squadra"
+    }
+  ]
 }

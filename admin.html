@@ -956,6 +956,20 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
   <div class="foglio-corpo" id="foglioCorpo"></div>
 </div>
 
+<div class="modale" id="modaleGara" role="dialog" aria-modal="true" aria-labelledby="mgTitolo">
+  <div class="modale-dentro">
+    <div class="modale-testa">
+      <h2 id="mgTitolo">Risultato</h2>
+      <button class="btn btn-chiaro btn-piccolo" id="mgChiudi" aria-label="Chiudi">✕</button>
+    </div>
+    <div class="modale-corpo" id="mgCorpo"></div>
+    <div class="modale-piede">
+      <button class="btn btn-chiaro" id="mgAzzera">↩️ Ricomincia</button>
+      <button class="btn btn-p btn-grande" id="mgSalva">✅ Fatto</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="admin.js"></script>

@@ -109,9 +109,12 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
    gara**. Scegli la gara, premi **▶ Via** e il tempo scorre; 🎵 apre la
    scaletta di quel gioco. Quando scade suona la sirena: se nessuna squadra
    ha già vinto, vince chi è avanti in quel momento e scrivi tu l'ordine
-   d'arrivo. Sotto, per i ragazzi scegli chi è arrivato primo, secondo,
-   terzo…; per le carte scrivi i punti delle partite. Si salva tutto da
-   solo nel database.
+   d'arrivo. Sotto, per ogni gara c'è **🏁 Segna il risultato**: si apre una
+   finestra e si **toccano le squadre nell'ordine in cui sono arrivate** —
+   primo tocco, primo posto. I punti li mette il programma. Nella stessa
+   finestra ci sono le **menzioni della gara**: ⭐ migliore in gioco,
+   😄 il più simpatico, 🤝 squadra più corretta. Per le carte scrivi i punti
+   delle partite. Si salva tutto da solo nel database.
 5. **Pubblica** — non devi fare niente. Ogni punteggio che registri arriva
    sulla pagina pubblica **da solo**, in una ventina di secondi: sei per
    scrivere nel database e mandare la bacheca, gli altri sono l'attesa del
@@ -124,6 +127,31 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
 6. **Foto** — scheda `📷 Album`, pulsante `📸 Scatta una foto`:
    dal telefono si apre la fotocamera e la foto è **subito** nell'album del
    sito. Vedi sotto.
+
+## Segnare il risultato di una gara
+
+Niente tendine e niente numeri da scrivere: in `🏅 Punteggi`, sotto ogni gara,
+c'è **🏁 Segna il risultato**. Si apre una finestra e si **toccano le squadre
+nell'ordine in cui sono arrivate**: il primo tocco è il primo posto, il secondo
+il secondo, e così via. Accanto a ogni squadra compare la medaglia e i punti
+che si prende — 5, 3, 2, 1, e il doppio nella finale.
+
+Se sbagli, tocchi di nuovo quella squadra e torna in fondo. `↩️ Ricomincia`
+azzera tutto.
+
+Nella stessa finestra, sotto, ci sono le **menzioni della gara**, facoltative:
+
+| | |
+|---|---|
+| ⭐ | Migliore in gioco |
+| 😄 | Il più simpatico |
+| 🤝 | Squadra più corretta |
+
+Servono a fine giornata: in `⭐ Titoli e premi` compare il conto di chi le ha
+raccolte più volte — *«Migliore in gioco: Marco (3)»* — e i premi finali si
+scelgono da soli, senza doverci pensare mentre si smonta tutto.
+
+Le menzioni si cambiano nei contenuti, come tutto il resto.
 
 ## I due «pubblica», che non sono la stessa cosa
 
