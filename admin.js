@@ -2585,6 +2585,21 @@
       'Passo 1 — le coppie. Ci sono ' + iscritti.length + ' iscritti a questo torneo: ' +
       (coppie.length ? ('sono già formate ' + coppie.length + ' coppie.') : 'le coppie non sono ancora state formate.')));
 
+    /* con un numero dispari qualcuno resta senza compagno: meglio dirlo
+       adesso che scoprirlo al tavolo con le carte già in mano */
+    var sole = coppie.filter(function (c) { return !c.b; });
+    if (sole.length) {
+      var av = crea('div', 'nota-box attenzione');
+      av.style.margin = '10px 0';
+      av.appendChild(crea('b', null, '⚠️ ' + (sole.length === 1
+        ? 'Un giocatore è senza compagno' : sole.length + ' giocatori sono senza compagno')));
+      av.appendChild(crea('p', 'aiuto',
+        sole.map(function (c) { return c.nome.replace(' – (da abbinare)', ''); }).join(', ') +
+        ': gli iscritti sono in numero dispari. Trovagli un compagno fra i genitori o ' +
+        'fallo giocare in tre a un tavolo, poi correggi il nome della coppia qui sotto.'));
+      g.appendChild(av);
+    }
+
     var az1 = crea('div', 'azioni');
     az1.style.cssText = 'justify-content:flex-start;margin:10px 0 18px';
     var bC = crea('button', 'btn btn-p btn-piccolo', '👥 Forma le coppie');
@@ -2728,6 +2743,7 @@
       aggiungi(rimasti.shift(), rimasti.pop(), true);
     }
     if (rimasti.length === 1) aggiungi(rimasti[0], null, true);
+    sciogliOmonimi(coppie, iscritti);
 
     STATO.tornei[idTorneo] = STATO.tornei[idTorneo] || {};
     STATO.tornei[idTorneo].coppie = coppie;
@@ -2737,6 +2753,21 @@
     disegnaCruscotto();
     CA.toast('👥 Formate ' + coppie.length + ' coppie.', 5000);
   }
+  /* «Marco Rossi» e «Marco Riva» diventano tutti e due «Marco R.»: al
+     tavolo nessuno capisce più chi gioca con chi. Quando due coppie
+     finiscono con lo stesso nome si torna ai nomi per esteso. */
+  function sciogliOmonimi(coppie, iscritti) {
+    var per = {};
+    iscritti.forEach(function (p) { per[p._id] = p; });
+    var quante = {};
+    coppie.forEach(function (c) { quante[c.nome] = (quante[c.nome] || 0) + 1; });
+    coppie.forEach(function (c) {
+      if (quante[c.nome] < 2) return;
+      var a = per[c.a], b = per[c.b];
+      c.nome = (a ? a.nome : '?') + ' – ' + (b ? b.nome : '(da abbinare)');
+    });
+  }
+
   function cognomino(nome) {
     var p = String(nome || '').trim().split(/\s+/);
     return p.length > 1 ? (p[0] + ' ' + p[p.length - 1][0] + '.') : p[0];
@@ -2762,6 +2793,7 @@
     STATO.tornei[idTorneo] = STATO.tornei[idTorneo] || {};
     STATO.tornei[idTorneo].formato = formato;
     STATO.tornei[idTorneo].incontri = incontri;
+    risolviSegnaposto(idTorneo);       /* se si rigenera a giochi già fatti */
     salvaStato();
     disegnaPannelloTorneo();
     disegnaPunteggi();
@@ -2828,8 +2860,14 @@
       });
       i += 2;
     }
-    var restano = coppie.slice(i).map(function (c) { return c.id; });
-    for (var q = 0; q < quanteSfide; q++) restano.push('Vincente preliminare ' + (q + 1));
+    /* Ogni posto del tabellone si porta dietro da quale partita arriva:
+       serve per riempirlo col nome vero appena quella partita è giocata.
+       Senza il collegamento restavano scritte «Vincente turno 1» per tutto
+       il pomeriggio e non si capiva più chi doveva giocare con chi. */
+    var restano = coppie.slice(i).map(function (c) { return { id: c.id, da: null }; });
+    for (var q = 0; q < quanteSfide; q++) {
+      restano.push({ id: 'Vincente preliminare ' + (q + 1), da: 'p' + (q + 1) });
+    }
 
     var turno = 1;
     while (restano.length > 1) {
@@ -2840,12 +2878,14 @@
       for (var j = 0; j < restano.length; j += 2) {
         k++;
         var idm = 't' + turno + '_' + j;
+        var A = restano[j], B = restano[j + 1] || { id: '', da: null };
         out.push({
-          id: idm, turno: nomeTurno, a: restano[j], b: restano[j + 1],
+          id: idm, turno: nomeTurno, a: A.id, b: B.id,
+          da: [A.da, B.da],
           tavolo: tav++, puntiA: '', puntiB: '',
-          segnaposto: String(restano[j]).indexOf('Vincente') === 0 || String(restano[j + 1]).indexOf('Vincente') === 0
+          segnaposto: !!(A.da || B.da)
         });
-        prossimi.push('Vincente ' + singolare + ' ' + (prossimi.length + 1));
+        prossimi.push({ id: 'Vincente ' + singolare + ' ' + (prossimi.length + 1), da: idm });
       }
       restano = prossimi;
       turno++;
@@ -2923,8 +2963,13 @@
     function cambia() {
       m.puntiA = ia.value === '' ? '' : Number(ia.value);
       m.puntiB = ib.value === '' ? '' : Number(ib.value);
+      /* questo punteggio può aver deciso chi va in semifinale o in finale:
+         se sì il tabellone cambia, e va ridisegnato tutto */
+      var id = idTorneo || TORNEO_APERTO;
+      var mosso = risolviSegnaposto(id);
       salvaStato();
-      aggiornaClassificaAVideo(idTorneo || TORNEO_APERTO);
+      if (mosso) { disegnaPannelloTorneo(); return; }
+      aggiornaClassificaAVideo(id);
       evidenziaVincente();
     }
     function evidenziaVincente() {
@@ -2955,7 +3000,75 @@
     box.appendChild(tabellaClassificaAdmin(classificaTorneo(idTorneo)));
   }
 
-  function classificaTorneo(idTorneo) {
+  /* ================== LE FASI FINALI SI COMPILANO DA SOLE ==============
+     Il tabellone nasce con i segnaposto — «1A», «Vincente semifinale 1» —
+     perché quando lo si genera non si sa ancora chi passa. Appena un
+     girone è finito, o una semifinale è stata giocata, i segnaposto si
+     sostituiscono coi nomi veri. Senza questo il tabellone restava pieno
+     di scritte e non si capiva chi doveva giocare. */
+  function classificaGirone(idTorneo, lettera) {
+    return classificaTorneo(idTorneo, function (m) {
+      return new RegExp('^Girone ' + lettera + '\\b').test(String(m.turno || ''));
+    });
+  }
+  function gironeCompleto(idTorneo, lettera) {
+    var st = STATO.tornei[idTorneo] || {};
+    var suoi = V(st.incontri, []).filter(function (m) {
+      return new RegExp('^Girone ' + lettera + '\\b').test(String(m.turno || ''));
+    });
+    return suoi.length > 0 && suoi.every(function (m) {
+      return m.puntiA !== '' && m.puntiB !== '' && m.puntiA !== undefined && m.puntiB !== undefined;
+    });
+  }
+  function vinceIncontro(m) {
+    if (m.puntiA === '' || m.puntiB === '' || m.puntiA === undefined || m.puntiB === undefined) return '';
+    var pa = Number(m.puntiA), pb = Number(m.puntiB);
+    if (pa === pb) return '';                 /* pari: decide chi organizza */
+    return pa > pb ? m.a : m.b;
+  }
+  function perdeIncontro(m) {
+    var v = vinceIncontro(m);
+    if (!v) return '';
+    return v === m.a ? m.b : m.a;
+  }
+
+  function risolviSegnaposto(idTorneo) {
+    var st = STATO.tornei[idTorneo] || {};
+    var inc = V(st.incontri, []);
+    var per = {};
+    inc.forEach(function (m) { if (m.id) per[m.id] = m; });
+    var cambiato = false;
+    function metti(m, campo, valore) {
+      if (!m || !valore || m[campo] === valore) return;
+      m[campo] = valore; cambiato = true;
+    }
+
+    /* dai gironi alle semifinali: prima e seconda di ognuno, incrociate */
+    ['A', 'B'].forEach(function (L) {
+      if (!gironeCompleto(idTorneo, L)) return;
+      var cl = classificaGirone(idTorneo, L);
+      var prima = cl[0] && cl[0].id, seconda = cl[1] && cl[1].id;
+      if (L === 'A') { metti(per.sf1, 'a', prima); metti(per.sf2, 'b', seconda); }
+      else { metti(per.sf2, 'a', prima); metti(per.sf1, 'b', seconda); }
+    });
+
+    /* dalle semifinali alla finale e alla finalina */
+    if (per.sf1 && per.sf2) {
+      metti(per.fin, 'a', vinceIncontro(per.sf1));
+      metti(per.fin, 'b', vinceIncontro(per.sf2));
+      metti(per.fin3, 'a', perdeIncontro(per.sf1));
+      metti(per.fin3, 'b', perdeIncontro(per.sf2));
+    }
+    /* dal tabellone a eliminazione: ogni turno alimenta il successivo */
+    inc.forEach(function (m) {
+      if (!m.da) return;
+      if (m.da[0]) metti(m, 'a', vinceIncontro(per[m.da[0]] || {}));
+      if (m.da[1]) metti(m, 'b', vinceIncontro(per[m.da[1]] || {}));
+    });
+    return cambiato;
+  }
+
+  function classificaTorneo(idTorneo, filtro) {
     var st = STATO.tornei[idTorneo] || {};
     var coppie = V(st.coppie, []);
     var pun = V(V(V(DATI.aree, {}).adulti, {}).punteggio, {});
@@ -2965,6 +3078,7 @@
       tab[c.id] = { coppia: c.nome, id: c.id, g: 0, v: 0, n: 0, p: 0, punti: 0, fatti: 0, subiti: 0 };
     });
     V(st.incontri, []).forEach(function (m) {
+      if (filtro && !filtro(m)) return;
       if (m.puntiA === '' || m.puntiB === '' || m.puntiA === undefined || m.puntiB === undefined) return;
       var a = tab[m.a], b = tab[m.b];
       if (!a || !b) return;
@@ -4503,12 +4617,13 @@
     var finestra = minutiFra(V(ev.orario, ''), V(ev.orarioFine, ''));
     var t = $('durataTotale');
     if (t) {
-      t.textContent = (ore ? ore + 'h ' : '') + resto + ' min' +
-        (finestra ? (min > finestra
-          ? ' — più delle ' + Math.round(finestra / 60) + ' ore dell\'evento: sposta qualche gioco «di riserva»'
-          : ' — ci sta nelle ' + Math.round(finestra / 60) + ' ore dell\'evento') : '');
-      t.style.color = (finestra && min > finestra) ? '#a30f1a' : '';
+      /* solo il totale: se ci sta o no lo dice la scaletta qui sotto, che
+         tiene conto anche di accoglienza, pausa e premiazione. Due verdetti
+         diversi sulla stessa cosa si contraddicevano. */
+      t.textContent = (ore ? ore + 'h ' : '') + resto + ' min di gioco';
+      t.style.color = '';
     }
+    void finestra;
   }
   function etichettaConteggio(testoEti, n) {
     var s = crea('span');
@@ -5369,8 +5484,30 @@
               V(m.puntiA, '____'), V(m.puntiB, '____'), nomeCoppia(m.b, V(st.coppie, []))];
           })));
       });
+      /* anche il calendario degli scontri dei ragazzi: il giorno della festa
+         si appende al muro e si spunta turno per turno */
+      var tr = torneoR();
+      if (tr.attivo && tr.turni.length) {
+        trovato = true;
+        var nomeSq = {};
+        STATO.squadre.forEach(function (s) { nomeSq[s.id] = s.nome; });
+        var hh = crea('h2', null, '🤽 Giochi in acqua — calendario degli scontri');
+        hh.style.cssText = 'margin-top:18px;font-size:1.15rem';
+        b2.appendChild(hh);
+        var righe = [];
+        tr.turni.forEach(function (turno) {
+          turno.incontri.forEach(function (inc) {
+            var g = V(DATI.giochi, []).filter(function (x) { return x.id === inc.gioco; })[0] || {};
+            var v = vincitoreDi(inc.gioco);
+            righe.push(['Turno ' + turno.n, V(g.nome, inc.gioco),
+              V(nomeSq[inc.a], '—'), V(nomeSq[inc.b], '—'),
+              v ? V(nomeSq[v], '—') : '____________']);
+          });
+        });
+        b2.appendChild(tabella(['Turno', 'Gioco', 'Squadra', 'Squadra', 'Ha vinto'], righe));
+      }
       if (!trovato) b2.appendChild(crea('p', null, 'Nessun tabellone generato.'));
-      apriFoglio('Tabelloni dei tornei', b2);
+      apriFoglio('Tabelloni e calendari', b2);
       return;
     }
     if (quale === 'classifiche') {
