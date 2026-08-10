@@ -301,6 +301,20 @@ section{ padding:clamp(40px,6vw,72px) 0; }
 @keyframes battito{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.045); } }
 @media (prefers-reduced-motion:reduce){ .orologio{ animation:none !important; } }
 
+/* ------------------- appello: si tocca il nome e basta ------------------ */
+.gruppo-appello{ margin-bottom:16px; }
+.gruppo-appello h3{ font-size:1rem; margin:0 0 6px; }
+.riga-appello{
+  display:flex; flex-wrap:wrap; align-items:center; gap:10px;
+  padding:8px 10px; border-radius:12px; border:1px solid var(--linea);
+  margin-bottom:6px; background:#fff;
+}
+.riga-appello .cnt{ flex:1 1 180px; }
+.riga-appello b{ display:block; }
+.riga-appello small{ display:block; color:var(--muted); font-size:.82rem; }
+.riga-appello.c-e{ background:#e9f9f0; border-color:#a9e6c4; }
+.riga-appello.manca{ background:#fdeaea; border-color:#ffc4c4; }
+
 /* ------------------ chi fa cosa: una scheda per persona ----------------- */
 .ruolo-card{
   border:1px solid var(--linea); border-radius:16px; padding:14px 16px;

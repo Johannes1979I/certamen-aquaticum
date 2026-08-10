@@ -50,8 +50,14 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
 
 ## Come si lavora il giorno della festa
 
-1. **Accoglienza** — stampa l'elenco da `🖨️ Stampe → Elenco per l'accoglienza`
-   e spunta chi arriva.
+1. **Accoglienza** — scheda `📋 Iscrizioni`, riquadro **✅ Appello** in cima:
+   ci sono tutti i nomi, e si tocca `C'è` o `Manca`. Se le squadre sono già
+   fatte i nomi arrivano raggruppati per squadra. In alto il conto: quanti
+   presenti, quanti assenti, quanti da spuntare.
+   Lo tengono **in più persone insieme**: le spunte si fondono, nessuno
+   cancella quelle degli altri. `✅ Sono arrivati tutti` chiude in fretta
+   quando manca poco, senza toccare chi hai già segnato assente.
+   Se preferisci la carta, l'elenco stampato è sempre in `🖨️ Stampe`.
 2. **Squadre** — scheda `🚩 Squadre`: la procedura guidata ti dice quante
    squadre conviene fare, poi scegli:
    - **automatico bilanciato**: l'equilibrio viene prima di tutto, e le

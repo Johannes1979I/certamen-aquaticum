@@ -34,7 +34,7 @@
     return {
       squadre: [], configSquadre: {}, risultati: {}, titoli: [], tornei: {}, bonus: {},
       cronometro: cronometroVuoto(), assettoCarte: null,
-      torneoRagazzi: { attivo: false, turni: [] }
+      torneoRagazzi: { attivo: false, turni: [] }, presenze: {}
     };
   }
   function cronometroVuoto() {
@@ -95,6 +95,9 @@
         if (v === 'punteggi') disegnaPunteggi();
         if (v === 'giochi') disegnaEditGiochi();
         if (v === 'stampe') disegnaRuoli();
+        /* l'appello si raggruppa per squadra: se le squadre sono nate dopo
+           l'ultimo disegno, va rifatto entrando */
+        if (v === 'iscrizioni') disegnaAppello();
       });
     }
 
@@ -253,6 +256,23 @@
     });
     $('btnVaiPubblica2').addEventListener('click', function () {
       document.querySelector('[data-vista="pubblica"]').click();
+    });
+    $('btnTuttiPresenti').addEventListener('click', function () {
+      if (!confirm('Segno presenti tutti quelli non ancora spuntati?')) return;
+      var pr = presenze();
+      attive().forEach(function (p) {
+        if (!pr[p._id]) { pr[p._id] = 'si'; PRESENZE_MIE[p._id] = true; }
+      });
+      salvaStato();
+      disegnaAppello();
+    });
+    $('btnAzzeraAppello').addEventListener('click', function () {
+      if (!confirm('Cancello tutte le spunte e ricomincio l\'appello?')) return;
+      var vuoto = {};
+      attive().forEach(function (p) { vuoto[p._id] = ''; PRESENZE_MIE[p._id] = true; });
+      STATO.presenze = vuoto;
+      salvaStato();
+      disegnaAppello();
     });
     $('btnCopiaGuida').addEventListener('click', function () {
       copiaTesto(testoGuida()).then(function (fatto) {
@@ -757,6 +777,7 @@
       risultati: { risultati: STATO.risultati, torneoRagazzi: STATO.torneoRagazzi },
       titoli: { titoli: STATO.titoli },
       cronometro: { cronometro: STATO.cronometro },
+      presenze: { presenze: STATO.presenze },
       assetto_carte: { assettoCarte: STATO.assettoCarte }
     };
     Object.keys(STATO.tornei || {}).forEach(function (id) {
@@ -781,6 +802,20 @@
       disegnaCronometro();
     } else if (nome === 'assetto_carte') {
       STATO.assettoCarte = V(dati.assettoCarte, null);
+    } else if (nome === 'presenze') {
+      /* L'appello lo tengono in due o tre insieme, e tutti scrivono sullo
+         stesso pezzo: sostituirlo di sana pianta cancellerebbe le spunte
+         appena fatte dagli altri. Quindi si fondono, e vince quello che ho
+         segnato io se ho toccato quel nome in questa sessione. */
+      var arrivate = V(dati.presenze, {});
+      var mie = STATO.presenze || {};
+      var unite = {};
+      Object.keys(arrivate).forEach(function (k) { unite[k] = arrivate[k]; });
+      Object.keys(mie).forEach(function (k) {
+        if (PRESENZE_MIE[k] || arrivate[k] === undefined) unite[k] = mie[k];
+      });
+      STATO.presenze = unite;
+      disegnaAppello();
     } else if (nome.indexOf('torneo_') === 0) {
       STATO.tornei = STATO.tornei || {};
       STATO.tornei[nome.slice(7)] = dati;
@@ -959,6 +994,7 @@
 
   /* ---------------------------- iscrizioni ---------------------------- */
   function disegnaIscritti() {
+    disegnaAppello();
     var el = $('elencoIscritti');
     el.textContent = '';
     var cerca = $('cerca').value.trim().toLowerCase();
@@ -1522,6 +1558,97 @@
       disegnaCategorie();
       disegnaIscritti();
     }).catch(function (e) { CA.toast('⚠️ ' + e.message, 8000); });
+  }
+
+  /* =============================== APPELLO ============================
+     Al cancello, alle quattro del pomeriggio, con venti persone che
+     arrivano insieme: si tocca il nome e basta. Le presenze stanno nello
+     stato condiviso, quindi chiunque tenga l'appello lo aggiorna per
+     tutti, e chi guarda da un altro telefono lo vede.                  */
+  var PRESENZE_MIE = {};        /* i nomi che ho spuntato io, in questa sessione */
+
+  function presenze() {
+    STATO.presenze = STATO.presenze || {};
+    return STATO.presenze;
+  }
+  function segnaPresenza(p, come) {
+    var pr = presenze();
+    PRESENZE_MIE[p._id] = true;
+    if (pr[p._id] === come) pr[p._id] = '';      /* ritocca: torna in dubbio */
+    else pr[p._id] = come;
+    salvaStato();
+    disegnaAppello();
+  }
+
+  function disegnaAppello() {
+    var el = $('elencoAppello');
+    if (!el) return;
+    el.textContent = '';
+    var tutti = attive();
+    var pr = presenze();
+
+    var box = $('conteggiAppello');
+    if (box) {
+      box.textContent = '';
+      var si = tutti.filter(function (p) { return pr[p._id] === 'si'; }).length;
+      var no = tutti.filter(function (p) { return pr[p._id] === 'no'; }).length;
+      box.appendChild(etichettaConteggio('✅ presenti', si));
+      box.appendChild(etichettaConteggio('❌ assenti', no));
+      box.appendChild(etichettaConteggio('❔ da spuntare', tutti.length - si - no));
+    }
+    if (!tutti.length) {
+      el.appendChild(crea('p', 'aiuto', 'Non c\'è ancora nessun iscritto.'));
+      return;
+    }
+
+    /* raggruppati per squadra se le squadre ci sono già; se no per sezione */
+    var gruppi = [], dove = {};
+    STATO.squadre.forEach(function (s) {
+      s.componenti.forEach(function (id) { dove[id] = s.nome; });
+    });
+    function metti(titolo, gente) {
+      if (gente.length) gruppi.push({ titolo: titolo, gente: gente });
+    }
+    if (STATO.squadre.length) {
+      STATO.squadre.forEach(function (s) {
+        metti('🚩 ' + s.nome, tutti.filter(function (p) { return dove[p._id] === s.nome; }));
+      });
+      metti('🤽 Ragazzi senza squadra', tutti.filter(function (p) {
+        return p.area === 'ragazzi' && !dove[p._id];
+      }));
+    } else {
+      metti('🤽 Giochi in acqua', tutti.filter(function (p) { return p.area === 'ragazzi'; }));
+    }
+    metti('🂡 Carte italiane', tutti.filter(function (p) { return p.gruppo === 'italiana'; }));
+    metti('🃟 Burraco', tutti.filter(function (p) { return p.gruppo === 'burraco'; }));
+
+    gruppi.forEach(function (g) {
+      var c = crea('div', 'gruppo-appello');
+      var presenti = g.gente.filter(function (p) { return pr[p._id] === 'si'; }).length;
+      c.appendChild(crea('h3', null, g.titolo + ' — ' + presenti + ' su ' + g.gente.length));
+      g.gente.slice().sort(function (a, b) {
+        return String(a.nome).localeCompare(String(b.nome), 'it');
+      }).forEach(function (p) {
+        var stato = pr[p._id] || '';
+        var r = crea('div', 'riga-appello ' + (stato === 'si' ? 'c-e' : (stato === 'no' ? 'manca' : '')));
+        var n = crea('div', 'cnt');
+        n.appendChild(crea('b', null, p.nome));
+        n.appendChild(crea('small', null,
+          (p.area === 'ragazzi' ? (p.eta ? p.eta + ' anni' : '') : V(p.livello, '')) +
+          (p.appartamento ? ' · app. ' + p.appartamento : '')));
+        r.appendChild(n);
+        var az = crea('div', 'azioni-r');
+        az.appendChild(bottone(stato === 'si' ? '✅ C\'è' : 'C\'è',
+          stato === 'si' ? 'verde btn-piccolo' : 'chiaro btn-piccolo',
+          function () { segnaPresenza(p, 'si'); }));
+        az.appendChild(bottone(stato === 'no' ? '❌ Manca' : 'Manca',
+          stato === 'no' ? 'rosso btn-piccolo' : 'chiaro btn-piccolo',
+          function () { segnaPresenza(p, 'no'); }));
+        r.appendChild(az);
+        c.appendChild(r);
+      });
+      el.appendChild(c);
+    });
   }
 
   function disegnaSquadre() {
