@@ -97,7 +97,7 @@
         if (v === 'stampe') disegnaRuoli();
         /* l'appello si raggruppa per squadra: se le squadre sono nate dopo
            l'ultimo disegno, va rifatto entrando */
-        if (v === 'iscrizioni') disegnaAppello();
+        if (v === 'appello') disegnaAppello();
       });
     }
 

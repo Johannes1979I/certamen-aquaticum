@@ -233,6 +233,7 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
   <div class="wrap" style="display:flex;gap:6px">
     <button data-vista="cruscotto" class="attiva">📊 Cruscotto</button>
     <button data-vista="iscrizioni">📋 Iscrizioni</button>
+    <button data-vista="appello">✅ Appello</button>
     <button data-vista="squadre">🚩 Squadre</button>
     <button data-vista="tornei">🃏 Tornei</button>
     <button data-vista="punteggi">🏅 Punteggi</button>
@@ -328,18 +329,6 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
 
 <!-- ----------------------------- ISCRIZIONI ---------------------------- -->
 <section class="vista" id="v-iscrizioni">
-  <div class="card" id="sec-appello">
-    <h2>✅ Appello</h2>
-    <p class="aiuto">Chi è arrivato e chi manca. Lo vedono e lo aggiornano tutti insieme:
-      basta toccare il nome. Se le squadre sono già fatte, i nomi sono raggruppati per squadra.</p>
-    <div class="conteggi-ord" id="conteggiAppello"></div>
-    <div class="azioni" style="justify-content:flex-start;margin-bottom:10px">
-      <button class="btn btn-chiaro btn-piccolo" id="btnTuttiPresenti">✅ Sono arrivati tutti</button>
-      <button class="btn btn-chiaro btn-piccolo" id="btnAzzeraAppello">↩️ Ricomincia l'appello</button>
-    </div>
-    <div id="elencoAppello"></div>
-  </div>
-
   <div class="card">
     <h2>📋 Registro delle iscrizioni</h2>
     <p class="aiuto">Tutte le iscrizioni arrivate. Si aggiorna da solo ogni minuto, ma si ferma mentre stai scrivendo.</p>
@@ -382,6 +371,22 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
 </section>
 
 <!-- ------------------------------ SQUADRE ------------------------------ -->
+<!-- ------------------------------ APPELLO ------------------------------ -->
+<section class="vista" id="v-appello">
+  <div class="card" id="sec-appello">
+    <h2>✅ Appello</h2>
+    <p class="aiuto">Chi è arrivato e chi manca. Lo vedono e lo aggiornano tutti insieme:
+      basta toccare il nome. Se le squadre sono già fatte, i nomi sono raggruppati per squadra.</p>
+    <div class="conteggi-ord" id="conteggiAppello"></div>
+    <div class="azioni" style="justify-content:flex-start;margin-bottom:10px">
+      <button class="btn btn-chiaro btn-piccolo" id="btnTuttiPresenti">✅ Sono arrivati tutti</button>
+      <button class="btn btn-chiaro btn-piccolo" id="btnAzzeraAppello">↩️ Ricomincia l'appello</button>
+    </div>
+    <div id="elencoAppello"></div>
+  </div>
+
+</section>
+
 <section class="vista" id="v-squadre">
   <div class="guidata">
     <h3>🚩 Procedura guidata: forma le squadre</h3>

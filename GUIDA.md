@@ -50,7 +50,7 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
 
 ## Come si lavora il giorno della festa
 
-1. **Accoglienza** — scheda `📋 Iscrizioni`, riquadro **✅ Appello** in cima:
+1. **Accoglienza** — scheda `✅ Appello`:
    ci sono tutti i nomi, e si tocca `C'è` o `Manca`. Se le squadre sono già
    fatte i nomi arrivano raggruppati per squadra. In alto il conto: quanti
    presenti, quanti assenti, quanti da spuntare.
