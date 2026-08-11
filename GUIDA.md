@@ -341,8 +341,11 @@ cronometro sta in cima alla scheda `🏅 Punteggi`.
 - **▶ Via** fa partire il conto alla rovescia. **⏸ Pausa** lo ferma dove sta
   (serve quando ci si ferma a spiegare), **↺ Azzera** lo riporta all'inizio.
 - Sotto il minuto i numeri diventano arancioni; a zero diventano rossi e
-  parte la **sirena**, con la vibrazione sul telefono. `🔕 Basta sirena` la
-  zittisce, e comunque smette da sola dopo un minuto.
+  parte la **sirena**: un ululato di due secondi e mezzo che sale e scende,
+  ripetuto, con la vibrazione sul telefono. È fatta per coprire una piscina
+  piena di ragazzi che urlano, quindi tienila al volume giusto e non farla
+  partire con l'orecchio attaccato alla cassa. `🔕 Basta sirena` la zittisce
+  sul colpo, e comunque smette da sola dopo un minuto.
 - **A tempo scaduto la gara finisce lì**: se nessuna squadra ha già vinto,
   vince chi è avanti in quel momento. L'ordine d'arrivo lo scrivi tu subito
   sotto, nella stessa schermata.
@@ -649,7 +652,9 @@ niente menù, si aggiorna da sola. Non si tocca: si guarda.
 
 **🔊 La prova della sirena** — nel cronometro, sotto `Provare la sirena prima del
 giorno`. Falla suonare dal dispositivo che userai davvero, con la cassa
-collegata: il 15 agosto è tardi per scoprire che non si sente.
+collegata: il 15 agosto è tardi per scoprire che non si sente. Va già al
+massimo che il dispositivo consente — se ti sembra piano, il volume da alzare
+è quello del dispositivo, non c'è altro margine da questa parte.
 
 ## Provare tutto, e poi ricominciare da zero
 

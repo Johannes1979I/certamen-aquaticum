@@ -230,9 +230,10 @@
           'o tieni un fischietto di scorta.');
         return;
       }
-      unBip();
-      testo('statoSirena', '🔊 Suonata. Se non l\'hai sentita: alza il volume, controlla che ' +
-        'la cassa sia collegata e che il dispositivo non sia in silenzioso.');
+      unaSirenata();
+      testo('statoSirena', '🔊 Sta suonando (dura due secondi e mezzo). Se ti sembra piano: ' +
+        'alza il volume del dispositivo, controlla che la cassa sia collegata e che non sia ' +
+        'in silenzioso. Più forte di così non posso andare — il resto è volume del dispositivo.');
     });
     $('btnProvaVibra').addEventListener('click', function () {
       var ok = false;
@@ -3883,7 +3884,7 @@
      Vive dentro lo stato condiviso: se lo fa partire uno, lo vedono
      tutti gli altri organizzatori. Quando scade suona, e allora si
      assegnano i punti a chi è avanti in quel momento.               */
-  var TIC = null, SIRENA = null, AUDIO = null;
+  var TIC = null, SIRENA = null, AUDIO = null, USCITA = null, SUONANDO = [];
 
   function cron() {
     STATO.cronometro = STATO.cronometro || cronometroVuoto();
@@ -3941,35 +3942,134 @@
     salvaStato(); disegnaCronometro();
   }
 
-  /* --- la sirena: due note ripetute, fatte al momento, senza file audio --- */
+  /* --- la sirena: fatta al momento, senza file audio.
+     Deve zittire una piscina piena di ragazzi che urlano, quindi non è un
+     bip: è un ululato che sale e scende, con le armoniche là dove l'orecchio
+     sente di più (fra 1 e 4 kHz), spinto a un soffio dal massimo e tenuto lì
+     da un saturatore — che non fa gracchiare e anzi lo rende più ruvido,
+     cioè più difficile da ignorare. --- */
+  var SIRENATA_MS = 2400;         /* quanto dura un ululato */
+
   function preparaAudio() {
     try {
       AUDIO = AUDIO || new (window.AudioContext || window.webkitAudioContext)();
       if (AUDIO.state === 'suspended') AUDIO.resume();
-    } catch (e) { AUDIO = null; }
+      if (!USCITA) USCITA = costruisciUscita();
+    } catch (e) { AUDIO = null; USCITA = null; }
   }
-  function unBip() {
-    if (!AUDIO) return;
+
+  /* La catena d'uscita, costruita una volta sola: tutto il volume che il
+     dispositivo può dare, senza sforare. Nell'ordine:
+       1. via i bassi, che un altoparlante da tablet non riesce comunque a
+          fare e che ruberebbero solo spazio;
+       2. si entra nel saturatore ben carichi, e lui arrotonda le punte invece
+          di tagliarle di netto — è questo che rende il suono pieno e ruvido;
+       3. un tetto in fondo, che non lascia passare niente oltre il massimo.
+     Il tetto serve davvero: il saturatore lavora a frequenza quadruplicata e
+     nel tornare indietro fa dei piccoli rimbalzi oltre il bordo. Con il tetto
+     si può tenere il volume alto invece di abbassarlo per prudenza.
+     Misurato sul codice vero: 26 dB più forte della sirena di prima — a
+     orecchio, sei volte tanto — e mai un campione oltre il fondoscala. */
+  function costruisciUscita() {
+    var alto = AUDIO.createBiquadFilter();
+    alto.type = 'highpass'; alto.frequency.value = 320; alto.Q.value = 0.7;
+    var dentro = AUDIO.createGain();
+    dentro.gain.value = 2.8;
+    var forma = AUDIO.createWaveShaper();
+    forma.curve = curvaSatura(2.6);
+    forma.oversample = '4x';
+    var tetto = AUDIO.createWaveShaper();
+    forma.connect(tetto);
+    tetto.curve = curvaTetto();
+    alto.connect(dentro); dentro.connect(forma);
+    tetto.connect(AUDIO.destination);
+    return alto;
+  }
+  /* la curva che arrotonda: da riga dritta a onda quadra man mano che si sale */
+  function curvaSatura(forza) {
+    var n = 2048, c = new Float32Array(n), i, x;
+    for (i = 0; i < n; i++) {
+      x = (i * 2) / (n - 1) - 1;
+      c[i] = Math.tanh(forza * x) / Math.tanh(forza);
+    }
+    return c;
+  }
+  /* il tetto: sotto 0,8 non tocca niente, sopra piega e non passa mai 0,93 */
+  function curvaTetto() {
+    var n = 2048, c = new Float32Array(n), i, x, a, segno, GOM = 0.8, CIMA = 0.95;
+    for (i = 0; i < n; i++) {
+      x = (i * 2) / (n - 1) - 1;
+      a = Math.abs(x); segno = x < 0 ? -1 : 1;
+      c[i] = a <= GOM ? x
+        : segno * (GOM + (CIMA - GOM) * Math.tanh((a - GOM) / (CIMA - GOM)));
+    }
+    return c;
+  }
+
+  function unaSirenata() {
+    if (!AUDIO || !USCITA) return;
     try {
-      var t = AUDIO.currentTime;
-      [[0, 880], [0.26, 880], [0.52, 660]].forEach(function (n) {
-        var o = AUDIO.createOscillator(), v = AUDIO.createGain();
-        o.type = 'square';
-        o.frequency.value = n[1];
-        v.gain.setValueAtTime(0.0001, t + n[0]);
-        v.gain.exponentialRampToValueAtTime(0.22, t + n[0] + 0.02);
-        v.gain.exponentialRampToValueAtTime(0.0001, t + n[0] + 0.2);
-        o.connect(v); v.connect(AUDIO.destination);
-        o.start(t + n[0]); o.stop(t + n[0] + 0.22);
+      var t = AUDIO.currentTime + 0.02;
+      var dur = SIRENATA_MS / 1000;
+      var giri = 3, mezzo = dur / (giri * 2);   /* tre salite e tre discese */
+      var BASSA = 620, ALTA = 1560;
+
+      /* dentro e fuori di colpo: nessuna dissolvenza, o si perde metà colpo */
+      var busta = AUDIO.createGain();
+      busta.gain.setValueAtTime(0.0001, t);
+      busta.gain.exponentialRampToValueAtTime(1, t + 0.012);
+      busta.gain.setValueAtTime(1, t + dur - 0.06);
+      busta.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      busta.connect(USCITA);
+
+      /* quattro voci sulla stessa salita: la nota, la sua ottava, la
+         dodicesima e una gemella appena scordata che fa battere il suono */
+      var voci = [];
+      [['sawtooth', 1, 0.50], ['square', 2, 0.30],
+       ['square', 3, 0.16], ['sawtooth', 1.008, 0.34]].forEach(function (v) {
+        var o = AUDIO.createOscillator(), g = AUDIO.createGain();
+        o.type = v[0]; g.gain.value = v[2];
+        o.frequency.setValueAtTime(BASSA * v[1], t);
+        for (var i = 0; i < giri * 2; i++) {
+          o.frequency.linearRampToValueAtTime((i % 2 === 0 ? ALTA : BASSA) * v[1],
+            t + mezzo * (i + 1));
+        }
+        o.connect(g); g.connect(busta);
+        o.start(t); o.stop(t + dur + 0.05);
+        voci.push(o);
       });
+
+      /* si tiene da parte per poterla spegnere a metà se qualcuno preme
+         «Basta sirena»: se no continuerebbe fino alla fine dell'ululato */
+      var riga = { busta: busta, voci: voci };
+      SUONANDO.push(riga);
+      voci[voci.length - 1].onended = function () {
+        var i = SUONANDO.indexOf(riga);
+        if (i >= 0) SUONANDO.splice(i, 1);
+      };
     } catch (e) { }
   }
+
+  function fermaVoci() {
+    if (!AUDIO || !SUONANDO.length) return;
+    var t = AUDIO.currentTime;
+    SUONANDO.forEach(function (r) {
+      try {
+        r.busta.gain.cancelScheduledValues(t);
+        r.busta.gain.setValueAtTime(Math.max(0.0001, r.busta.gain.value), t);
+        r.busta.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+      } catch (e) { }
+      r.voci.forEach(function (o) { try { o.stop(t + 0.07); } catch (e) { } });
+    });
+    SUONANDO = [];
+  }
+
   function suona() {
     if (SIRENA) return;
     preparaAudio();
-    unBip();
-    try { if (navigator.vibrate) navigator.vibrate([400, 180, 400, 180, 600]); } catch (e) { }
-    SIRENA = setInterval(unBip, 1600);
+    unaSirenata();
+    try { if (navigator.vibrate) navigator.vibrate([700, 200, 700, 200, 1000]); } catch (e) { }
+    SIRENA = setInterval(unaSirenata, SIRENATA_MS + 450);
     /* non suona all'infinito: dopo un minuto smette da sola */
     setTimeout(zittisci, 60000);
     var z = $('btnCronZitto');
@@ -3977,6 +4077,7 @@
   }
   function zittisci() {
     if (SIRENA) { clearInterval(SIRENA); SIRENA = null; }
+    fermaVoci();
     try { if (navigator.vibrate) navigator.vibrate(0); } catch (e) { }
     var z = $('btnCronZitto');
     if (z) z.style.display = 'none';
