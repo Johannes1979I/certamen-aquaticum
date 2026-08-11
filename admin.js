@@ -98,6 +98,9 @@
         /* l'appello si raggruppa per squadra: se le squadre sono nate dopo
            l'ultimo disegno, va rifatto entrando */
         if (v === 'appello') disegnaAppello();
+        /* il messaggio di chiusura si riscrive coi punteggi del momento,
+           finché non lo si ritocca a mano */
+        if (v === 'pubblica') disegnaChiusura(false);
       });
     }
 
@@ -220,6 +223,24 @@
     $('btnCronPausa').addEventListener('click', pausaCron);
     $('btnCronAzzera').addEventListener('click', azzeraCron);
     $('btnCronZitto').addEventListener('click', zittisci);
+    $('btnProvaSirena').addEventListener('click', function () {
+      preparaAudio();
+      if (!AUDIO) {
+        testo('statoSirena', '⚠️ Questo browser non mi lascia suonare. Prova da un altro, ' +
+          'o tieni un fischietto di scorta.');
+        return;
+      }
+      unBip();
+      testo('statoSirena', '🔊 Suonata. Se non l\'hai sentita: alza il volume, controlla che ' +
+        'la cassa sia collegata e che il dispositivo non sia in silenzioso.');
+    });
+    $('btnProvaVibra').addEventListener('click', function () {
+      var ok = false;
+      try { ok = !!(navigator.vibrate && navigator.vibrate([400, 180, 400])); } catch (e) { }
+      testo('statoSirena', ok
+        ? '📳 Vibrazione mandata: sul telefono si sente, sul computer no.'
+        : '📳 Questo dispositivo non vibra — normale su computer e iPhone.');
+    });
 
     $('btnSalvaGh').addEventListener('click', salvaGh);
     /* il token si scrive una volta e non si rilegge più: ma per passarlo al
@@ -257,6 +278,16 @@
     $('btnVaiPubblica2').addEventListener('click', function () {
       document.querySelector('[data-vista="pubblica"]').click();
     });
+    $('btnRifaiChiusura').addEventListener('click', function () {
+      disegnaChiusura(true);
+      testo('statoChiusura', '🔄 Rifatto con i punteggi di adesso.');
+    });
+    $('btnCopiaChiusura').addEventListener('click', function () {
+      copiaTesto($('msgChiusura').value).then(function (ok) {
+        testo('statoChiusura', ok ? '📋 Copiato.' : '⚠️ Non riesco a copiarlo: selezionalo a mano.');
+      });
+    });
+    $('msgChiusura').addEventListener('input', function () { disegnaChiusura(false); });
     $('btnAzzeraPunteggi').addEventListener('click', function () { azzeraGiornata(false); });
     $('btnAzzeraTutto').addEventListener('click', function () { azzeraGiornata(true); });
     $('mgChiudi').addEventListener('click', chiudiModaleGara);
@@ -5815,6 +5846,72 @@
     if (a) a.href = CA.linkWhatsApp(testoRiassunto());
   }
 
+  /* ==================== IL MESSAGGIO DI FINE GIORNATA ==================
+     A premiazione fatta nessuno ha voglia di mettersi a scrivere: qui il
+     messaggio è già pronto, con la classifica vera e il link all'album.  */
+  function testoChiusura() {
+    var righe = [];
+    var t = V(DATI.tema, {}), ev = V(DATI.evento, {});
+    righe.push(V(t.titolo, 'Certamen Aquaticum') + ' — è finita così!');
+    if (ev.data) righe.push(CA.dataIt(ev.data, true));
+    righe.push('');
+
+    var gen = classificaRagazzi().filter(function (r) { return r.punti || r.gare; });
+    if (gen.length) {
+      righe.push('LE SQUADRE');
+      gen.forEach(function (r, i) {
+        righe.push((['1°', '2°', '3°'][i] || (i + 1) + '°') + ' ' + r.nome + ' — ' + r.punti + ' punti');
+      });
+      righe.push('');
+    }
+    var carte = [];
+    torneiAttivi().forEach(function (x) {
+      var st = STATO.tornei[x.id] || {};
+      if (!V(st.coppie, []).length) return;
+      var cl = classificaTorneo(x.id).filter(function (r) { return r.g; });
+      if (!cl.length) return;
+      carte.push(x.nome + ': ' + cl[0].coppia + (cl[1] ? ', poi ' + cl[1].coppia : ''));
+    });
+    if (carte.length) {
+      righe.push('LE CARTE');
+      carte.forEach(function (r) { righe.push(r); });
+      righe.push('');
+    }
+    var titoli = V(STATO.titoli, []).filter(function (x) { return x.chi; });
+    if (titoli.length) {
+      righe.push('I PREMI');
+      titoli.forEach(function (x) { righe.push(x.premio + ': ' + x.chi); });
+      righe.push('');
+    }
+    var mz = contoMenzioni();
+    var menz = [];
+    V(DATI.menzioniGara, []).forEach(function (m) {
+      var q = mz[m.id];
+      if (!q) return;
+      var primo = Object.keys(q).sort(function (a, b) { return q[b] - q[a]; })[0];
+      menz.push(m.nome + ': ' + nomeDiRiferimento(primo) +
+        (q[primo] > 1 ? ' (' + q[primo] + ' volte)' : ''));
+    });
+    if (menz.length) {
+      righe.push('MENZIONI DEL POMERIGGIO');
+      menz.forEach(function (r) { righe.push(r); });
+      righe.push('');
+    }
+    righe.push('Le foto sono già online: ' + CA.urlSito() + 'album.html');
+    righe.push('Classifiche complete: ' + CA.urlSito() + 'classifiche.html');
+    righe.push('');
+    righe.push('Grazie a tutti — ci si rivede l\'anno prossimo!');
+    return righe.join('\n');
+  }
+
+  function disegnaChiusura(rifai) {
+    var t = $('msgChiusura');
+    if (!t) return;
+    if (rifai || !t.value.trim()) t.value = testoChiusura();
+    $('chiusuraWa').href = CA.linkWhatsApp(t.value);
+    $('chiusuraTg').href = CA.linkTelegram(t.value);
+  }
+
   /* ==================== AZZERARE DOPO LA PROVA GENERALE ===============
      Provare tutto per davvero — squadre, gare, punteggi, tabelloni — e poi
      rimettere il contatore a zero. Le iscrizioni stanno in un'altra
@@ -6030,6 +6127,79 @@
       }
       if (!trovato) b2.appendChild(crea('p', null, 'Nessun tabellone generato.'));
       apriFoglio('Tabelloni e calendari', b2);
+      return;
+    }
+    if (quale === 'diplomi') {
+      /* Un foglio per ragazzo, da consegnare dopo la premiazione. A quell'età
+         il pezzo di carta da portare a casa vale più della coppa. */
+      var b5 = crea('div');
+      var gen = classificaRagazzi();
+      var posto = {};
+      gen.forEach(function (r, i) { posto[r.id] = i + 1; });
+      var mzTot = contoMenzioni();
+      var quanti = 0;
+
+      STATO.squadre.forEach(function (sq) {
+        sq.componenti.forEach(function (id) {
+          var p = perId(id);
+          if (!p) return;
+          quanti++;
+          var f = crea('div', 'diploma');
+          f.appendChild(crea('div', 'dip-occhiello',
+            V(V(DATI.tema, {}).titolo, 'Certamen Aquaticum')));
+          f.appendChild(crea('div', 'dip-evento',
+            V(V(DATI.evento, {}).luogo, 'Residence Holiday') +
+            (V(DATI.evento, {}).data ? ' · ' + CA.dataIt(DATI.evento.data, true) : '')));
+          f.appendChild(crea('div', 'dip-a', 'si consegna a'));
+          f.appendChild(crea('div', 'dip-nome', p.nome));
+          var col = crea('div', 'dip-squadra', '🚩 ' + sq.nome +
+            (sq.capitano === id ? ' · capitano' : '') + (sq.motto ? ' — «' + sq.motto + '»' : ''));
+          if (sq.colore) col.style.color = sq.colore;
+          f.appendChild(col);
+
+          var pz = posto[sq.id];
+          f.appendChild(crea('div', 'dip-posto',
+            (pz === 1 ? '🥇 Squadra campione di Ferragosto'
+              : (pz === 2 ? '🥈 Secondo posto' : (pz === 3 ? '🥉 Terzo posto' : pz + '° posto')))));
+
+          /* le gare vinte dalla sua squadra, per nome */
+          var vinte = [];
+          giochiAttivi().forEach(function (g) {
+            var r = V(STATO.risultati[g.id], []).filter(Boolean);
+            var primo = r.filter(function (x) { return x.posizione === 1; })[0];
+            if (primo && primo.squadra === sq.id) vinte.push(V(g.emoji, '') + ' ' + g.nome);
+          });
+          if (vinte.length) {
+            f.appendChild(crea('div', 'dip-titolo-sez', 'Gare vinte'));
+            f.appendChild(crea('div', 'dip-elenco', vinte.join(' · ')));
+          }
+          /* le menzioni prese proprio da lui */
+          var sue = [];
+          V(DATI.menzioniGara, []).forEach(function (m) {
+            var q = mzTot[m.id];
+            if (q && q['p:' + id]) {
+              sue.push(V(m.emoji, '🏅') + ' ' + m.nome +
+                (q['p:' + id] > 1 ? ' (' + q['p:' + id] + ' volte)' : ''));
+            }
+          });
+          V(STATO.titoli, []).forEach(function (t2) {
+            if (normalizza(V(t2.chi, '')) === normalizza(p.nome)) {
+              sue.push(V(t2.emoji, '🏅') + ' ' + t2.premio);
+            }
+          });
+          if (sue.length) {
+            f.appendChild(crea('div', 'dip-titolo-sez', 'Menzioni speciali'));
+            f.appendChild(crea('div', 'dip-elenco', sue.join(' · ')));
+          }
+          f.appendChild(crea('div', 'dip-firma', 'Gli organizzatori del Residence Holiday'));
+          b5.appendChild(f);
+        });
+      });
+      if (!quanti) {
+        b5.appendChild(crea('p', null,
+          'Prima forma le squadre: i diplomi prendono nome, squadra e posizione da lì.'));
+      }
+      apriFoglio('Diplomi', b5);
       return;
     }
     if (quale === 'collaboratori') {

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Tabellone — Certamen Aquaticum</title>
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#0a2540" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📺</text></svg>" />
+<link rel="stylesheet" href="stile.css" />
+<script src="firebase.js"></script>
+<script src="comune.js"></script>
+<style>
+/* =========================================================================
+   Il tabellone da appoggiare su un tablet a bordo vasca. Si guarda da tre
+   metri di distanza, con il sole addosso: quindi fondo scuro, numeri
+   enormi e niente di superfluo. Non si tocca: si guarda e basta.
+   ========================================================================= */
+body{ background:#0a2540; color:#fff; margin:0; overflow:hidden; }
+.schermo{
+  min-height:100vh; min-height:100dvh; display:flex; flex-direction:column;
+  padding:clamp(14px,2.5vw,30px); gap:clamp(10px,2vh,22px);
+}
+.riga-alta{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.marchio-tab{ font-size:clamp(1rem,2.4vw,1.6rem); font-weight:800; letter-spacing:.02em; }
+.marchio-tab .goccia{ margin-right:8px; }
+.orologio-ora{ margin-left:auto; font-size:clamp(1rem,2.2vw,1.5rem); opacity:.75; font-variant-numeric:tabular-nums; }
+
+.gara-ora{
+  background:rgba(255,255,255,.07); border-radius:22px; padding:clamp(14px,2.4vw,26px);
+  text-align:center; border:3px solid transparent;
+}
+.gara-ora .che{ font-size:clamp(1.1rem,3.2vw,2.2rem); font-weight:bold; }
+.gara-ora .tempo{
+  font-size:clamp(3.4rem,15vw,9rem); font-weight:800; line-height:1;
+  font-variant-numeric:tabular-nums; letter-spacing:-.02em; margin:6px 0;
+}
+.gara-ora .sotto{ font-size:clamp(.85rem,1.8vw,1.15rem); opacity:.8; }
+.gara-ora.corre{ border-color:#2f9e5b; }
+.gara-ora.corre .tempo{ color:#7ce8ab; }
+.gara-ora.sgoccioli{ border-color:#ffc233; }
+.gara-ora.sgoccioli .tempo{ color:#ffd75e; animation:pulsa 1s ease-in-out infinite; }
+.gara-ora.finita{ border-color:#ff6b6b; }
+.gara-ora.finita .tempo{ color:#ff9a9a; }
+@keyframes pulsa{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.04); } }
+@media (prefers-reduced-motion:reduce){ .gara-ora .tempo{ animation:none !important; } }
+
+.classifica-tab{ flex:1; display:flex; flex-direction:column; gap:clamp(6px,1.2vh,12px); justify-content:center; }
+.riga-sq{
+  display:flex; align-items:center; gap:clamp(10px,2vw,20px);
+  background:rgba(255,255,255,.07); border-radius:18px;
+  padding:clamp(8px,1.6vh,18px) clamp(12px,2vw,24px);
+  border-left:10px solid var(--cs,#14c4b4);
+}
+/* la prima deve saltare all'occhio da tre metri, non essere appena diversa */
+.riga-sq.prima{ background:linear-gradient(90deg, rgba(255,194,51,.34), rgba(255,194,51,.12)); }
+.riga-sq.prima .nome, .riga-sq.prima .pt{ color:#ffd75e; }
+.riga-sq .pos{ font-size:clamp(1.4rem,3.6vw,2.6rem); width:clamp(46px,6vw,84px); text-align:center; }
+.riga-sq .nome{ flex:1; font-size:clamp(1.2rem,3.4vw,2.4rem); font-weight:bold; }
+.riga-sq .pt{
+  font-size:clamp(1.6rem,4.4vw,3.2rem); font-weight:800; font-variant-numeric:tabular-nums;
+}
+.riga-sq .pt small{ font-size:.42em; opacity:.7; margin-left:6px; font-weight:normal; }
+
+.pieno{ text-align:center; opacity:.65; font-size:clamp(1rem,2.4vw,1.5rem); margin:auto; }
+.avviso-tab{
+  background:#ffc233; color:#4a2c00; border-radius:16px; padding:12px 18px;
+  font-weight:bold; text-align:center; font-size:clamp(.95rem,2vw,1.3rem);
+}
+.piede-tab{ text-align:center; font-size:clamp(.75rem,1.5vw,1rem); opacity:.5; }
+</style>
+</head>
+<body>
+
+<div class="schermo">
+  <div class="riga-alta">
+    <div class="marchio-tab"><span class="goccia">🏊</span><span id="marchioNome">Certamen Aquaticum</span></div>
+    <div class="orologio-ora" id="oraOra">--:--</div>
+  </div>
+
+  <div class="avviso-tab" id="avvisoTab" style="display:none"></div>
+
+  <div class="gara-ora" id="garaOra" style="display:none">
+    <div class="che" id="cheGaraTab"></div>
+    <div class="tempo" id="tempoTab">--:--</div>
+    <div class="sotto" id="sottoTab"></div>
+  </div>
+
+  <div class="classifica-tab" id="classificaTab"></div>
+
+  <div class="piede-tab" id="piedeTab"></div>
+</div>
+
+<script>
+/* =========================================================================
+   Legge la stessa bacheca delle classifiche: nessun comando, nessun tocco.
+   Il conto alla rovescia si calcola dall'ora di partenza, quindi scorre
+   liscio anche fra un aggiornamento e l'altro.
+   ========================================================================= */
+var $ = CA.$, V = CA.V, testo = CA.testo, crea = CA.crea;
+var DATI = {}, CL = null;
+
+CA.carica().then(function(d){
+  DATI = d;
+  testo('marchioNome', V(V(d.tema,{}).titolo, 'Certamen Aquaticum'));
+  var av = V(d.avviso, {});
+  if(av.attivo && av.testo){
+    $('avvisoTab').style.display = '';
+    $('avvisoTab').textContent = (av.titolo ? av.titolo + ' — ' : '') + av.testo;
+  }
+  testo('piedeTab', 'Le classifiche complete su ' + CA.urlSito().replace(/^https?:\/\//,'') + 'classifiche.html');
+  leggi();
+  setInterval(function(){ if(!document.hidden) leggi(); }, 15000);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) leggi(); });
+}).catch(function(e){
+  testo('piedeTab', 'Non riesco a leggere i contenuti: ' + e.message);
+});
+
+function leggi(){
+  if(!window.FB || !FB.attivo()) return;
+  FB.leggiClassifica().then(function(c){ CL = c; disegna(); }).catch(function(){ /* al giro dopo */ });
+}
+
+function due(n){ return (n < 10 ? '0' : '') + n; }
+
+/* l'ora vera, in alto a destra: serve più di quanto sembri */
+setInterval(function(){
+  var d = new Date();
+  testo('oraOra', due(d.getHours()) + ':' + due(d.getMinutes()));
+}, 1000);
+
+/* il conto alla rovescia della gara in corso */
+setInterval(orologio, 500);
+function orologio(){
+  var box = $('garaOra');
+  var c = CL && CL.cronometro;
+  if(!c || !(Number(c.minuti) > 0)){ box.style.display = 'none'; return; }
+  var totale = Number(c.minuti) * 60000;
+  var passato = Number(c.consumato || 0) + (c.avvio ? (Date.now() - Number(c.avvio)) : 0);
+  var manca = totale - passato;
+  if(manca < -3 * 60000){ box.style.display = 'none'; return; }
+
+  box.style.display = '';
+  testo('cheGaraTab', V(c.emoji, '⏱️') + ' ' + V(c.gioco, ''));
+  var s = Math.max(0, Math.floor(manca / 1000));
+  testo('tempoTab', due(Math.floor(s / 60)) + ':' + due(s % 60));
+  var stato = manca <= 0 ? 'finita' : (manca <= 60000 ? 'sgoccioli' : (c.avvio ? 'corre' : 'ferma'));
+  box.className = 'gara-ora ' + stato;
+  testo('sottoTab',
+    stato === 'finita' ? 'tempo scaduto' :
+    stato === 'sgoccioli' ? 'ultimo minuto!' :
+    stato === 'ferma' ? 'in pausa' : 'alla fine della gara');
+}
+
+function disegna(){
+  var el = $('classificaTab');
+  el.textContent = '';
+  var sq = V(V(CL, {}).ragazzi, {}).squadre || [];
+  if(!sq.length){
+    el.appendChild(crea('div', 'pieno', 'Le squadre compaiono qui appena sono formate.'));
+    return;
+  }
+  var ordinate = sq.slice().sort(function(a, b){ return V(b.punti,0) - V(a.punti,0); });
+  ordinate.forEach(function(s, i){
+    var r = crea('div', 'riga-sq' + (i === 0 ? ' prima' : ''));
+    if(s.colore) r.style.setProperty('--cs', CA.colore(s.colore, '#14c4b4'));
+    r.appendChild(crea('span', 'pos', ['🥇','🥈','🥉'][i] || (i + 1) + '°'));
+    r.appendChild(crea('span', 'nome', V(s.nome, '')));
+    var p = crea('span', 'pt', String(V(s.punti, 0)));
+    p.appendChild(crea('small', null, 'punti'));
+    r.appendChild(p);
+    el.appendChild(r);
+  });
+}
+</script>
+</body>
+</html>

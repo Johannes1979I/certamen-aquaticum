@@ -27,6 +27,7 @@ Dopo ogni pubblicazione premi **⌘⇧R** per vedere davvero le modifiche.
 | `piscina.html` | Le foto della piscina |
 | `admin.html` | Area organizzatori |
 | `locandina.html` | Locandina A4 con QR, da stampare |
+| `tabellone.html` | Tabellone a schermo pieno per un tablet a bordo vasca |
 
 ## Dove stanno i dati
 
@@ -627,6 +628,28 @@ service cloud.firestore {
   `illustrazioni.js`: nessuna immagine da scaricare.
 - Mobile-first, ma a piena larghezza su ogni schermo.
 - Mai `innerHTML` con dati che arrivano da fuori.
+
+## Le cose della fine
+
+**🎓 I diplomi** — `🖨️ Stampe → Diplomi per i ragazzi`: un foglio A4 a testa, con
+nome, squadra, posizione finale, le gare vinte dalla sua squadra e le menzioni
+che ha preso lui. Si stampano tutti insieme dopo la premiazione. A quell'età il
+pezzo di carta da appendere in camera vale più della coppa.
+
+**📣 Il messaggio di chiusura** — `📣 Pubblica → Il messaggio di fine giornata`:
+già scritto con la classifica vera, i premi assegnati, le menzioni e il link
+all'album. Si manda al gruppo mentre ancora si smonta. `🔄 Rifallo con i dati di
+adesso` lo riscrive se nel frattempo hai aggiunto qualcosa; se lo ritocchi a
+mano resta come l'hai lasciato.
+
+**📺 Il tabellone** — `tabellone.html`, o il pulsante nel cronometro. Una pagina
+a schermo pieno per un tablet appoggiato al bordo: la gara in corso col tempo
+che scorre, e sotto la classifica generale a caratteri grandi. Fondo scuro,
+niente menù, si aggiorna da sola. Non si tocca: si guarda.
+
+**🔊 La prova della sirena** — nel cronometro, sotto `Provare la sirena prima del
+giorno`. Falla suonare dal dispositivo che userai davvero, con la cassa
+collegata: il 15 agosto è tardi per scoprire che non si sente.
 
 ## Provare tutto, e poi ricominciare da zero
 

@@ -301,6 +301,29 @@ section{ padding:clamp(40px,6vw,72px) 0; }
 @keyframes battito{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.045); } }
 @media (prefers-reduced-motion:reduce){ .orologio{ animation:none !important; } }
 
+/* ------------------- il diploma: uno per foglio, da appendere ----------- */
+.diploma{
+  border:6px double #0a2540; border-radius:10px; padding:34px 30px; text-align:center;
+  margin-bottom:22px; break-inside:avoid; break-after:page; background:#fff;
+}
+.diploma:last-child{ break-after:auto; }
+.diploma .dip-occhiello{
+  font-size:1.5rem; font-weight:800; letter-spacing:.04em; color:#0a2540;
+}
+.diploma .dip-evento{ font-size:.9rem; color:#555; margin-bottom:22px; }
+.diploma .dip-a{ font-size:.9rem; color:#555; font-style:italic; }
+.diploma .dip-nome{ font-size:2.1rem; font-weight:800; margin:4px 0 8px; line-height:1.15; }
+.diploma .dip-squadra{ font-size:1.05rem; font-weight:bold; margin-bottom:16px; }
+.diploma .dip-posto{ font-size:1.25rem; font-weight:bold; margin-bottom:18px; }
+.diploma .dip-titolo-sez{
+  font-size:.8rem; text-transform:uppercase; letter-spacing:.08em; color:#666; margin-top:14px;
+}
+.diploma .dip-elenco{ font-size:.95rem; }
+.diploma .dip-firma{
+  margin-top:26px; font-size:.85rem; color:#555; font-style:italic;
+  border-top:1px solid #ccc; padding-top:10px;
+}
+
 /* pulsante di quelli da pensarci due volte */
 .btn.btn-rosso{ background:#c1121f; color:#fff; border-color:#c1121f; }
 .btn.btn-rosso:hover{ background:#a30f1a; }

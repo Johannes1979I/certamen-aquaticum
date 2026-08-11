@@ -498,8 +498,21 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
       <button class="btn btn-chiaro" id="btnCronPausa">⏸ Pausa</button>
       <button class="btn btn-chiaro" id="btnCronAzzera">↺ Azzera</button>
       <a class="btn btn-chiaro" id="btnCronMusica" target="_blank" rel="noopener">🎵 Scaletta</a>
+      <a class="btn btn-chiaro" href="tabellone.html" target="_blank" rel="noopener">📺 Tabellone</a>
       <button class="btn btn-rosso" id="btnCronZitto" style="display:none">🔕 Basta sirena</button>
     </div>
+    <details style="margin-top:12px">
+      <summary style="cursor:pointer;font-size:.9rem;color:var(--muted);padding:6px 0">
+        Provare la sirena prima del giorno</summary>
+      <p class="aiuto" style="margin-top:8px">Falla suonare adesso, dal dispositivo che
+        userai davvero e con la cassa collegata: il 15 agosto è tardi per scoprire che
+        non si sente. Suona una volta sola.</p>
+      <div class="azioni" style="justify-content:flex-start">
+        <button class="btn btn-chiaro" id="btnProvaSirena">🔊 Prova la sirena</button>
+        <button class="btn btn-chiaro" id="btnProvaVibra">📳 Prova la vibrazione</button>
+      </div>
+      <p class="aiuto" id="statoSirena" style="margin-top:8px"></p>
+    </details>
   </div>
 
   <div class="card">
@@ -728,6 +741,23 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
     <p class="aiuto" id="admSpiegaCond" style="margin-top:10px"></p>
   </div>
 
+  <div class="card" id="sec-chiusura">
+    <h2>🎉 Il messaggio di fine giornata</h2>
+    <p class="aiuto">A premiazione fatta, questo è già scritto: classifica finale, chi ha
+      vinto cosa, il link all'album delle foto. Si manda al gruppo mentre ancora si smonta.</p>
+    <div class="campo">
+      <label for="msgChiusura">Messaggio pronto</label>
+      <textarea id="msgChiusura" style="min-height:220px"></textarea>
+    </div>
+    <div class="azioni" style="justify-content:flex-start">
+      <a class="btn btn-p" id="chiusuraWa" target="_blank" rel="noopener">💬 Manda su WhatsApp</a>
+      <a class="btn btn-p" id="chiusuraTg" target="_blank" rel="noopener">✈️ Manda su Telegram</a>
+      <button class="btn btn-chiaro btn-piccolo" id="btnRifaiChiusura">🔄 Rifallo con i dati di adesso</button>
+      <button class="btn btn-chiaro btn-piccolo" id="btnCopiaChiusura">📋 Copia</button>
+    </div>
+    <p class="aiuto" id="statoChiusura" style="margin-top:10px"></p>
+  </div>
+
   <div class="card" id="sec-github">
     <h2>🌐 Pubblica i contenuti del sito</h2>
     <p class="aiuto">Serve solo quando cambi testi, giochi, orari o foto nella scheda «Contenuti». Le iscrizioni e i punteggi non passano da qui: quelli stanno nel database.</p>
@@ -910,6 +940,7 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
       <button class="btn btn-chiaro" data-stampa="classifiche">🏆 Classifiche finali</button>
       <button class="btn btn-chiaro" data-stampa="programma">🕓 Programma del pomeriggio</button>
       <button class="btn btn-chiaro" data-stampa="collaboratori">👥 Guida per i collaboratori</button>
+      <button class="btn btn-chiaro" data-stampa="diplomi">🎓 Diplomi per i ragazzi</button>
       <a class="btn btn-chiaro" href="locandina.html" target="_blank">🖼️ Locandina A4 con QR</a>
     </div>
   </div>
