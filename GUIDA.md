@@ -172,13 +172,13 @@ mandato a mano quando lo cambi — è l'unico pulsante che devi ricordarti.
 Il giorno della festa il sito lo tenete aperto in tre o quattro: uno al
 Trittico, uno al burraco, uno ai giochi in acqua. Non vi pestate i piedi.
 
-- Scrivi il tuo nome in `📊 Cruscotto → Chi sei` (Gianpaolo, Veronica…):
+- Scrivi il tuo nome in `📊 Cruscotto → Chi sei` (Gianpaolo, Lorenzo…):
   serve solo a far capire agli altri chi ha cambiato cosa.
 - Ognuno tocca la sua parte e **si salva solo quella**: le squadre, i punteggi
   di una gara, il tabellone di un torneo viaggiano separati. Chi non tocca il
   burraco non lo può sovrascrivere, nemmeno per sbaglio.
 - Ogni dieci secondi arriva il lavoro degli altri, con un avviso in basso —
-  *«🔄 Veronica ha aggiornato: burraco»*. Quello che stai scrivendo tu in quel
+  *«🔄 Lorenzo ha aggiornato: burraco»*. Quello che stai scrivendo tu in quel
   momento non viene toccato.
 - In `📊 Cruscotto → 👥 Chi sta lavorando` vedi chi è collegato e a cosa ha
   messo mano per ultimo.
@@ -252,7 +252,7 @@ stampata e il messaggio da mandare.
 | 🎤 | **Gianpaolo** | Regia: microfono, cronometro, musica, punteggi |
 | 🛟 | **Laura** | Arbitra la gara col materassino |
 | 🤝 | **Simona** | Assiste la stessa gara: conta, tiene in riga, e dice a Gianpaolo chi ha vinto |
-| ⚽ | **Veronica** | Arbitra l'altra gara, in parallelo |
+| ⚽ | **Lorenzo** | Arbitra l'altra gara, in parallelo |
 | 🃏 | **Serena** | Assiste l'altra gara, e tiene i tavoli delle carte fra un turno e l'altro |
 
 **Ogni gara ha due persone**: una arbitra e guarda solo la gara, l'altra conta,
@@ -349,7 +349,7 @@ cronometro sta in cima alla scheda `🏅 Punteggi`.
 - **A tempo scaduto la gara finisce lì**: se nessuna squadra ha già vinto,
   vince chi è avanti in quel momento. L'ordine d'arrivo lo scrivi tu subito
   sotto, nella stessa schermata.
-- Il cronometro è **uno solo per tutti**: se lo fa partire Veronica dal suo
+- Il cronometro è **uno solo per tutti**: se lo fa partire Lorenzo dal suo
   telefono, sullo schermo di Gianpaolo compare la stessa gara con lo stesso
   tempo. Il conto si calcola dall'ora di partenza, quindi non si sfasa mai,
   nemmeno se ricarichi la pagina.
