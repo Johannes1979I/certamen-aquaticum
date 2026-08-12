@@ -96,6 +96,13 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
    Poi, per ogni torneo: prima `Forma le coppie` (usa i compagni
    dichiarati, poi abbina i rimasti mettendo insieme un esperto e un
    principiante), poi scegli la formula e `Genera il tabellone`.
+   Se le coppie non ti convincono, `🔄 Rifai le coppie da capo` le
+   ricalcola: chi si è dichiarato un compagno resta con il suo, e cambiano
+   solo gli abbinamenti fatti dal sito — che ogni volta escono diversi, pur
+   restando sempre un esperto con un principiante. Premilo finché non sei
+   contento. `🧹 Azzera le coppie` invece le toglie e basta.
+   Tutti e due chiedono conferma e ti dicono prima cosa se ne va: il
+   tabellone si rigenera in un secondo, ma **i punteggi già segnati no**.
    Nel **Trittico** ogni turno gioca una prova diversa — briscola, scopone,
    tresette — e il nome del turno lo dice: la coppia resta la stessa e i punti
    delle tre prove si sommano in una classifica unica.

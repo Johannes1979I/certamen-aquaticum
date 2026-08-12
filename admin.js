@@ -2947,11 +2947,35 @@
     }
 
     var az1 = crea('div', 'azioni');
-    az1.style.cssText = 'justify-content:flex-start;margin:10px 0 18px';
-    var bC = crea('button', 'btn btn-p btn-piccolo', '👥 Forma le coppie');
-    bC.addEventListener('click', function () { formaCoppie(TORNEO_APERTO); });
+    az1.style.cssText = 'justify-content:flex-start;margin:10px 0 18px;flex-wrap:wrap';
+    var bC = crea('button', 'btn btn-p btn-piccolo',
+      coppie.length ? '🔄 Rifai le coppie da capo' : '👥 Forma le coppie');
+    bC.addEventListener('click', function () {
+      if (coppie.length && !confirm(
+        'Rifaccio le coppie ' + delTorneo(t.nome) + ' da capo?\n\n' +
+        cosaSiPerde(stato, iscritti) +
+        '\nRestano le iscrizioni e i compagni dichiarati: quelli non si toccano.')) return;
+      formaCoppie(TORNEO_APERTO);
+    });
     az1.appendChild(bC);
+    if (coppie.length) {
+      var bAz = crea('button', 'btn btn-chiaro btn-piccolo', '🧹 Azzera le coppie');
+      bAz.addEventListener('click', function () {
+        if (!confirm('Tolgo tutte le coppie ' + delTorneo(t.nome) + '?\n\n' +
+          cosaSiPerde(stato, iscritti) +
+          '\nResti senza coppie: per rifarle premi «Forma le coppie».')) return;
+        azzeraCoppie(TORNEO_APERTO);
+      });
+      az1.appendChild(bAz);
+    }
     g.appendChild(az1);
+    if (coppie.length) {
+      g.appendChild(crea('p', 'aiuto',
+        '«Rifai» ricalcola tutto dalle iscrizioni: chi si è dichiarato compagno resta con ' +
+        'il suo, e cambiano solo gli abbinamenti fatti dal sito — che ogni volta escono ' +
+        'diversi, sempre mettendo insieme un esperto e un principiante. «Azzera» le toglie ' +
+        'e basta. In tutti e due i casi il tabellone se ne va e va rigenerato.'));
+    }
 
     /* passo 2: formula */
     var c = consiglioFormato(coppie.length);
@@ -2983,7 +3007,7 @@
     az2.appendChild(bG);
     var bZ = crea('button', 'btn btn-chiaro btn-piccolo', '↩️ Cancella il tabellone');
     bZ.addEventListener('click', function () {
-      if (!confirm('Cancello il tabellone di ' + t.nome + '?')) return;
+      if (!confirm('Cancello il tabellone ' + delTorneo(t.nome) + '?')) return;
       if (STATO.tornei[TORNEO_APERTO]) STATO.tornei[TORNEO_APERTO].incontri = [];
       salvaStato();
       disegnaPannelloTorneo();
@@ -2996,7 +3020,8 @@
     if (coppie.length) {
       var cc = crea('div', 'card');
       cc.appendChild(crea('h2', null, '👥 Le coppie (' + coppie.length + ')'));
-      cc.appendChild(crea('p', 'aiuto', 'Puoi cambiare il nome di una coppia: è quello che finisce sul tabellone pubblico.'));
+      cc.appendChild(crea('p', 'aiuto', 'Puoi cambiare il nome di una coppia: è quello che finisce sul ' +
+        'tabellone pubblico. Per rifarle da capo o toglierle ci sono i due pulsanti del Passo 1, qui sopra.'));
       coppie.forEach(function (cp, i) {
         var r = crea('div', 'riga-iscr');
         var cnt = crea('div', 'cnt');
@@ -3029,13 +3054,74 @@
       el.appendChild(ci);
 
       var cl = crea('div', 'card');
-      cl.appendChild(crea('h2', null, '📊 Classifica di ' + V(t.nome, '')));
+      cl.appendChild(crea('h2', null, '📊 Classifica ' + delTorneo(t.nome)));
       var dentroCl = crea('div');
       dentroCl.id = 'classificaTorneo';
       dentroCl.appendChild(tabellaClassificaAdmin(classificaTorneo(TORNEO_APERTO)));
       cl.appendChild(dentroCl);
       el.appendChild(cl);
     }
+  }
+
+  /* Prima di buttare via le coppie si dice esattamente cosa se ne va: se ci
+     sono punteggi già segnati è bene che si legga nero su bianco, perché
+     quelli non si recuperano rigenerando il tabellone. */
+  function cosaSiPerde(stato, iscritti) {
+    var coppie = V(stato.coppie, []);
+    var inc = V(stato.incontri, []);
+    var giocate = inc.filter(function (m) {
+      return String(V(m.puntiA, '')) !== '' || String(V(m.puntiB, '')) !== '';
+    }).length;
+    var mano = quantiRibattezzati(coppie, iscritti);
+    var r = 'Adesso ci sono ' + coppie.length + ' coppie';
+    r += inc.length ? ' e ' + inc.length + ' partite in tabellone' : ', e nessun tabellone';
+    r += giocate ? ', di cui ' + giocate + ' con il punteggio già segnato.\n' : '.\n';
+    var via = [];
+    if (inc.length) via.push('il tabellone');
+    if (giocate) via.push('i ' + giocate + ' punteggi segnati');
+    if (mano) via.push(mano === 1 ? 'il nome della coppia che hai scritto tu'
+      : 'i ' + mano + ' nomi di coppia che hai scritto tu');
+    if (!via.length) return r;
+    return r + '\nSi perdono: ' + CA.elencoConE(via) + '.\n';
+  }
+  /* I nomi delle coppie si possono correggere a mano, e quelli non tornano
+     più: si contano solo quelli davvero diversi da come li scrive il sito
+     (che a volte usa i nomi per esteso, quando ci sono due omonimi). */
+  function quantiRibattezzati(coppie, iscritti) {
+    var per = {};
+    V(iscritti, []).forEach(function (p) { per[p._id] = p; });
+    return coppie.filter(function (c) {
+      var a = per[c.a], b = per[c.b];
+      if (!a) return false;
+      var corto = cognomino(a.nome) + ' – ' + (b ? cognomino(b.nome) : '(da abbinare)');
+      var lungo = a.nome + ' – ' + (b ? b.nome : '(da abbinare)');
+      return c.nome !== corto && c.nome !== lungo;
+    }).length;
+  }
+
+  /* Toglie le coppie e basta. Il tabellone deve andarsene con loro: gli
+     incontri puntano alle coppie per numero, e senza quelle non vogliono
+     dire più niente. */
+  function azzeraCoppie(idTorneo) {
+    STATO.tornei[idTorneo] = STATO.tornei[idTorneo] || {};
+    STATO.tornei[idTorneo].coppie = [];
+    STATO.tornei[idTorneo].incontri = [];
+    salvaStato();
+    disegnaPannelloTorneo();
+    disegnaCruscotto();
+    CA.toast('🧹 Coppie azzerate: puoi rifarle da capo.', 5000);
+  }
+
+  /* «le coppie di Il Trittico» non si può leggere: quando il nome comincia
+     con l'articolo, la preposizione ci si fonde dentro. */
+  function delTorneo(nome) {
+    var n = String(nome || '').trim();
+    if (!n) return 'di questo torneo';
+    var m = n.match(/^(Il|Lo|La|I|Gli|Le|L')\s*(.+)$/);
+    if (!m) return 'di ' + n;
+    var fuse = { 'Il': 'del ', 'Lo': 'dello ', 'La': 'della ',
+                 'I': 'dei ', 'Gli': 'degli ', 'Le': 'delle ', "L'": "dell'" };
+    return fuse[m[1]] + m[2];
   }
 
   function consiglioFormato(n) {
@@ -3081,14 +3167,20 @@
       if (!altro || usati[altro._id] || altro._id === p._id) return;
       aggiungi(p, altro, false);
     });
-    /* 3. i rimasti: esperto con principiante */
-    var rimasti = iscritti.filter(function (p) { return !usati[p._id]; });
+    /* 3. i rimasti: il più esperto con il meno esperto, e così a scendere.
+       Fra chi ha lo stesso livello l'ordine è tirato a sorte: se no «rifai»
+       ridarebbe ogni volta le identiche coppie, e non servirebbe a niente.
+       La sorte decide solo fra pari, quindi l'equilibrio non cambia. */
     var peso = { esperto: 3, medio: 2, principiante: 1 };
-    rimasti.sort(function (a, b) { return (peso[b.livello] || 2) - (peso[a.livello] || 2); });
+    var rimasti = iscritti.filter(function (p) { return !usati[p._id]; })
+      .map(function (p) { return { p: p, sorte: Math.random() }; });
+    rimasti.sort(function (a, b) {
+      return ((peso[b.p.livello] || 2) - (peso[a.p.livello] || 2)) || (a.sorte - b.sorte);
+    });
     while (rimasti.length >= 2) {
-      aggiungi(rimasti.shift(), rimasti.pop(), true);
+      aggiungi(rimasti.shift().p, rimasti.pop().p, true);
     }
-    if (rimasti.length === 1) aggiungi(rimasti[0], null, true);
+    if (rimasti.length === 1) aggiungi(rimasti[0].p, null, true);
     sciogliOmonimi(coppie, iscritti);
 
     STATO.tornei[idTorneo] = STATO.tornei[idTorneo] || {};
