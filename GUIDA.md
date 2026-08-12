@@ -96,16 +96,28 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
    Poi, per ogni torneo: prima `Forma le coppie` (usa i compagni
    dichiarati, poi abbina i rimasti mettendo insieme un esperto e un
    principiante), poi scegli la formula e `Genera il tabellone`.
-   Se le coppie non ti convincono, `🔄 Rifai le coppie da capo` le
+   Se una sola coppia non va, non serve rifare tutto: nella scheda
+   `👥 Le coppie` **sposta i nomi**. Trascina un nome sopra un altro e i due
+   si scambiano di posto; dal telefono tocca il primo e poi il secondo.
+   Il tabellone non si tocca: le partite restano quelle, cambia solo chi
+   siede al tavolo — si può fare anche a torneo cominciato.
+   Se invece non ti convince nessuna, `🔄 Rifai le coppie da capo` le
    ricalcola: chi si è dichiarato un compagno resta con il suo, e cambiano
    solo gli abbinamenti fatti dal sito — che ogni volta escono diversi, pur
    restando sempre un esperto con un principiante. Premilo finché non sei
    contento. `🧹 Azzera le coppie` invece le toglie e basta.
    Tutti e due chiedono conferma e ti dicono prima cosa se ne va: il
    tabellone si rigenera in un secondo, ma **i punteggi già segnati no**.
-   Nel **Trittico** ogni turno gioca una prova diversa — briscola, scopone,
-   tresette — e il nome del turno lo dice: la coppia resta la stessa e i punti
-   delle tre prove si sommano in una classifica unica.
+   Nel **Trittico** col **girone all'italiana** si gioca tutto: ogni coppia
+   incontra tutte le altre **a ognuna delle prove**. Prima il giro completo di
+   briscola, poi quello di scopone, poi quello di tresette; la coppia resta la
+   stessa e i punti si sommano in una classifica unica. Se scegli due giochi su
+   tre, i giri diventano due. Negli altri formati — gironi, eliminazione — le
+   prove si alternano invece turno dopo turno, se no non ci starebbe.
+   Sotto la formula c'è il **riquadro dei tempi**: quanti turni, quante
+   partite, quanti tavoli in parallelo e quanto dura in tutto, confrontato col
+   tempo che hai davvero fino alla premiazione. Se non ci sta te lo dice
+   prima, con le vie d'uscita e i minuti giusti per ognuna.
    La formula la consiglia il sito in base a quante coppie ci sono:
    - 2 coppie → sfida diretta al meglio delle tre
    - 3–6 coppie → girone all'italiana

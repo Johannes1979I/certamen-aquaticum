@@ -25,6 +25,7 @@
   var FILTRO = 'tutti', FILTRO_PUNTI = 'ragazzi';
   var TORNEO_APERTO = null;
   var SCELTA = null;        /* pedina selezionata col dito */
+  var PRESA = null;         /* nome di una coppia in attesa dello scambio */
   var sqToccato = false;    /* ho già scelto io quante squadre fare? */
 
   var COLORI_SQ = ['#0b7fd4', '#ff6b6b', '#ffc233', '#14c4b4', '#7c4dff', '#1f8a5b', '#e8734a', '#8d5ac2'];
@@ -2909,7 +2910,7 @@
       var n = iscrittiTorneo(t.id).length;
       var b = crea('button', 'btn btn-piccolo ' + (t.id === TORNEO_APERTO ? 'btn-p' : 'btn-chiaro'),
         V(t.emoji, '🃏') + ' ' + t.nome + ' (' + n + ')');
-      b.addEventListener('click', function () { TORNEO_APERTO = t.id; disegnaTornei(); });
+      b.addEventListener('click', function () { TORNEO_APERTO = t.id; PRESA = null; disegnaTornei(); });
       sc.appendChild(b);
     });
     disegnaPannelloTorneo();
@@ -3000,6 +3001,11 @@
     });
     g.appendChild(sf);
 
+    if (coppie.length >= 2) {
+      var rd = riquadroDurata(TORNEO_APERTO, coppie, stato.formato || c.formato);
+      if (rd) g.appendChild(rd);
+    }
+
     var az2 = crea('div', 'azioni');
     az2.style.cssText = 'justify-content:flex-start;margin-top:16px';
     var bG = crea('button', 'btn btn-p', '🎲 Genera il tabellone');
@@ -3020,8 +3026,16 @@
     if (coppie.length) {
       var cc = crea('div', 'card');
       cc.appendChild(crea('h2', null, '👥 Le coppie (' + coppie.length + ')'));
-      cc.appendChild(crea('p', 'aiuto', 'Puoi cambiare il nome di una coppia: è quello che finisce sul ' +
-        'tabellone pubblico. Per rifarle da capo o toglierle ci sono i due pulsanti del Passo 1, qui sopra.'));
+      cc.appendChild(crea('p', 'aiuto',
+        'Per rifare una coppia a mano sposta i nomi: trascina un nome sopra un altro e si scambiano ' +
+        'di posto. Dal telefono tocca il primo nome e poi il secondo — trascinare col dito non ' +
+        'funziona bene. Puoi anche cambiare il nome della coppia: è quello che finisce sul ' +
+        'tabellone pubblico.'));
+      if (V(stato.incontri, []).length) {
+        cc.appendChild(crea('p', 'aiuto',
+          '👍 Scambiare due nomi non tocca il tabellone: le partite restano quelle, cambia solo ' +
+          'chi siede al tavolo. È il modo di correggere una coppia a torneo già cominciato.'));
+      }
       coppie.forEach(function (cp, i) {
         var r = crea('div', 'riga-iscr');
         var cnt = crea('div', 'cnt');
@@ -3029,7 +3043,14 @@
         inp.type = 'text'; inp.value = cp.nome; inp.className = 'mini';
         inp.addEventListener('change', function () { cp.nome = inp.value.trim(); salvaStato(); });
         cnt.appendChild(inp);
-        cnt.appendChild(crea('small', null, 'coppia ' + (i + 1) + (cp.spaiata ? ' · abbinata dagli organizzatori' : '')));
+        var eti = 'coppia ' + (i + 1);
+        if (cp.mano) eti += ' · fatta a mano';
+        else if (cp.spaiata) eti += ' · abbinata dagli organizzatori';
+        cnt.appendChild(crea('small', null, eti));
+        var pd = crea('div', 'pedine-coppia');
+        pd.appendChild(pedinaCoppia(cp, 'a', iscritti));
+        pd.appendChild(pedinaCoppia(cp, 'b', iscritti));
+        cnt.appendChild(pd);
         r.appendChild(cnt);
         cc.appendChild(r);
       });
@@ -3090,13 +3111,7 @@
   function quantiRibattezzati(coppie, iscritti) {
     var per = {};
     V(iscritti, []).forEach(function (p) { per[p._id] = p; });
-    return coppie.filter(function (c) {
-      var a = per[c.a], b = per[c.b];
-      if (!a) return false;
-      var corto = cognomino(a.nome) + ' – ' + (b ? cognomino(b.nome) : '(da abbinare)');
-      var lungo = a.nome + ' – ' + (b ? b.nome : '(da abbinare)');
-      return c.nome !== corto && c.nome !== lungo;
-    }).length;
+    return coppie.filter(function (c) { return !nomeAutomatico(c, per); }).length;
   }
 
   /* Toglie le coppie e basta. Il tabellone deve andarsene con loro: gli
@@ -3110,6 +3125,212 @@
     disegnaPannelloTorneo();
     disegnaCruscotto();
     CA.toast('🧹 Coppie azzerate: puoi rifarle da capo.', 5000);
+  }
+
+  /* -------------------- quanto dura, davvero ----------------------------
+     Le partite si giocano su più tavoli insieme: quindi il tempo non lo
+     fanno le partite, lo fanno i TURNI — quante volte tutti si alzano e si
+     rimettono a sedere. È la cosa che sfugge sempre, ed è quella che manda
+     fuori orario un pomeriggio. */
+  var CAMBIO_TAVOLO = 3;             /* minuti fra un turno e l'altro */
+
+  function turniDi(n, formato, quanteProve) {
+    if (n < 2) return 0;
+    var giro = (n % 2) ? n : n - 1;                  /* dispari: uno riposa a ogni turno */
+    if (formato === 'sfida') return 3;
+    if (formato === 'italiana') return giro * Math.max(1, quanteProve > 1 ? quanteProve : 1);
+    if (formato === 'gironi') {
+      var m = Math.ceil(n / 2);
+      return ((m % 2) ? m : m - 1) + 2;              /* girone + semifinali + finale */
+    }
+    var t = 0, resta = n;
+    while (resta > 1) { resta = Math.ceil(resta / 2); t++; }
+    return t;
+  }
+
+  function stimaTorneo(idTorneo, coppie, formato) {
+    var td = torneoDati(idTorneo);
+    var prove = V(td.prove, []);
+    var n = coppie.length;
+    if (n < 2) return null;
+    var conTutteLeProve = (formato === 'italiana' && prove.length > 1);
+    var turni = turniDi(n, formato, conTutteLeProve ? prove.length : 1);
+    var partite = conTutteLeProve ? (n * (n - 1) / 2) * prove.length
+      : (formato === 'italiana' ? n * (n - 1) / 2 : 0);
+    var durata = Number(td.durataPartita) || 25;
+    var minuti = turni * (durata + CAMBIO_TAVOLO);
+    return {
+      turni: turni, partite: partite, tavoli: Math.floor(n / 2),
+      durata: durata, minuti: minuti, prove: prove.length,
+      conTutteLeProve: conTutteLeProve, finestra: finestraTorneo(td)
+    };
+  }
+
+  /* Da che ora a che ora ci sono i tavoli: dall'orario del torneo all'ultima
+     riga del programma, che è la premiazione. */
+  function finestraTorneo(td) {
+    var righe = V(DATI.programma, []).filter(function (r) { return /^\d\d?:\d\d$/.test(V(r.ora, '')); });
+    if (!righe.length || !td.orario) return 0;
+    var fine = righe[righe.length - 1].ora;
+    return inMinuti(fine) - inMinuti(td.orario);
+  }
+  function inMinuti(ora) {
+    var p = String(ora || '').split(':');
+    return (Number(p[0]) || 0) * 60 + (Number(p[1]) || 0);
+  }
+  function oreEMinuti(m) {
+    m = Math.round(m);
+    var o = Math.floor(m / 60), r = m % 60;
+    if (!o) return r + ' minuti';
+    return o + 'h' + (r < 10 ? '0' : '') + r;
+  }
+
+  /* Il riquadro che dice se ci sta o no, e cosa fare se non ci sta. */
+  function riquadroDurata(idTorneo, coppie, formato) {
+    var s = stimaTorneo(idTorneo, coppie, formato);
+    if (!s) return null;
+    var ok = !s.finestra || s.minuti <= s.finestra;
+    var box = crea('div', 'nota-box' + (ok ? '' : ' attenzione'));
+    box.style.margin = '12px 0 0';
+    box.appendChild(crea('b', null, (ok ? '⏱️ Ci sta: ' : '⏱️ Non ci sta: ') + oreEMinuti(s.minuti)));
+
+    var conto = s.turni + (s.turni === 1 ? ' turno' : ' turni') +
+      (s.partite ? ' · ' + s.partite + ' partite' : '') +
+      ' · ' + s.tavoli + (s.tavoli === 1 ? ' tavolo' : ' tavoli in parallelo') +
+      ' · ' + s.durata + ' minuti a partita più ' + CAMBIO_TAVOLO + ' di cambio';
+    box.appendChild(crea('p', 'aiuto', conto + '.'));
+    if (s.conTutteLeProve) {
+      box.appendChild(crea('p', 'aiuto',
+        'Ogni coppia incontra tutte le altre a tutte e ' + s.prove + ' le prove: sono ' +
+        s.prove + ' gironi interi, uno per gioco, con i punti che si sommano in una classifica sola.'));
+    }
+    if (s.finestra) {
+      box.appendChild(crea('p', 'aiuto', 'Il tempo che hai è ' + oreEMinuti(s.finestra) +
+        ', dalle ' + V(torneoDati(idTorneo).orario, '') + ' alla premiazione.'));
+    }
+    if (!ok) {
+      /* La domanda vera non è «quanto sfora», è «quanto può durare una
+         partita». Si risponde per ogni strada possibile, con il numero. */
+      box.appendChild(crea('p', 'aiuto', 'Per starci dentro, scegli una di queste:'));
+      var vie = crea('ul', 'mini');
+      vie.style.cssText = 'margin:2px 0 0 18px';
+      var n = coppie.length;
+      function quanto(turni) { return Math.floor(s.finestra / turni) - CAMBIO_TAVOLO; }
+      function riga(testo) { vie.appendChild(crea('li', null, testo)); }
+
+      var q = quanto(s.turni);
+      riga(q >= 8
+        ? 'tenere tutte e ' + (s.conTutteLeProve ? s.prove : 1) + ' le prove e fare partite da ' +
+          q + ' minuti invece di ' + s.durata
+        : 'tenere tutto così non si può: verrebbero partite da ' + Math.max(q, 0) + ' minuti');
+      if (s.conTutteLeProve) {
+        for (var k = s.prove - 1; k >= 1; k--) {
+          var qk = quanto(turniDi(n, 'italiana', k));
+          if (qk >= 8) {
+            riga('giocare ' + (k === 1 ? 'una prova sola' : k + ' prove') + ' invece di ' + s.prove +
+              ': partite da ' + Math.min(qk, s.durata) + ' minuti' +
+              (qk >= s.durata ? ' — così ci sta comoda' : ''));
+          }
+        }
+        riga('lasciare che le prove si alternino turno dopo turno, come prima: ' +
+          'si sceglie qui sopra «due gironi e finale», e ogni coppia gioca ' +
+          'ogni gioco ma non contro tutti');
+      }
+      box.appendChild(vie);
+      box.appendChild(crea('p', 'aiuto',
+        'La durata di una partita si cambia in ⚙️ Contenuti, nel torneo, alla voce «minuti a partita».'));
+    }
+    return box;
+  }
+
+  /* ---------------- rifare una coppia spostando i nomi ------------------
+     Una coppia ha due caselle e basta: quindi spostare un nome vuol dire
+     per forza scambiarlo con un altro. Si trascina col mouse, oppure — ed
+     è il modo che funziona sul telefono — si tocca il primo nome e poi il
+     secondo. Gli identificativi delle coppie non cambiano: per questo il
+     tabellone già generato resta valido. */
+  function pedinaCoppia(cp, slot, iscritti) {
+    var id = cp[slot];
+    var p = id ? iscritti.filter(function (x) { return x._id === id; })[0] : null;
+    var presa = PRESA && PRESA.coppia === cp.id && PRESA.slot === slot;
+    var d = crea('div', 'pedina pedina-c' + (presa ? ' scelta' : '') + (p ? '' : ' vuota'));
+    d.appendChild(crea('span', null, p ? p.nome : '— posto libero —'));
+    if (p && p.livello) d.appendChild(crea('span', 'eta-p', String(p.livello)));
+
+    if (p) {
+      d.draggable = true;
+      d.addEventListener('dragstart', function (e) {
+        e.dataTransfer.setData('text/plain', cp.id + '|' + slot);
+      });
+    }
+    d.addEventListener('dragover', function (e) { e.preventDefault(); d.classList.add('sopra'); });
+    d.addEventListener('dragleave', function () { d.classList.remove('sopra'); });
+    d.addEventListener('drop', function (e) {
+      e.preventDefault(); d.classList.remove('sopra');
+      var parti = String(e.dataTransfer.getData('text/plain') || '').split('|');
+      if (parti.length === 2) scambiaNelleCoppie({ coppia: parti[0], slot: parti[1] }, { coppia: cp.id, slot: slot });
+    });
+    d.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (PRESA && PRESA.coppia === cp.id && PRESA.slot === slot) { PRESA = null; disegnaPannelloTorneo(); return; }
+      if (PRESA) { scambiaNelleCoppie(PRESA, { coppia: cp.id, slot: slot }); return; }
+      if (!p) { CA.toast('Il posto è libero: tocca prima un nome, poi questo.', 4000); return; }
+      PRESA = { coppia: cp.id, slot: slot };
+      disegnaPannelloTorneo();
+      CA.toast('Ora tocca il nome con cui scambiarlo.', 4000);
+    });
+    return d;
+  }
+
+  function scambiaNelleCoppie(da, a) {
+    PRESA = null;
+    var st = STATO.tornei[TORNEO_APERTO] || {};
+    var coppie = V(st.coppie, []);
+    function trova(id) { return coppie.filter(function (c) { return c.id === id; })[0]; }
+    var A = trova(da.coppia), B = trova(a.coppia);
+    if (!A || !B) { disegnaPannelloTorneo(); return; }
+    if (A === B && da.slot === a.slot) { disegnaPannelloTorneo(); return; }
+
+    var x = A[da.slot], y = B[a.slot];
+    if (!x && !y) { disegnaPannelloTorneo(); return; }
+
+    var iscritti = iscrittiTorneo(TORNEO_APERTO);
+    var per = {};
+    iscritti.forEach(function (p) { per[p._id] = p; });
+    /* chi aveva ancora il nome messo dal sito lo rifà; chi l'ha scritto a
+       mano se lo tiene — ma va deciso adesso, prima di spostare i nomi */
+    var autoA = nomeAutomatico(A, per), autoB = nomeAutomatico(B, per);
+
+    A[da.slot] = y; B[a.slot] = x;
+    if (!A.a && !A.b || !B.a && !B.b) {                 /* nessuna coppia può restare vuota */
+      A[da.slot] = x; B[a.slot] = y;
+      CA.toast('Così una coppia resterebbe senza nessuno: scambia due nomi fra loro.', 6000);
+      disegnaPannelloTorneo();
+      return;
+    }
+    [A, B].forEach(function (c) { if (!c.a && c.b) { c.a = c.b; c.b = ''; } });
+    A.mano = true; B.mano = true;
+    if (autoA) A.nome = nomeDiCoppia(A, per);
+    if (autoB) B.nome = nomeDiCoppia(B, per);
+    sciogliOmonimi(coppie, iscritti);
+
+    salvaStato();
+    disegnaPannelloTorneo();
+    disegnaCruscotto();
+    CA.toast('👥 Coppie aggiornate.', 3000);
+  }
+
+  function nomeDiCoppia(c, per) {
+    var a = per[c.a], b = per[c.b];
+    return (a ? cognomino(a.nome) : '(vuoto)') + ' – ' + (b ? cognomino(b.nome) : '(da abbinare)');
+  }
+  /* vero se il nome è ancora quello scritto dal sito, nella forma corta o
+     in quella per esteso che si usa quando ci sono due omonimi */
+  function nomeAutomatico(c, per) {
+    var a = per[c.a], b = per[c.b];
+    if (!a) return true;
+    var lungo = a.nome + ' – ' + (b ? b.nome : '(da abbinare)');
+    return c.nome === nomeDiCoppia(c, per) || c.nome === lungo;
   }
 
   /* «le coppie di Il Trittico» non si può leggere: quando il nome comincia
@@ -3218,15 +3439,21 @@
     if (coppie.length < 2) { CA.toast('Forma prima le coppie.', 5000); return; }
     var formato = st.formato || consiglioFormato(coppie.length).formato;
 
+    var td = torneoDati(idTorneo);
+    var prove = V(td.prove, []);
     var incontri = [];
-    if (formato === 'sfida') incontri = calendarioSfida(coppie);
+    /* Nel girone all'italiana di un torneo a più prove si gioca tutto: ogni
+       coppia incontra tutte le altre a ognuna delle prove. Sono tre gironi
+       interi, non un girone solo con i giochi che si alternano. */
+    var gironeCompleto = (formato === 'italiana' && prove.length > 1);
+    if (gironeCompleto) incontri = calendarioItalianaPerProva(coppie, prove);
+    else if (formato === 'sfida') incontri = calendarioSfida(coppie);
     else if (formato === 'italiana') incontri = calendarioItaliana(coppie);
     else if (formato === 'gironi') incontri = calendarioGironi(coppie);
     else incontri = calendarioEliminazione(coppie);
 
-    /* nei tornei a piu' prove (il Trittico) ogni turno ha il suo gioco */
-    var td = torneoDati(idTorneo);
-    incontri = assegnaProve(incontri, V(td.prove, []), V(td.provaFinale, ''), formato);
+    /* negli altri formati ogni turno ha il suo gioco, a rotazione */
+    if (!gironeCompleto) incontri = assegnaProve(incontri, prove, V(td.provaFinale, ''), formato);
 
     STATO.tornei[idTorneo] = STATO.tornei[idTorneo] || {};
     STATO.tornei[idTorneo].formato = formato;
@@ -3267,6 +3494,23 @@
       }
       ids.splice(1, 0, ids.pop());                /* si ruota tenendo fermo il primo */
     }
+    return out;
+  }
+
+  /* Un girone intero per ogni prova: prima tutti contro tutti a briscola,
+     poi tutti contro tutti a scopone, poi a tresette. I punti si sommano in
+     una classifica sola, e le coppie restano quelle. */
+  function calendarioItalianaPerProva(coppie, prove) {
+    var out = [];
+    prove.forEach(function (p, i) {
+      var giro = calendarioItaliana(coppie);
+      giro.forEach(function (m) {
+        m.id = 'p' + (i + 1) + m.id;
+        m.prova = p.id;
+        m.turno = V(p.emoji, '') + ' ' + V(p.nome, '') + ' — ' + m.turno.toLowerCase();
+      });
+      out = out.concat(giro);
+    });
     return out;
   }
 

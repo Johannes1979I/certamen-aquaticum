@@ -99,6 +99,12 @@ body{ background:#eef4fa; }
 .pedina .cap{ cursor:pointer; }
 .pedina.capitano{ background:rgba(255,194,51,.22); }
 .serbatoio{ background:#fff; border:2px dashed var(--linea); border-radius:16px; padding:12px; min-height:100px; }
+.pedina.sopra{ border-color:var(--c1); background:rgba(11,127,212,.12); }
+/* i due nomi di una coppia di carte, da scambiare col dito o col mouse */
+.pedine-coppia{ display:flex; gap:8px; flex-wrap:wrap; margin-top:7px; }
+.pedine-coppia .pedina{ margin-bottom:0; flex:1 1 46%; min-width:150px; }
+.pedina.vuota{ background:transparent; border:2px dashed var(--linea); color:var(--muted); cursor:default; }
+.pedina-c .eta-p{ font-weight:normal; font-size:.76rem; }
 
 /* ---- punteggi ---- */
 .gioco-punti{ background:#fff; border:1px solid var(--linea); border-radius:16px; padding:16px; margin-bottom:14px; }
