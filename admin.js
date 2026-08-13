@@ -3166,12 +3166,17 @@
     };
   }
 
-  /* Da che ora a che ora ci sono i tavoli: dall'orario del torneo all'ultima
-     riga del programma, che è la premiazione. */
+  /* Da che ora a che ora ci sono i tavoli: dall'orario del torneo alla sua
+     ora di fine, se è scritta; se no fino all'ultima riga del programma,
+     che è la premiazione. */
   function finestraTorneo(td) {
-    var righe = V(DATI.programma, []).filter(function (r) { return /^\d\d?:\d\d$/.test(V(r.ora, '')); });
-    if (!righe.length || !td.orario) return 0;
-    var fine = righe[righe.length - 1].ora;
+    if (!td.orario) return 0;
+    var fine = V(td.fine, '');
+    if (!/^\d\d?:\d\d$/.test(fine)) {
+      var righe = V(DATI.programma, []).filter(function (r) { return /^\d\d?:\d\d$/.test(V(r.ora, '')); });
+      if (!righe.length) return 0;
+      fine = righe[righe.length - 1].ora;
+    }
     return inMinuti(fine) - inMinuti(td.orario);
   }
   function inMinuti(ora) {
@@ -3205,8 +3210,18 @@
         s.prove + ' gironi interi, uno per gioco, con i punti che si sommano in una classifica sola.'));
     }
     if (s.finestra) {
+      var td2 = torneoDati(idTorneo);
       box.appendChild(crea('p', 'aiuto', 'Il tempo che hai è ' + oreEMinuti(s.finestra) +
-        ', dalle ' + V(torneoDati(idTorneo).orario, '') + ' alla premiazione.'));
+        ', dalle ' + V(td2.orario, '') +
+        (td2.fine ? ' alle ' + td2.fine + '.' : ' alla premiazione.')));
+    }
+    /* con un numero dispari di coppie una sta ferma a ogni turno: è la cosa
+       che fa più brutta figura, e si risolve solo trovando una coppia in più */
+    if (coppie.length % 2) {
+      box.appendChild(crea('p', 'aiuto',
+        '⚠️ Le coppie sono ' + coppie.length + ', dispari: a ogni turno una resta a guardare. ' +
+        'Con una coppia in più — bastano due persone — giocano tutti a ogni turno, ' +
+        'e il torneo non dura un minuto di più.'));
     }
     if (!ok) {
       /* La domanda vera non è «quanto sfora», è «quanto può durare una

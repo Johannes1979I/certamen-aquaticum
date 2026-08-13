@@ -115,9 +115,22 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
    tre, i giri diventano due. Negli altri formati — gironi, eliminazione — le
    prove si alternano invece turno dopo turno, se no non ci starebbe.
    Sotto la formula c'è il **riquadro dei tempi**: quanti turni, quante
-   partite, quanti tavoli in parallelo e quanto dura in tutto, confrontato col
-   tempo che hai davvero fino alla premiazione. Se non ci sta te lo dice
-   prima, con le vie d'uscita e i minuti giusti per ognuna.
+   partite, quanti tavoli in parallelo e quanto dura in tutto, confrontato con
+   la finestra vera del torneo. Se non ci sta te lo dice prima, con le vie
+   d'uscita e i minuti giusti per ognuna.
+   Due cose che il riquadro sa e che sfuggono sempre:
+   - **il tempo lo fanno i turni, non le partite**. I tavoli giocano insieme,
+     quindi raddoppiare le coppie non raddoppia la durata: quello che conta è
+     quante volte tutti si alzano e si rimettono a sedere;
+   - **con un numero dispari di coppie una resta a guardare a ogni turno**.
+     Trovare due persone in più non allunga il torneo di un minuto e fa
+     giocare tutti: il riquadro te lo ricorda da solo.
+
+   Come sta adesso il pomeriggio delle carte: **Burraco 16:15 → 17:55**,
+   **Trittico 18:00 → 20:00**. Il Trittico è tarato su due giri completi —
+   briscola e scopone — cioè 6 turni da venti minuti (17 di gioco più 3 di
+   cambio) su due tavoli: 12 partite, e ogni coppia gioca a ogni turno.
+   La coppa delle carte si dà alle 20:00, dopo la premiazione dei ragazzi.
    La formula la consiglia il sito in base a quante coppie ci sono:
    - 2 coppie → sfida diretta al meglio delle tre
    - 3–6 coppie → girone all'italiana
