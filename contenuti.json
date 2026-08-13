@@ -48,20 +48,20 @@
       "nome": "Tornei di carte",
       "titoloLungo": "Tornei di carte degli adulti",
       "emoji": "🃏",
-      "sottotitolo": "Il Trittico e il Burraco, all'ombra a bordo piscina",
+      "sottotitolo": "Le carte italiane e il Burraco, all'ombra a bordo piscina",
       "eta": "",
       "postiTotali": 64,
       "minimo": 8,
       "colore": "#0b7fd4",
-      "descrizione": "Due tornei a coppie ai tavoli sotto gli ombrelloni: il Trittico con le carte italiane (briscola, scopone e tresette in un torneo solo) e il Burraco. Ci si iscrive da soli o già in coppia: chi arriva solo viene abbinato dagli organizzatori.",
+      "descrizione": "Due tornei a coppie ai tavoli sotto gli ombrelloni: le carte italiane (quest'anno scopone e tresette, in un torneo solo) e il Burraco. Ci si iscrive da soli o già in coppia: chi arriva solo viene abbinato dagli organizzatori.",
       "punteggio": {
         "vittoria": 3,
         "pareggio": 1,
         "sconfitta": 0,
         "nota": "In caso di parità in classifica contano, nell'ordine: lo scontro diretto, poi la differenza punti realizzati."
       },
-      "avvisoTornei": "Il Trittico si gioca nel blocco A e il Burraco nel blocco B: chi vuole può fare tutti e due.",
-      "sezioni": "Le carte hanno due iscrizioni separate: il Trittico e il Burraco.",
+      "avvisoTornei": "Il Burraco si gioca nel pomeriggio e le carte italiane la sera: chi vuole può fare tutti e due.",
+      "sezioni": "Le carte hanno due iscrizioni separate: le carte italiane e il Burraco.",
       "etichetta": "adulti"
     }
   },
@@ -1082,14 +1082,26 @@
       "emoji": "🂡",
       "illustrazione": "briscola",
       "gruppo": "italiana",
-      "blocco": "A",
+      "blocco": "B",
       "orario": "18:00",
-      "fine": "20:00",
+      "fine": "22:00",
+      "sessioni": [
+        {
+          "giorno": "sabato 15",
+          "dalle": "18:00",
+          "alle": "22:00"
+        },
+        {
+          "giorno": "domenica 16",
+          "dalle": "17:00",
+          "alle": "20:00"
+        }
+      ],
       "formazione": "coppia",
       "coppiaObbligatoria": true,
       "giocatoriTavolo": 4,
       "postiTotali": 24,
-      "durataPartita": 17,
+      "durataPartita": 35,
       "escluso": false,
       "descrizione": "Un torneo solo con le carte italiane, in tre prove: si comincia a briscola, si passa allo scopone e si chiude a tresette. La stessa coppia gioca tutte e tre le prove e i punti si sommano: non vince chi è bravo a un gioco, vince chi se la cava con tutti e tre.",
       "partita": "Nel girone all'italiana ogni coppia incontra tutte le altre a ognuna delle prove che si giocano: un giro completo per gioco. Una partita è una smazzata a scopone o una mano a tresette — si finisce di giocare quella e si cambia — con un tetto di 17 minuti: se scade, vince chi è avanti. Se invece le coppie sono tante e si gioca a gironi, ogni turno ha la sua prova e la finale si disputa a scopone. Vittoria 3 punti, pareggio 1, sconfitta 0: la classifica è unica.",
@@ -1129,7 +1141,8 @@
             "Briscola chiamata in cinque, se al tavolo ci si ritrova in numero dispari.",
             "Briscola scoperta: si gioca a carte scoperte, tutta strategia e niente fortuna.",
             "Briscola a perdere: vince la coppia che fa meno punti."
-          ]
+          ],
+          "durataPartita": 20
         },
         {
           "id": "scopone",
@@ -1137,7 +1150,7 @@
           "emoji": "🂱",
           "illustrazione": "scopone",
           "descrizione": "Il torneo dei veterani: dieci carte a testa, niente mazzo da pescare, solo memoria e testa. Si gioca rigorosamente a coppie e il compagno va scelto bene.",
-          "partita": "In questo torneo una partita è una smazzata sola: si contano denari, carte, settebello, primiera e scope, e vince chi ha fatto più punti in quella smazzata. Tetto di 17 minuti.",
+          "partita": "Partita intera, a 11 punti: di solito tre smazzate, poco più di mezz'ora. Non si interrompe a metà.",
           "regole": [
             "Quattro giocatori, due coppie: i compagni siedono uno di fronte all'altro.",
             "Tutte e 40 le carte vengono distribuite: 10 a testa, 4 scoperte sul tavolo.",
@@ -1150,7 +1163,8 @@
             "Scopone a 21 punti per la finale, se resta tempo.",
             "Scopa normale a coppie, più semplice per chi non ha mai giocato a scopone.",
             "Scopone con l'asso piglia tutto, per una versione più mossa."
-          ]
+          ],
+          "durataPartita": 35
         },
         {
           "id": "tresette",
@@ -1158,7 +1172,7 @@
           "emoji": "🂲",
           "illustrazione": "tresette",
           "descrizione": "Il gioco del silenzio e delle parole giuste: si può parlare solo con le frasi ammesse, e il resto lo deve capire il compagno. Elegante, lento e spietato.",
-          "partita": "In questo torneo una partita è una mano sola, quella da 11 punti: dieci prese più il punto dell'ultima. Tetto di 17 minuti.",
+          "partita": "Partita intera, a 21 punti: due o tre mani, circa venticinque minuti. Non si interrompe a metà.",
           "regole": [
             "Quattro giocatori, due coppie: i compagni siedono uno di fronte all'altro.",
             "Mazzo da 40 carte, 10 a testa. Si deve sempre rispondere al seme di uscita.",
@@ -1171,7 +1185,8 @@
             "Tresette a non prendere: vince la coppia che fa meno punti.",
             "Tresette con l'accuso di napoletana e buon gioco, per chi lo gioca così da sempre.",
             "Tresette in due, se qualcuno resta senza compagno."
-          ]
+          ],
+          "durataPartita": 25
         }
       ],
       "premio": "Coppa del Trittico",
@@ -1182,7 +1197,7 @@
       "nome": "Burraco",
       "emoji": "🃟",
       "illustrazione": "burraco",
-      "blocco": "B",
+      "blocco": "A",
       "orario": "16:15",
       "fine": "18:00",
       "formazione": "coppia",
@@ -1305,8 +1320,8 @@
     {
       "ora": "18:00",
       "area": "adulti",
-      "titolo": "Carte italiane — primo giro: scopone scientifico",
-      "nota": "Tre turni da venti minuti, due tavoli insieme: una smazzata a partita, e gioca ogni coppia a ogni turno"
+      "titolo": "Carte italiane — giro di scopone",
+      "nota": "Tre turni, due tavoli insieme: partita intera a 11 punti, si finisce verso le 19:50"
     },
     {
       "ora": "18:05",
@@ -1336,16 +1351,16 @@
       "nota": "Coppe, medaglie e foto di gruppo"
     },
     {
-      "ora": "19:00",
+      "ora": "19:55",
       "area": "adulti",
-      "titolo": "Carte italiane — secondo giro: tresette",
-      "nota": "Altri tre turni, una mano a partita. Se scade il tempo vince chi è avanti"
+      "titolo": "Carte italiane — giro di tresette",
+      "nota": "Altri tre turni, partita intera a 21 punti"
     },
     {
-      "ora": "20:00",
+      "ora": "21:20",
       "area": "adulti",
       "titolo": "Coppa delle carte italiane",
-      "nota": "Si sommano i punti dei due giri e si premia la coppia vincitrice"
+      "nota": "Si sommano i punti dei due giri. Se qualcosa slitta si finisce domenica 16, dalle 17:00"
     }
   ],
   "premi": [
@@ -1385,7 +1400,7 @@
       "area": "ragazzi"
     },
     {
-      "nome": "Coppa del Trittico",
+      "nome": "Coppa delle carte italiane",
       "emoji": "🂡",
       "area": "adulti"
     },
@@ -1504,19 +1519,19 @@
   "gruppiCarte": [
     {
       "id": "italiana",
-      "nome": "Il Trittico",
-      "nomeBreve": "Il Trittico",
+      "nome": "Le carte italiane",
+      "nomeBreve": "Carte italiane",
       "emoji": "🂡",
-      "illustrazione": "briscola",
+      "illustrazione": "scopone",
       "colore": "#1f8a5b",
       "tornei": [
         "trittico"
       ],
       "postiTotali": 24,
-      "sottotitolo": "Un torneo, tre prove: briscola, scopone e tresette",
-      "descrizione": "Le carte italiane in un torneo solo. La coppia gioca tutte e tre le prove — briscola, scopone e tresette — e i punti si sommano in una classifica unica. Ci si iscrive a coppie: se non hai il compagno, te ne troviamo uno.",
-      "premio": "Coppa del Trittico",
-      "nota": "Le tre prove si giocano una dopo l'altra nel blocco A, senza cambiare compagno."
+      "sottotitolo": "Scopone e tresette, a coppie, il sabato sera",
+      "descrizione": "Le carte italiane in un torneo solo: la coppia gioca ogni prova contro tutte le altre coppie e i punti si sommano in una classifica unica. Quest'anno si gioca a scopone e tresette, partite intere. Ci si iscrive a coppie: se non hai il compagno, te ne troviamo uno.",
+      "premio": "Coppa delle carte italiane",
+      "nota": "Si comincia alle 18:00, quando i ragazzi hanno quasi finito in acqua, e si va avanti fino a sera."
     },
     {
       "id": "burraco",
@@ -1532,7 +1547,7 @@
       "sottotitolo": "Due mazzi, il pozzetto e la corsa a chiudere",
       "descrizione": "Il torneo di burraco ha la sua iscrizione a parte, il suo tavolo e la sua coppa. Si gioca rigorosamente a coppie: se non hai il compagno te ne troviamo uno.",
       "premio": "Coppa Burraco",
-      "nota": "Il burraco si gioca nel blocco B: chi si iscrive qui può comunque fare il Trittico nel blocco A."
+      "nota": "Il burraco si gioca nel pomeriggio: chi si iscrive qui può comunque fare le carte italiane la sera."
     }
   ],
   "formatiSquadre": {

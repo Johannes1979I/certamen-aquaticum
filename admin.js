@@ -3157,13 +3157,86 @@
     var turni = turniDi(n, formato, conTutteLeProve ? prove.length : 1);
     var partite = conTutteLeProve ? (n * (n - 1) / 2) * prove.length
       : (formato === 'italiana' ? n * (n - 1) / 2 : 0);
-    var durata = Number(td.durataPartita) || 25;
-    var minuti = turni * (durata + CAMBIO_TAVOLO);
+    var base = Number(td.durataPartita) || 25;
+
+    /* Ogni gioco ha il suo passo: una partita intera di scopone dura il
+       doppio di una di tresette. Quindi non c'è «una durata», c'è un blocco
+       per ogni giro, ognuno con la sua. */
+    var perGiro = turni, blocchi = [];
+    if (conTutteLeProve) {
+      perGiro = turni / prove.length;
+      prove.forEach(function (p) {
+        blocchi.push({ nome: V(p.nome, ''), emoji: V(p.emoji, ''),
+          turni: perGiro, durata: Number(p.durataPartita) || base });
+      });
+    } else {
+      blocchi.push({ nome: '', emoji: '', turni: turni, durata: base });
+    }
+    var minuti = 0;
+    blocchi.forEach(function (b) { minuti += b.turni * (b.durata + CAMBIO_TAVOLO); });
+
+    var sess = sessioniDi(td);
     return {
       turni: turni, partite: partite, tavoli: Math.floor(n / 2),
-      durata: durata, minuti: minuti, prove: prove.length,
-      conTutteLeProve: conTutteLeProve, finestra: finestraTorneo(td)
+      durata: base, minuti: minuti, prove: prove.length, blocchi: blocchi,
+      conTutteLeProve: conTutteLeProve,
+      finestra: minutiDisponibili(sess), sessioni: sess,
+      piano: pianifica(blocchi, sess)
     };
+  }
+
+  /* Le giornate in cui si gioca. Un torneo può finire il giorno dopo: se non
+     ha sessioni scritte, la sua unica giornata è quella della festa. */
+  function sessioniDi(td) {
+    var s = V(td.sessioni, []).filter(function (x) { return x.dalle && x.alle; });
+    if (s.length) return s;
+    if (td.orario && td.fine) return [{ giorno: '', dalle: td.orario, alle: td.fine }];
+    var righe = V(DATI.programma, []).filter(function (r) { return /^\d\d?:\d\d$/.test(V(r.ora, '')); });
+    if (!righe.length || !td.orario) return [];
+    return [{ giorno: '', dalle: td.orario, alle: righe[righe.length - 1].ora }];
+  }
+  function minutiDisponibili(sess) {
+    var m = 0;
+    sess.forEach(function (s) { m += inMinuti(s.alle) - inMinuti(s.dalle); });
+    return m;
+  }
+
+  /* Si mettono i turni nelle giornate uno dopo l'altro, come si farebbe con
+     la matita: quando una giornata è piena si passa alla successiva. Una
+     partita non si spezza a metà, quindi il turno che non ci sta intero
+     scivola tutto al giorno dopo. */
+  function pianifica(blocchi, sess) {
+    if (!sess.length) return null;
+    var piano = sess.map(function (s) {
+      return { giorno: V(s.giorno, ''), dalle: s.dalle, alle: s.alle,
+        ora: inMinuti(s.dalle), pezzi: [], finisce: inMinuti(s.dalle) };
+    });
+    var i = 0, avanzati = 0;
+    blocchi.forEach(function (b) {
+      var resta = b.turni;
+      while (resta > 0) {
+        if (i >= piano.length) { avanzati += resta; return; }
+        var g = piano[i];
+        var passo = b.durata + CAMBIO_TAVOLO;
+        var ci = Math.floor((inMinuti(g.alle) - g.ora) / passo);
+        if (ci <= 0) { i++; continue; }
+        var quanti = Math.min(ci, resta);
+        var da = g.ora;
+        g.ora += quanti * passo;
+        g.finisce = g.ora - CAMBIO_TAVOLO;      /* l'ultimo cambio non serve */
+        g.pezzi.push({ nome: b.nome, emoji: b.emoji, turni: quanti,
+          dalle: oraDa(da), alle: oraDa(g.finisce) });
+        resta -= quanti;
+        if (resta > 0) i++;
+      }
+    });
+    var usate = piano.filter(function (g) { return g.pezzi.length; });
+    return { giornate: usate, avanzati: avanzati,
+      fine: usate.length ? usate[usate.length - 1] : null };
+  }
+  function oraDa(m) {
+    var o = Math.floor(m / 60) % 24, r = Math.round(m % 60);
+    return (o < 10 ? '0' : '') + o + ':' + (r < 10 ? '0' : '') + r;
   }
 
   /* Da che ora a che ora ci sono i tavoli: dall'orario del torneo alla sua
@@ -3201,19 +3274,44 @@
 
     var conto = s.turni + (s.turni === 1 ? ' turno' : ' turni') +
       (s.partite ? ' · ' + s.partite + ' partite' : '') +
-      ' · ' + s.tavoli + (s.tavoli === 1 ? ' tavolo' : ' tavoli in parallelo') +
-      ' · ' + s.durata + ' minuti a partita più ' + CAMBIO_TAVOLO + ' di cambio';
+      ' · ' + s.tavoli + (s.tavoli === 1 ? ' tavolo' : ' tavoli in parallelo') + ' · ' +
+      (s.blocchi.length > 1
+        ? s.blocchi.map(function (b) { return b.durata + "' a " + b.nome.toLowerCase(); }).join(', ')
+        : s.durata + ' minuti a partita') +
+      ', più ' + CAMBIO_TAVOLO + ' di cambio';
     box.appendChild(crea('p', 'aiuto', conto + '.'));
+
+    /* dove cade ogni giro, ora per ora: è la cosa che si guarda davvero */
+    if (s.piano && s.piano.giornate.length) {
+      var ul = crea('ul', 'mini');
+      ul.style.cssText = 'margin:6px 0 0 18px';
+      s.piano.giornate.forEach(function (g) {
+        g.pezzi.forEach(function (pz) {
+          ul.appendChild(crea('li', null,
+            (g.giorno ? g.giorno + ': ' : '') + pz.dalle + ' → ' + pz.alle + ' · ' +
+            pz.turni + (pz.turni === 1 ? ' turno' : ' turni') +
+            (pz.nome ? ' di ' + pz.nome.toLowerCase() : '')));
+        });
+      });
+      box.appendChild(ul);
+      var f = s.piano.fine;
+      if (f && !s.piano.avanzati) {
+        box.appendChild(crea('p', 'aiuto', 'Si chiude ' +
+          (f.giorno ? f.giorno + ' ' : '') + 'alle ' + oraDa(f.finisce) +
+          ': la coppa si può dare subito dopo.'));
+      }
+    }
     if (s.conTutteLeProve) {
       box.appendChild(crea('p', 'aiuto',
         'Ogni coppia incontra tutte le altre a tutte e ' + s.prove + ' le prove: sono ' +
         s.prove + ' gironi interi, uno per gioco, con i punti che si sommano in una classifica sola.'));
     }
     if (s.finestra) {
-      var td2 = torneoDati(idTorneo);
       box.appendChild(crea('p', 'aiuto', 'Il tempo che hai è ' + oreEMinuti(s.finestra) +
-        ', dalle ' + V(td2.orario, '') +
-        (td2.fine ? ' alle ' + td2.fine + '.' : ' alla premiazione.')));
+        ', su ' + (s.sessioni.length === 1 ? 'una sola giornata' : s.sessioni.length + ' giornate') +
+        ': ' + s.sessioni.map(function (x) {
+          return (x.giorno ? x.giorno + ' ' : '') + x.dalle + '–' + x.alle;
+        }).join(', ') + '.'));
     }
     /* con un numero dispari di coppie una sta ferma a ogni turno: è la cosa
        che fa più brutta figura, e si risolve solo trovando una coppia in più */

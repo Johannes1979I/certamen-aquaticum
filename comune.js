@@ -453,13 +453,21 @@
       'La stessa coppia gioca tutte le prove e i punti si sommano: non vince chi è bravo ' +
       'a un gioco, vince chi se la cava con tutti.';
     var minuscoli = elencoConE(nomi.map(function (x) { return x.toLowerCase(); }));
+    /* ogni gioco ha il suo passo: si dice quello, non una media che non
+       corrisponde a nessuna partita vera */
+    var durate = prove.map(function (p) {
+      return (Number(p.durataPartita) || Number(t.durataPartita) || 25) +
+        ' minuti a ' + p.nome.toLowerCase();
+    });
+    n.durataPartita = prove.reduce(function (m, p) {
+      return Math.max(m, Number(p.durataPartita) || Number(t.durataPartita) || 0);
+    }, 0) || t.durataPartita;
     n.partita = 'Nel girone all\'italiana ogni coppia incontra tutte le altre a ognuna delle ' +
-      'prove: un giro completo per gioco — ' + minuscoli + ' — e i punti si sommano. Una ' +
-      'partita dura al massimo ' + V(t.durataPartita, 25) + ' minuti: quando scade il tempo ' +
-      'vince chi è avanti in quel momento, e i tavoli cambiano tutti insieme. Se invece le ' +
-      'coppie sono tante si gioca a gironi: lì le prove si alternano turno dopo turno e la ' +
-      'finale si disputa a ' + fin.nome.toLowerCase() + '. Vittoria 3 punti, pareggio 1, ' +
-      'sconfitta 0: la classifica è unica.';
+      'prove: un giro completo per gioco — ' + minuscoli + ' — e i punti si sommano. Si gioca ' +
+      'la partita intera, fino al punteggio: non si interrompe a metà per il cronometro. ' +
+      'Si mettono in conto ' + elencoConE(durate) + '. Se invece le coppie sono tante si gioca ' +
+      'a gironi: lì le prove si alternano turno dopo turno e la finale si disputa a ' +
+      fin.nome.toLowerCase() + '. Vittoria 3 punti, pareggio 1, sconfitta 0: la classifica è unica.';
     n.formula = 'La formula la decidono gli organizzatori il giorno stesso, in base a quante ' +
       'coppie si sono iscritte: girone all\'italiana se siamo pochi — e allora si gioca tutti ' +
       'contro tutti a ogni prova — gironi con finale se siamo tanti, e in quel caso le prove ' +

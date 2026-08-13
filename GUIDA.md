@@ -125,15 +125,26 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
    - **con un numero dispari di coppie una resta a guardare a ogni turno**.
      Trovare due persone in più non allunga il torneo di un minuto e fa
      giocare tutti: il riquadro te lo ricorda da solo.
+   - **ogni gioco ha il suo passo**: una partita intera di scopone dura il
+     doppio di una di tresette, e il conto lo tiene in considerazione invece
+     di usare una media che non corrisponde a nessuna partita vera.
 
-   Come sta adesso il pomeriggio delle carte: **Burraco 16:15 → 17:55**,
-   **carte italiane 18:00 → 20:00**. Di serie si giocano **scopone e
-   tresette**: due giri completi, cioè 6 turni da venti minuti (17 di gioco
-   più 3 di cambio) su due tavoli, 12 partite, e ogni coppia gioca a ogni
-   turno. La coppa si dà alle 20:00, dopo la premiazione dei ragazzi.
+   Come sta adesso la giornata delle carte: **Burraco 16:15 → 17:55**,
+   **carte italiane dalle 18:00**. Di serie si giocano **scopone e tresette**,
+   e si gioca la **partita intera**: a 11 punti lo scopone (tre smazzate,
+   35 minuti), a 21 il tresette (due o tre mani, 25 minuti). Niente partite
+   troncate dal cronometro.
+   Sono 6 turni su due tavoli, 12 partite: **18:00 → 19:51 il giro di
+   scopone, 19:54 → 21:15 quello di tresette**, coppa alle 21:20. Si finisce
+   il 15 sera, come deve essere.
+   **Domenica 16, dalle 17:00, è la rete di sicurezza**: se qualcosa slitta —
+   si comincia tardi, arrivano più coppie, una partita non finisce più — i
+   turni che avanzano scivolano lì da soli, e il riquadro dei tempi te lo
+   dice con l'ora esatta. Le due giornate si scrivono in ⚙️ Contenuti, nel
+   torneo, alla voce «sessioni».
    La **briscola è messa da parte**, non cancellata: le sue regole restano nel
    catalogo e un tocco su `🂡 Briscola` nella scheda Tornei la rimette dentro
-   (ma allora i turni diventano 9 e le partite devono scendere a 10 minuti).
+   (ma allora i turni diventano 9 e si sfora nella domenica).
    Con due prove il torneo non si chiama più «Trittico»: il sito lo ribattezza
    da solo col nome dei giochi che si fanno.
    La formula la consiglia il sito in base a quante coppie ci sono:

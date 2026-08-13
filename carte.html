@@ -87,7 +87,7 @@
 <section id="iscrizioni">
   <div class="wrap">
     <h2 class="titolo-sez">Due <span class="em">iscrizioni</span> separate</h2>
-    <p class="occhiello">Il Trittico e il Burraco sono due tornei distinti, con il loro tavolo, la loro classifica e la loro coppa. Scegli quello che fa per te: se vuoi, puoi fare tutti e due.</p>
+    <p class="occhiello">Le carte italiane e il Burraco sono due tornei distinti, con il loro tavolo, la loro classifica e la loro coppa. Scegli quello che fa per te: se vuoi, puoi fare tutti e due.</p>
     <div class="porte" id="gruppi"></div>
   </div>
 </section>
@@ -138,7 +138,7 @@
 <section id="elenco">
   <div class="wrap">
     <h2 class="titolo-sez">I due <span class="em">tornei</span></h2>
-    <p class="occhiello">Per ognuno trovi la formula, le regole con cui si gioca qui e qualche variante, se al tavolo vi mettete d'accordo diversamente. Nel Trittico ogni prova ha le sue regole, una per gioco.</p>
+    <p class="occhiello">Per ognuno trovi la formula, le regole con cui si gioca qui e qualche variante, se al tavolo vi mettete d'accordo diversamente. Nelle carte italiane ogni prova ha le sue regole, una per gioco.</p>
     <div class="giochi" id="tornei"></div>
   </div>
 </section>
@@ -295,12 +295,29 @@ function disegnaGruppi(tornei){
 function disegnaBlocchi(tornei){
   var el = $('blocchi');
   el.textContent = '';
-  ['A','B'].forEach(function(lettera){
+  /* in ordine di orario, non di lettera: il blocco B può benissimo venire
+     prima del blocco A, e chi legge vuole sapere cosa si gioca prima */
+  var lettere = ['A','B'].filter(function(l){
+    return tornei.some(function(x){ return String(x.blocco).toUpperCase() === l; });
+  }).sort(function(a,b){
+    function quando(l){
+      var t = tornei.filter(function(x){ return String(x.blocco).toUpperCase() === l; })[0];
+      var p = String(V(t && t.orario, '99:99')).split(':');
+      return (Number(p[0])||0) * 60 + (Number(p[1])||0);
+    }
+    return quando(a) - quando(b);
+  });
+  lettere.forEach(function(lettera){
     var dentro = tornei.filter(function(x){ return String(x.blocco).toUpperCase() === lettera; });
     if(!dentro.length) return;
     var d = crea('div', 'blocco-orario' + (lettera === 'B' ? ' b' : ''));
     d.appendChild(crea('h3', null, 'Blocco ' + lettera));
-    d.appendChild(crea('div', 'quando', 'si comincia alle ' + V(dentro[0].orario, '')));
+    var sess = V(dentro[0].sessioni, []).filter(function(s){ return s.dalle && s.alle; });
+    d.appendChild(crea('div', 'quando', sess.length
+      ? sess.map(function(s, i){
+          return (s.giorno ? s.giorno + ' ' : '') + s.dalle + '–' + s.alle + (i ? ' se serve' : '');
+        }).join(', ')
+      : 'si comincia alle ' + V(dentro[0].orario, '')));
     var ul = document.createElement('ul');
     dentro.forEach(function(x){
       ul.appendChild(crea('li', null, V(x.emoji,'') + ' ' + V(x.nome,'') + ' — ' + V(x.postiTotali, 0) + ' posti'));
@@ -424,7 +441,16 @@ function cartaTorneo(x, numero){
 
   var eti = crea('div', 'etichette');
   if(V(x.prove, []).length) eti.appendChild(crea('span', 'eti gialla', '🎴 ' + x.prove.length + ' prove in un torneo solo'));
-  if(x.blocco) eti.appendChild(crea('span', 'eti', '🕓 blocco ' + x.blocco + (x.orario ? ' · ' + x.orario : '')));
+  /* un torneo può occupare più di una serata: si scrivono tutte, che è la
+     cosa che uno vuole sapere prima di iscriversi */
+  var sess = V(x.sessioni, []).filter(function(s){ return s.dalle && s.alle; });
+  if(sess.length){
+    sess.forEach(function(s, i){
+      eti.appendChild(crea('span', 'eti' + (i ? ' grigia' : ''),
+        '🕓 ' + (s.giorno ? s.giorno + ' ' : '') + s.dalle + '–' + s.alle +
+        (i ? ' se serve' : '')));
+    });
+  } else if(x.blocco) eti.appendChild(crea('span', 'eti', '🕓 blocco ' + x.blocco + (x.orario ? ' · ' + x.orario : '')));
   eti.appendChild(crea('span', 'eti verde', x.coppiaObbligatoria ? '👥 solo a coppie' : '👥 a coppie (o da solo)'));
   if(x.giocatoriTavolo) eti.appendChild(crea('span', 'eti grigia', '🪑 ' + x.giocatoriTavolo + ' al tavolo'));
   if(x.postiTotali) eti.appendChild(crea('span', 'eti grigia', '🎟️ ' + x.postiTotali + ' posti'));
