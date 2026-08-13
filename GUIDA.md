@@ -127,10 +127,15 @@ I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
      giocare tutti: il riquadro te lo ricorda da solo.
 
    Come sta adesso il pomeriggio delle carte: **Burraco 16:15 → 17:55**,
-   **Trittico 18:00 → 20:00**. Il Trittico è tarato su due giri completi —
-   briscola e scopone — cioè 6 turni da venti minuti (17 di gioco più 3 di
-   cambio) su due tavoli: 12 partite, e ogni coppia gioca a ogni turno.
-   La coppa delle carte si dà alle 20:00, dopo la premiazione dei ragazzi.
+   **carte italiane 18:00 → 20:00**. Di serie si giocano **scopone e
+   tresette**: due giri completi, cioè 6 turni da venti minuti (17 di gioco
+   più 3 di cambio) su due tavoli, 12 partite, e ogni coppia gioca a ogni
+   turno. La coppa si dà alle 20:00, dopo la premiazione dei ragazzi.
+   La **briscola è messa da parte**, non cancellata: le sue regole restano nel
+   catalogo e un tocco su `🂡 Briscola` nella scheda Tornei la rimette dentro
+   (ma allora i turni diventano 9 e le partite devono scendere a 10 minuti).
+   Con due prove il torneo non si chiama più «Trittico»: il sito lo ribattezza
+   da solo col nome dei giochi che si fanno.
    La formula la consiglia il sito in base a quante coppie ci sono:
    - 2 coppie → sfida diretta al meglio delle tre
    - 3–6 coppie → girone all'italiana

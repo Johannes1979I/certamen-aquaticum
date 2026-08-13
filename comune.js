@@ -390,11 +390,18 @@
      sono arrivati: da qui escono nomi, regole, tabelloni e classifiche,
      tutti già coerenti con quello che si è deciso.                      */
 
+  /* Di serie si giocano le prove del catalogo, tolte quelle messe da parte:
+     restano nel catalogo — regole, illustrazione e tutto — e basta un tocco
+     nell'area organizzatori per rimetterle dentro il giorno stesso. */
   function assettoPredefinito(t) {
+    var dentro = V(t && t.prove, []).filter(function (p) { return !p.escluso; });
+    if (!dentro.length) dentro = V(t && t.prove, []);
+    var ids = dentro.map(function (p) { return p.id; });
+    var finale = V(t && t.provaFinale, '');
     return {
-      prove: V(t && t.prove, []).map(function (p) { return p.id; }),
+      prove: ids,
       forma: 'unico',
-      provaFinale: V(t && t.provaFinale, '')
+      provaFinale: ids.indexOf(finale) >= 0 ? finale : (ids[ids.length - 1] || '')
     };
   }
 
@@ -445,19 +452,24 @@
       ' prove: ' + elencoConE(nomi.map(function (x) { return x.toLowerCase(); })) + '. ' +
       'La stessa coppia gioca tutte le prove e i punti si sommano: non vince chi è bravo ' +
       'a un gioco, vince chi se la cava con tutti.';
-    n.partita = 'Ogni turno di girone si gioca a una prova diversa, al massimo ' +
-      V(t.durataPartita, 25) + ' minuti a partita. La finale si disputa a ' +
-      fin.nome.toLowerCase() + '. Vittoria 3 punti, pareggio 1, sconfitta 0: la ' +
-      'classifica è unica.';
+    var minuscoli = elencoConE(nomi.map(function (x) { return x.toLowerCase(); }));
+    n.partita = 'Nel girone all\'italiana ogni coppia incontra tutte le altre a ognuna delle ' +
+      'prove: un giro completo per gioco — ' + minuscoli + ' — e i punti si sommano. Una ' +
+      'partita dura al massimo ' + V(t.durataPartita, 25) + ' minuti: quando scade il tempo ' +
+      'vince chi è avanti in quel momento, e i tavoli cambiano tutti insieme. Se invece le ' +
+      'coppie sono tante si gioca a gironi: lì le prove si alternano turno dopo turno e la ' +
+      'finale si disputa a ' + fin.nome.toLowerCase() + '. Vittoria 3 punti, pareggio 1, ' +
+      'sconfitta 0: la classifica è unica.';
     n.formula = 'La formula la decidono gli organizzatori il giorno stesso, in base a quante ' +
-      'coppie si sono iscritte: girone all\'italiana se siamo pochi, gironi con finale se ' +
-      'siamo tanti. Le prove si alternano turno dopo turno e la finale si gioca a ' +
-      fin.nome.toLowerCase() + '.';
+      'coppie si sono iscritte: girone all\'italiana se siamo pochi — e allora si gioca tutti ' +
+      'contro tutti a ogni prova — gironi con finale se siamo tanti, e in quel caso le prove ' +
+      'si alternano turno dopo turno e la finale si gioca a ' + fin.nome.toLowerCase() + '.';
     n.regole = [
       'Si gioca in quattro, a coppie: i compagni siedono uno di fronte all\'altro.',
       'La coppia resta la stessa per tutte le prove.',
-      'Ogni turno di girone ha la sua prova: ' + elencoConE(nomi.map(function (x) { return x.toLowerCase(); })) + '.',
-      'La finale si disputa a ' + fin.nome.toLowerCase() + '.',
+      'Nel girone all\'italiana ogni coppia incontra tutte le altre a ogni prova: ' + minuscoli + '.',
+      'Se le coppie sono tante e si gioca a gironi, ogni turno ha la sua prova e la finale si ' +
+        'disputa a ' + fin.nome.toLowerCase() + '.',
       'I punti delle prove si sommano in una classifica unica.',
       'Le regole di ogni singola prova sono qui sotto, una per gioco.'
     ].concat(V(t.regole, []).filter(function (r) { return /pari|arbitr|organizzat/i.test(r); }));
@@ -478,8 +490,11 @@
       if (tutte.length < 2) { fuori.push(t); return; }   /* burraco e simili: nulla da scegliere */
 
       var a = assetto || {};
+      /* finché l'organizzatore non sceglie, valgono le prove di serie: la
+         stessa regola dell'area organizzatori, scritta una volta sola */
+      var pre = assettoPredefinito(t);
       var scelte = V(a.prove, null);
-      if (!scelte || !scelte.length) scelte = tutte.map(function (p) { return p.id; });
+      if (!scelte || !scelte.length) scelte = pre.prove;
       var prove = tutte.filter(function (p) { return scelte.indexOf(p.id) >= 0; });
       if (!prove.length) prove = tutte.slice();
 
@@ -488,7 +503,7 @@
       } else if (V(a.forma, 'unico') === 'separati') {
         prove.forEach(function (p) { fuori.push(torneoDiUnaProva(t, p)); });
       } else {
-        fuori.push(torneoUnico(t, prove, a.provaFinale));
+        fuori.push(torneoUnico(t, prove, V(a.provaFinale, '') || pre.provaFinale));
       }
     });
     return fuori;

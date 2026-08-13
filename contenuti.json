@@ -1092,7 +1092,7 @@
       "durataPartita": 17,
       "escluso": false,
       "descrizione": "Un torneo solo con le carte italiane, in tre prove: si comincia a briscola, si passa allo scopone e si chiude a tresette. La stessa coppia gioca tutte e tre le prove e i punti si sommano: non vince chi è bravo a un gioco, vince chi se la cava con tutti e tre.",
-      "partita": "Nel girone all'italiana ogni coppia incontra tutte le altre a tutte e tre le prove: prima il giro di briscola, poi quello di scopone, poi quello di tresette. Ogni partita dura al massimo 17 minuti: quando scade il tempo vince chi è avanti in quel momento, e i tavoli cambiano tutti insieme. Se invece le coppie sono tante e si gioca a gironi, ogni turno ha la sua prova e la finale si disputa a scopone. Vittoria 3 punti, pareggio 1, sconfitta 0: la classifica è unica.",
+      "partita": "Nel girone all'italiana ogni coppia incontra tutte le altre a ognuna delle prove che si giocano: un giro completo per gioco. Una partita è una smazzata a scopone o una mano a tresette — si finisce di giocare quella e si cambia — con un tetto di 17 minuti: se scade, vince chi è avanti. Se invece le coppie sono tante e si gioca a gironi, ogni turno ha la sua prova e la finale si disputa a scopone. Vittoria 3 punti, pareggio 1, sconfitta 0: la classifica è unica.",
       "formula": "La formula la decidono gli organizzatori il giorno stesso, in base a quante coppie si sono iscritte: girone all'italiana se siamo pochi, gironi con finale se siamo tanti. Nel girone all'italiana si gioca tutti contro tutti a ogni prova, e i punti si sommano; con i gironi le prove si alternano turno dopo turno e la finale si gioca a scopone.",
       "regole": [
         "Si gioca in quattro, a coppie: i compagni siedono uno di fronte all'altro.",
@@ -1111,6 +1111,7 @@
       "prove": [
         {
           "id": "briscola",
+          "escluso": true,
           "nome": "Briscola",
           "emoji": "🂡",
           "illustrazione": "briscola",
@@ -1136,7 +1137,7 @@
           "emoji": "🂱",
           "illustrazione": "scopone",
           "descrizione": "Il torneo dei veterani: dieci carte a testa, niente mazzo da pescare, solo memoria e testa. Si gioca rigorosamente a coppie e il compagno va scelto bene.",
-          "partita": "Ogni partita si gioca a 11 punti, con un tetto di 17 minuti: se scade il tempo vince chi è avanti.",
+          "partita": "In questo torneo una partita è una smazzata sola: si contano denari, carte, settebello, primiera e scope, e vince chi ha fatto più punti in quella smazzata. Tetto di 17 minuti.",
           "regole": [
             "Quattro giocatori, due coppie: i compagni siedono uno di fronte all'altro.",
             "Tutte e 40 le carte vengono distribuite: 10 a testa, 4 scoperte sul tavolo.",
@@ -1157,7 +1158,7 @@
           "emoji": "🂲",
           "illustrazione": "tresette",
           "descrizione": "Il gioco del silenzio e delle parole giuste: si può parlare solo con le frasi ammesse, e il resto lo deve capire il compagno. Elegante, lento e spietato.",
-          "partita": "Ogni partita si gioca a 21 punti, con un tetto di 17 minuti: se scade il tempo vince chi è avanti.",
+          "partita": "In questo torneo una partita è una mano sola, quella da 11 punti: dieci prese più il punto dell'ultima. Tetto di 17 minuti.",
           "regole": [
             "Quattro giocatori, due coppie: i compagni siedono uno di fronte all'altro.",
             "Mazzo da 40 carte, 10 a testa. Si deve sempre rispondere al seme di uscita.",
@@ -1238,7 +1239,7 @@
     {
       "ora": "16:15",
       "area": "adulti",
-      "titolo": "Blocco B — Burraco: primo turno",
+      "titolo": "Burraco — primo turno",
       "nota": "Sui tavoli all'ombra, mentre in acqua si scaldano i ragazzi"
     },
     {
@@ -1258,7 +1259,7 @@
     {
       "ora": "16:50",
       "area": "adulti",
-      "titolo": "Blocco B — secondo turno",
+      "titolo": "Burraco — secondo turno",
       "nota": ""
     },
     {
@@ -1284,8 +1285,8 @@
     {
       "ora": "17:25",
       "area": "adulti",
-      "titolo": "Blocco B — finale del Burraco",
-      "nota": "Si chiude prima delle 18:00: alle 18 i tavoli passano al Trittico"
+      "titolo": "Burraco — finale",
+      "nota": "Si chiude prima delle 18:00: alle 18 i tavoli passano alle carte italiane"
     },
     {
       "ora": "17:35",
@@ -1304,8 +1305,8 @@
     {
       "ora": "18:00",
       "area": "adulti",
-      "titolo": "Il Trittico — primo giro: briscola",
-      "nota": "Tre turni da venti minuti, due tavoli insieme: gioca ogni coppia a ogni turno"
+      "titolo": "Carte italiane — primo giro: scopone scientifico",
+      "nota": "Tre turni da venti minuti, due tavoli insieme: una smazzata a partita, e gioca ogni coppia a ogni turno"
     },
     {
       "ora": "18:05",
@@ -1337,13 +1338,13 @@
     {
       "ora": "19:00",
       "area": "adulti",
-      "titolo": "Il Trittico — secondo giro: scopone scientifico",
-      "nota": "Altri tre turni. Allo scadere dei venti minuti vince chi è avanti"
+      "titolo": "Carte italiane — secondo giro: tresette",
+      "nota": "Altri tre turni, una mano a partita. Se scade il tempo vince chi è avanti"
     },
     {
       "ora": "20:00",
       "area": "adulti",
-      "titolo": "Coppa del Trittico",
+      "titolo": "Coppa delle carte italiane",
       "nota": "Si sommano i punti dei due giri e si premia la coppia vincitrice"
     }
   ],
