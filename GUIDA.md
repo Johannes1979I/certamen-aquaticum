@@ -15,7 +15,7 @@ Dopo ogni pubblicazione premi **⌘⇧R** per vedere davvero le modifiche.
 
 | Pagina | Cosa contiene |
 |---|---|
-| `index.html` | Ingresso: informazioni generali, contatori in tempo reale, riquadri verso le sezioni |
+| `index.html` | Ingresso: informazioni generali, contatori in tempo reale, riquadri verso le sezioni, **la sigla e il jingle da ascoltare** |
 | `ragazzi.html` | I giochi in acqua, con regole, varianti, illustrazione e canzone |
 | `carte.html` | I tornei di carte e **le due iscrizioni separate** (all'italiana / burraco) |
 | `iscrizione-ragazzi.html` | Iscrizione ai giochi in acqua |

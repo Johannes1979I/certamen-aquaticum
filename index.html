@@ -113,6 +113,15 @@
   </div>
 </section>
 
+<!-- =============================== MUSICA =============================== -->
+<section id="musica" style="display:none;padding-top:10px">
+  <div class="wrap">
+    <h2 class="titolo-sez">La <span class="em">musica</span> del Certamen</h2>
+    <p class="occhiello" id="musicaSotto"></p>
+    <div id="elencoMusica"></div>
+  </div>
+</section>
+
 <!-- ============================= CONDIVIDI =============================== -->
 <section id="condividi" style="padding-top:10px">
   <div class="wrap">
@@ -206,10 +215,46 @@ function disegna(){
   }
 
   disegnaTessere();
+  disegnaMusica();
   disegnaFotoBrevi();
   $('condWa').href = CA.linkWhatsApp();
   $('condTg').href = CA.linkTelegram();
   collegaCondivisione();
+}
+
+/* ========================= LA MUSICA DEL CERTAMEN =====================
+   La sigla e il jingle si ascoltano anche da qui, non solo dall'area
+   organizzatori: sono canzoni scritte per noi, e chi apre il sito ha
+   diritto di sentirle senza aspettare Ferragosto. Sono gli stessi file
+   che partono dalla cassa a bordo piscina — un posto solo, nessuna copia
+   da tenere allineata. Niente si scarica finché non si preme play: la
+   sigla pesa quattro megabyte e non è detto che uno la voglia. */
+function disegnaMusica(){
+  var a = V(DATI.audio, {});
+  var pezzi = [a.sigla, a.jingle].filter(function(x){ return x && x.file; });
+  if(!pezzi.length) return;
+
+  testo('musicaSotto', 'Scritte apposta per l\'estate del Residence Holiday. ' +
+    'Il giorno della festa escono dalla cassa a bordo piscina.');
+  var el = $('elencoMusica');
+  el.textContent = '';
+  pezzi.forEach(function(m){
+    var d = crea('div', 'canzone');
+    d.appendChild(crea('b', null, V(m.titolo, 'Senza titolo')));
+    if(m.sottotitolo) d.appendChild(crea('small', null, m.sottotitolo));
+    var au = document.createElement('audio');
+    au.controls = true;
+    au.preload = 'none';
+    au.src = m.file;
+    au.setAttribute('aria-label', V(m.titolo, 'brano'));
+    /* una alla volta: se ne parte un'altra, questa si ferma */
+    au.addEventListener('play', function(){
+      [].forEach.call(el.querySelectorAll('audio'), function(x){ if(x !== au) x.pause(); });
+    });
+    d.appendChild(au);
+    el.appendChild(d);
+  });
+  $('musica').style.display = '';
 }
 
 /* I pulsanti WhatsApp e Telegram mandano il messaggio con il link: l'app va a

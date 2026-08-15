@@ -484,6 +484,16 @@ section{ padding:clamp(40px,6vw,72px) 0; }
 .testa-scaletta{ display:flex; flex-wrap:wrap; align-items:baseline; gap:10px; margin-bottom:10px; }
 .dida-scaletta{ font-size:.86rem; color:var(--muted); }
 .dida-scaletta.corta{ color:#a30f1a; font-weight:bold; }
+/* le canzoni della giornata, da ascoltare dal sito: un riquadro per pezzo */
+.canzone{
+  background:#fff; border:1px solid var(--linea); border-radius:16px;
+  padding:15px 18px; margin:0 auto 12px; max-width:620px; text-align:left;
+  box-shadow:var(--shadow-s);
+}
+.canzone b{ display:block; font-size:1.05rem; }
+.canzone small{ display:block; color:var(--muted); margin:2px 0 10px; }
+.canzone audio{ width:100%; display:block; }
+
 .brano{ display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-top:1px solid var(--linea); }
 .brano:first-child{ border-top:none; }
 .num-brano{
