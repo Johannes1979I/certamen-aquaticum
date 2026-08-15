@@ -983,10 +983,129 @@
   /* ============================== DISEGNO ============================== */
   function disegnaTutto() {
     disegnaCruscotto();
+    disegnaSportello();
     disegnaIscritti();
     disegnaSquadre();
     disegnaTornei();
     disegnaPunteggi();
+  }
+
+  /* ---------------------- lo sportello delle iscrizioni ------------------
+     Tre stati, non due: aperte, chiuse, oppure «si chiudono da sole» alla
+     data. Il terzo è quello di sempre e resta il predefinito; gli altri due
+     servono il giorno in cui la vita non segue il calendario. */
+  function statoSportello() {
+    var ev = V(DATI.evento, {});
+    return String(V(ev.iscrizioni, 'data'));
+  }
+  function scadutaLaData() {
+    var f = V(V(DATI.evento, {}).chiusuraIscrizioni, '');
+    var p = String(f).split('-');
+    if (p.length !== 3) return false;
+    return Date.now() > new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]), 23, 59, 59).getTime();
+  }
+  function chiuseAdesso() {
+    var s = statoSportello();
+    if (s === 'aperte') return false;
+    if (s === 'chiuse') return true;
+    return scadutaLaData();
+  }
+
+  function disegnaSportello() {
+    var el = $('sportello');
+    if (!el) return;
+    el.textContent = '';
+    var scelta = statoSportello(), chiuse = chiuseAdesso();
+    var data = V(V(DATI.evento, {}).chiusuraIscrizioni, '');
+
+    var stato = crea('div', 'nota-box attenzione');
+    stato.style.margin = '0 0 14px';
+    if (!chiuse) stato.className = 'nota-box sereno';
+    stato.appendChild(crea('b', null, chiuse
+      ? '🔒 In questo momento le iscrizioni sono chiuse'
+      : '🔓 In questo momento le iscrizioni sono aperte'));
+    stato.appendChild(crea('p', 'aiuto',
+      scelta === 'aperte' ? 'Le tieni aperte tu: la data di chiusura è ignorata.' :
+      scelta === 'chiuse' ? 'Le hai chiuse tu, prima della data.' :
+      (data ? ('Si chiudono da sole dopo il ' + CA.dataIt(data) + '.' +
+        (scadutaLaData() ? ' Quella data è passata.' : '')) : 'Non c\'è una data di chiusura: restano aperte.')));
+    stato.appendChild(crea('p', 'aiuto', chiuse
+      ? 'Chi apre il modulo trova il messaggio «Le iscrizioni sono chiuse». Tu puoi comunque ' +
+        'aggiungere una persona a mano, qui sotto, con ➕ Aggiungi a mano.'
+      : 'Dal sito ci si può iscrivere: i moduli funzionano e le iscrizioni arrivano qui.'));
+    el.appendChild(stato);
+
+    var az = crea('div', 'azioni');
+    az.style.cssText = 'justify-content:flex-start;flex-wrap:wrap;margin-bottom:12px';
+    function bottone(valore, testoB) {
+      var b = crea('button', 'btn btn-piccolo ' + (scelta === valore ? 'btn-p' : 'btn-chiaro'), testoB);
+      b.addEventListener('click', function () { cambiaSportello(valore); });
+      az.appendChild(b);
+    }
+    bottone('aperte', '🔓 Aperte');
+    bottone('data', '📅 Si chiudono da sole');
+    bottone('chiuse', '🔒 Chiuse');
+    el.appendChild(az);
+
+    var c = crea('div', 'campo');
+    c.style.maxWidth = '260px';
+    c.appendChild(crea('label', null, 'Si chiudono da sole dopo il'));
+    var inp = document.createElement('input');
+    inp.type = 'date'; inp.value = data;
+    inp.addEventListener('change', function () {
+      DATI.evento = DATI.evento || {};
+      DATI.evento.chiusuraIscrizioni = inp.value;
+      var campo = $('c_chiusura');
+      if (campo) campo.value = inp.value;         /* la scheda Contenuti resta allineata */
+      salvaBozza();
+      disegnaSportello();
+      mandaSportello('📅 Data di chiusura aggiornata');
+    });
+    c.appendChild(inp);
+    el.appendChild(c);
+
+    if (ghPronto()) {
+      el.appendChild(crea('p', 'aiuto',
+        'La scelta vive in contenuti.json, quindi va pubblicata: il pulsante lo fa da solo. ' +
+        'Sul sito si vede dopo una trentina di secondi, il tempo che GitHub rifaccia le pagine.'));
+    } else {
+      /* Senza token la scelta resta in questo telefono e il sito non cambia:
+         va detto qui, senza portare via l'utente dall'interruttore che sta
+         usando. Il pulsante lo accompagna quando vuole lui. */
+      var manca = crea('div', 'nota-box allarme');
+      manca.style.margin = '12px 0 0';
+      manca.appendChild(crea('b', null, '🔑 Manca il token di GitHub'));
+      manca.appendChild(crea('p', 'aiuto',
+        'La scelta è salvata in questo telefono, ma sul sito non è ancora arrivata: ' +
+        'chi apre il modulo vede ancora com\'era prima. Ci vuole un minuto.'));
+      var b = crea('button', 'btn btn-chiaro btn-piccolo', '🔑 Sistemo il token');
+      b.addEventListener('click', chiediGh);
+      manca.appendChild(b);
+      el.appendChild(manca);
+    }
+  }
+
+  function cambiaSportello(valore) {
+    DATI.evento = DATI.evento || {};
+    DATI.evento.iscrizioni = valore;
+    salvaBozza();
+    disegnaSportello();
+    disegnaCruscotto();
+    mandaSportello(valore === 'aperte' ? '🔓 Iscrizioni aperte'
+      : valore === 'chiuse' ? '🔒 Iscrizioni chiuse'
+        : '📅 Si chiudono da sole alla data');
+  }
+
+  /* Cambiare stato senza pubblicare non serve a niente: chi guarda il sito
+     vedrebbe ancora quello di prima. Quindi si pubblica subito, e se manca
+     il token si dice chiaro che la modifica è salva ma non ancora online. */
+  function mandaSportello(cosa) {
+    if (!ghPronto()) {
+      CA.toast(cosa + ' — salvato qui, ma sul sito non si vede ancora: manca il token di GitHub.', 9000);
+      return;                       /* niente salti di scheda: il riquadro rosso lo spiega lì */
+    }
+    CA.toast(cosa + ' — lo pubblico…', 30000);
+    pubblicaContenuti();
   }
 
   /* ----------------------------- cruscotto ---------------------------- */

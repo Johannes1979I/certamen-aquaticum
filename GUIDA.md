@@ -49,6 +49,28 @@ ragazzi accorciati (`Giulia B.`).
 I **contenuti** del sito (testi, giochi, orari, foto, musica) stanno invece in
 `contenuti.json`, che si modifica dall'admin e si pubblica su GitHub.
 
+## Aprire e chiudere le iscrizioni
+
+`📋 Iscrizioni`, primo riquadro: **🎟️ Iscrizioni aperte o chiuse**. In cima c'è
+sempre scritto cosa vede chi apre il sito **adesso**, e sotto tre pulsanti:
+
+- **🔓 Aperte** — restano aperte finché non dici tu, data ignorata. È quello da
+  usare quando devi aggiungere qualcuno all'ultimo momento;
+- **📅 Si chiudono da sole** — vale la data qui sotto, ed è il comportamento di
+  sempre;
+- **🔒 Chiuse** — chiuse subito, anche se la data non è ancora arrivata: serve
+  quando i posti sono finiti.
+
+La scelta sta in `contenuti.json`, quindi **va pubblicata**: il pulsante lo fa
+da solo se hai il token di GitHub, e sul sito si vede in una trentina di
+secondi. Se il token manca — capita sul telefono — la scelta resta salvata lì
+e compare un riquadro rosso che te lo dice: non ti sposta di scheda, e quando
+vuoi c'è il pulsante per sistemarlo.
+
+A iscrizioni chiuse **tu puoi sempre aggiungere una persona a mano**, con
+`➕ Aggiungi a mano` nel registro qui sotto: chiudere lo sportello ferma il
+sito, non te.
+
 ## Come si lavora il giorno della festa
 
 1. **Accoglienza** — scheda `✅ Appello`:

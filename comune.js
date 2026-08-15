@@ -605,9 +605,16 @@
     return playlistDi(g).filter(function (b) { return !!idVideo(b.url); }).length;
   }
 
-  /* --------------------------- iscrizioni aperte? ------------------------ */
+  /* --------------------------- iscrizioni aperte? ------------------------
+     Di norma lo sportello si chiude da solo alla data stabilita. Ma capita
+     di dover aggiungere qualcuno all'ultimo momento, o di voler chiudere in
+     anticipo perché i posti sono finiti: l'organizzatore può forzare la mano
+     in tutte e due le direzioni. */
   function iscrizioniChiuse() {
     var ev = V(dati().evento, {});
+    var scelta = String(V(ev.iscrizioni, 'data'));
+    if (scelta === 'aperte') return false;
+    if (scelta === 'chiuse') return true;
     var fine = V(ev.chiusuraIscrizioni, '');
     if (!fine) return false;
     var p = String(fine).split('-');
