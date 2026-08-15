@@ -1279,9 +1279,9 @@
     {
       "ora": "16:15",
       "area": "ragazzi",
-      "gioco": "palla-bollente",
       "titolo": "Palla bollente — a eliminazione",
-      "nota": "Chi resta con la palla in mano esce: vince la squadra con l'ultimo in acqua"
+      "nota": "Chi resta con la palla in mano esce: vince la squadra con l'ultimo in acqua",
+      "gioco": "palla-bollente"
     },
     {
       "ora": "16:15",
@@ -1292,23 +1292,23 @@
     {
       "ora": "16:25",
       "area": "ragazzi",
-      "gioco": "staffetta-pallone",
       "titolo": "Staffetta con pallone",
-      "nota": ""
+      "nota": "",
+      "gioco": "staffetta-pallone"
     },
     {
       "ora": "16:40",
       "area": "ragazzi",
-      "gioco": "cavalca-materassino",
       "titolo": "Cavalca il materassino",
-      "nota": ""
+      "nota": "",
+      "gioco": "cavalca-materassino"
     },
     {
       "ora": "16:50",
       "area": "ragazzi",
-      "gioco": "trasporto-compagno",
       "titolo": "Trasporto del compagno",
-      "nota": ""
+      "nota": "",
+      "gioco": "trasporto-compagno"
     },
     {
       "ora": "16:50",
@@ -1325,9 +1325,9 @@
     {
       "ora": "17:15",
       "area": "ragazzi",
-      "gioco": "traghetto",
       "titolo": "Il materassino traghetto",
-      "nota": ""
+      "nota": "",
+      "gioco": "traghetto"
     },
     {
       "ora": "17:25",
@@ -1338,23 +1338,23 @@
     {
       "ora": "17:30",
       "area": "ragazzi",
-      "gioco": "re-materassino",
       "titolo": "Re e regina del materassino",
-      "nota": ""
+      "nota": "",
+      "gioco": "re-materassino"
     },
     {
       "ora": "17:45",
       "area": "ragazzi",
-      "gioco": "catena",
       "titolo": "La catena acquatica",
-      "nota": ""
+      "nota": "",
+      "gioco": "catena"
     },
     {
       "ora": "17:55",
       "area": "ragazzi",
-      "gioco": "pallanuoto",
       "titolo": "Pallanuoto semplificata",
-      "nota": "Due mini partite da cinque minuti"
+      "nota": "Due mini partite da cinque minuti",
+      "gioco": "pallanuoto"
     },
     {
       "ora": "18:00",
@@ -1365,16 +1365,16 @@
     {
       "ora": "18:05",
       "area": "ragazzi",
-      "gioco": "baseball-acqua",
       "titolo": "Baseball in acqua",
-      "nota": "Si batte con la mazza di gommapiuma, si corre alle ciambelle che galleggiano"
+      "nota": "Si batte con la mazza di gommapiuma, si corre alle ciambelle che galleggiano",
+      "gioco": "baseball-acqua"
     },
     {
       "ora": "18:25",
       "area": "ragazzi",
-      "gioco": "super-staffetta",
       "titolo": "Super staffetta di Ferragosto",
-      "nota": "Punti doppi: qui si decide tutto"
+      "nota": "Punti doppi: qui si decide tutto",
+      "gioco": "super-staffetta"
     },
     {
       "ora": "18:45",
@@ -1636,9 +1636,9 @@
   },
   "album": {
     "attivo": true,
-    "titolo": "Le foto e i video della giornata",
+    "titolo": "Le foto della giornata",
     "sottotitolo": "Come è andata: i giochi, le squadre, le facce di chi ha vinto e di chi ci ha provato.",
-    "nota": "Se in una foto o in un video c'è tuo figlio e non vuoi che resti qui, scrivilo agli organizzatori: lo togliamo subito.",
+    "nota": "Se in una foto c'è tuo figlio e non vuoi che resti qui, scrivilo agli organizzatori: la togliamo subito.",
     "foto": []
   },
   "programmaAuto": {
