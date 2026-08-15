@@ -106,6 +106,15 @@ sito, non te.
      e a coppie). Alla fine ti dice quante preferenze ha rispettato e quali
      no, con il motivo;
    - **a mano**: trascini i nomi, o li tocchi e poi tocchi la squadra.
+   **Chi non deve mai stare con chi**: nel pieghevole sotto le due tendine,
+   `Chi non deve mai finire nella stessa squadra`. Si scelgono i due nomi
+   dalle tendine (non si scrivono: un nome sbagliato è una regola che sembra
+   attiva e non lo è) e da lì in poi il programma li tiene divisi **sempre**,
+   anche se si sono dichiarati amici e anche se hai messo «Prima le
+   preferenze». È un vincolo, non un desiderio: viene applicato per ultimo,
+   quando tutto il resto è già pareggiato, scegliendo lo scambio che costa
+   meno in equilibrio. Se proprio non ci riesce, te lo dice invece di tacere.
+   Di serie c'è già Adriano Gelasi mai con Matteo Papale.
    Il 🧢 accanto a un nome lo nomina capitano. Nome e grido si scrivono nei
    due campi in cima a ogni colonna.
 3. **Tornei** — scheda `🃏 Tornei`. In cima decidi **come si giocano le carte
@@ -198,6 +207,21 @@ sito, non te.
 6. **Foto** — scheda `📷 Album`, pulsante `📸 Scatta una foto`:
    dal telefono si apre la fotocamera e la foto è **subito** nell'album del
    sito. Vedi sotto.
+
+## I materassini e le gare in contemporanea
+
+Ne avete **quattro**, uno per squadra: a ogni gara scendono in acqua **tutte
+insieme**, anche a quelle col materassino, e i punti si danno per ordine
+d'arrivo. Il numero si cambia in `🎯 Settaggio giochi acquatici`, alla voce
+«Quanti materassini avete», e tutto il resto si regola da solo.
+
+Le **gare a scontri** (due squadre alla volta, in parallelo su giochi diversi)
+sono nate quando i materassini erano due e non bastavano. Adesso non servono
+più: restano se ti piacciono — partite corte, una contro una, più partite in
+tutto — ma non sono più obbligate. Il riquadro in `🏅 Punteggi` te lo dice da
+solo: *«Hai 4 materassini per 4 squadre: uno per squadra, non c'è più bisogno
+di dividersi»*. Se un domani le squadre diventassero cinque, lo stesso riquadro
+ti avviserebbe che alle gare col materassino non ci stanno tutte insieme.
 
 ## Segnare il risultato di una gara
 

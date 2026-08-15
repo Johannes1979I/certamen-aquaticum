@@ -429,6 +429,17 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
         <div class="aiuto" id="sqPrefNota"></div>
       </div>
     </div>
+
+    <details id="dettagliSeparati" style="margin:14px 0">
+      <summary>Chi non deve mai finire nella stessa squadra</summary>
+      <p class="aiuto">Due ragazzi che presi insieme vincono e basta: qui li tieni divisi
+        per sempre. È una regola, non una preferenza — il programma la rispetta anche a
+        costo di sbilanciare un po' le squadre, e se proprio non ci riesce te lo dice.</p>
+      <div id="elencoSeparati"></div>
+      <div class="azioni" style="justify-content:flex-start">
+        <button class="btn btn-chiaro btn-piccolo" id="btnAggiungiSeparati">➕ Aggiungi una coppia</button>
+      </div>
+    </details>
     <div class="azioni" style="justify-content:flex-start">
       <button class="btn btn-p" id="btnGeneraSquadre">🎲 Genera le squadre</button>
       <button class="btn btn-chiaro btn-piccolo" id="btnSvuotaSquadre">↩️ Ricomincia da capo</button>
@@ -635,8 +646,8 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
       </div>
       <div class="campo">
         <label for="pa_materassini">Quanti materassini avete</label>
-        <input type="text" id="pa_materassini" class="mini" placeholder="2" />
-        <div class="aiuto">Serve alle gare a scontri: uno per squadra in campo.</div>
+        <input type="text" id="pa_materassini" class="mini" placeholder="4" />
+        <div class="aiuto">Uno per squadra. Se ne hai quanti sono le squadre, a ogni gara giocano tutte insieme; se sono meno, alle gare col materassino tocca dividersi in scontri.</div>
       </div>
     </div>
     <div class="linea-tempo" id="lineaTempo"></div>

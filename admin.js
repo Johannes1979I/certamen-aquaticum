@@ -244,6 +244,13 @@
         : '📳 Questo dispositivo non vibra — normale su computer e iPhone.');
     });
 
+    $('btnAggiungiSeparati').addEventListener('click', function () {
+      DATI.separati = V(DATI.separati, []);
+      DATI.separati.push({ a: '', b: '' });
+      salvaBozza();
+      disegnaSeparati();
+    });
+
     $('btnSalvaGh').addEventListener('click', salvaGh);
     /* il token si scrive una volta e non si rilegge più: ma per passarlo al
        telefono bisogna poterlo vedere e copiare */
@@ -984,6 +991,7 @@
   function disegnaTutto() {
     disegnaCruscotto();
     disegnaSportello();
+    disegnaSeparati();
     disegnaIscritti();
     disegnaSquadre();
     disegnaTornei();
@@ -2034,8 +2042,12 @@
 
     if (criterio === 'auto') {
       distribuisciBilanciato(rag, STATO.squadre);
+      var rotte = separazioniRotte(STATO.squadre);
       CA.toast('🎲 Squadre generate: prima l\'equilibrio fra età e capacità in acqua, ' +
-        'poi le preferenze (' + ESITO_PREFERENZE.fatte.length + ' rispettate).', 7000);
+        'poi le preferenze (' + ESITO_PREFERENZE.fatte.length + ' rispettate).' +
+        (rotte.length ? ' ⚠️ Non sono riuscito a separare ' + CA.elencoConE(rotte) +
+          ': non c\'era nessuno scambio possibile.' : ''),
+        rotte.length ? 12000 : 7000);
     } else {
       CA.toast('Squadre vuote create: ora trascina i nomi.', 5000);
     }
@@ -2182,6 +2194,9 @@
        sbilanciata proprio all'ultimo (i maschi finivano 1-2-3) */
     pareggiaFasce(squadre);
     affinaForza(squadre);
+    /* per ultimo chi non deve stare insieme: è un vincolo, non un desiderio,
+       e va rispettato anche a costo di rovinare un po' l'equilibrio */
+    separaIncompatibili(squadre);
     return squadre.map(function (s) {
       return { componenti: s.componenti.slice(), capitano: s.capitano };
     });
@@ -2487,6 +2502,14 @@
         ESITO_PREFERENZE.saltate.push(d.a.nome + ' → «' + d.testo + '»: non l\'ho trovato fra gli iscritti');
         return;
       }
+      /* se sono nell'elenco di quelli da tenere separati, l'amicizia non
+         conta: si dice subito, invece di formare il gruppo e disfarlo dopo */
+      if (daSeparare(d.a._id, d.b._id)) {
+        SALTATI[chiave(d)] = true;
+        ESITO_PREFERENZE.saltate.push(d.a.nome + ' con ' + d.b.nome +
+          ': sono nell\'elenco di quelli da non mettere mai nella stessa squadra');
+        return;
+      }
       /* col livello più prudente si tiene insieme solo chi si è scelto a
          vicenda: una richiesta a senso unico non vale quanto l'equilibrio */
       if (livello === 'poco' && !d.reciproco) {
@@ -2616,6 +2639,154 @@
       if (!migliore) break;
       scambia(squadre[alta], squadre[bassa], migliore.a, migliore.b);
     }
+  }
+
+  /* ------------------- quelli da non mettere mai insieme -----------------
+     Due che presi da soli valgono già una squadra: se finiscono nella stessa
+     non c'è bilanciamento che tenga, perché il numero non dice tutto — si
+     coprono a vicenda, si passano la palla, vincono e basta. Si separano per
+     forza, alla fine, quando tutto il resto è già pareggiato: così il costo
+     dello spostamento si vede e si sceglie il meno caro. */
+  function coppieDaSeparare() {
+    var elenco = V(DATI.separati, []);
+    var fuori = [];
+    elenco.forEach(function (c) {
+      var a = perNomeIscritto(c.a), b = perNomeIscritto(c.b);
+      if (a && b && a._id !== b._id) fuori.push([a._id, b._id]);
+    });
+    return fuori;
+  }
+  function perNomeIscritto(nome) {
+    var cerca = normalizza(nome);
+    if (!cerca) return null;
+    return ragazziIscritti().filter(function (p) { return normalizza(p.nome) === cerca; })[0] || null;
+  }
+  function daSeparare(ida, idb) {
+    return coppieDaSeparare().some(function (c) {
+      return (c[0] === ida && c[1] === idb) || (c[0] === idb && c[1] === ida);
+    });
+  }
+  function stannoInsieme(squadre, coppia) {
+    for (var i = 0; i < squadre.length; i++) {
+      var c = squadre[i].componenti;
+      if (c.indexOf(coppia[0]) >= 0 && c.indexOf(coppia[1]) >= 0) return squadre[i];
+    }
+    return null;
+  }
+  /* vero se mettere «chi» in questa squadra romperebbe una separazione */
+  function vietatoIn(squadra, chi, coppie, senza) {
+    return coppie.some(function (c) {
+      var altro = c[0] === chi ? c[1] : (c[1] === chi ? c[0] : null);
+      if (!altro || altro === senza) return false;
+      return squadra.componenti.indexOf(altro) >= 0;
+    });
+  }
+
+  function separaIncompatibili(squadre) {
+    var coppie = coppieDaSeparare();
+    if (!coppie.length || squadre.length < 2) return;
+
+    function scarto() {
+      var m = squadre.map(mediaForza);
+      return Math.max.apply(null, m) - Math.min.apply(null, m);
+    }
+    for (var giro = 0; giro < 8; giro++) {
+      var rotta = null, quale = null;
+      for (var i = 0; i < coppie.length && !rotta; i++) {
+        var sq = stannoInsieme(squadre, coppie[i]);
+        if (sq) { rotta = sq; quale = coppie[i]; }
+      }
+      if (!rotta) return;                       /* sono già tutti separati */
+
+      /* si prova a spostare l'uno o l'altro, scambiandolo con qualcuno di
+         un'altra squadra: vince lo scambio che lascia le forze più vicine */
+      var migliore = null;
+      quale.forEach(function (chi) {
+        squadre.forEach(function (altra) {
+          if (altra === rotta) return;
+          if (vietatoIn(altra, chi, coppie, null)) return;
+          altra.componenti.forEach(function (ib) {
+            if (vietatoIn(rotta, ib, coppie, chi)) return;
+            scambia(rotta, altra, chi, ib);
+            var v = scarto();
+            scambia(rotta, altra, ib, chi);     /* rimetto a posto */
+            if (!migliore || v < migliore.v) migliore = { da: rotta, a: altra, chi: chi, con: ib, v: v };
+          });
+        });
+      });
+      if (!migliore) return;                    /* non c'è verso: meglio dirlo che fingere */
+      scambia(migliore.da, migliore.a, migliore.chi, migliore.con);
+      if (migliore.da.capitano === migliore.chi) migliore.da.capitano = '';
+      if (migliore.a.capitano === migliore.con) migliore.a.capitano = '';
+    }
+  }
+
+  /* L'elenco si compila con due tendine di nomi veri: scrivere a mano un
+     nome vuol dire sbagliarlo, e una regola scritta male non protegge
+     niente — sembra attiva e non lo è. */
+  function disegnaSeparati() {
+    var el = $('elencoSeparati');
+    if (!el) return;
+    el.textContent = '';
+    var lista = V(DATI.separati, []);
+    var rag = ragazziIscritti();
+    if (!lista.length) {
+      el.appendChild(crea('p', 'aiuto', 'Nessuna coppia da separare: le squadre si fanno solo con l\'equilibrio.'));
+    }
+    lista.forEach(function (c, i) {
+      var r = crea('div', 'riga-iscr');
+      var cnt = crea('div', 'cnt');
+      var riga = crea('div');
+      riga.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap';
+      function tendina(campo) {
+        var s = document.createElement('select');
+        s.className = 'mini';
+        var vuoto = document.createElement('option');
+        vuoto.value = ''; vuoto.textContent = '— scegli —';
+        s.appendChild(vuoto);
+        rag.forEach(function (p) {
+          var o = document.createElement('option');
+          o.value = p.nome; o.textContent = p.nome;
+          if (normalizza(p.nome) === normalizza(V(c[campo], ''))) o.selected = true;
+          s.appendChild(o);
+        });
+        /* un nome scritto prima che la persona si iscrivesse non va perso */
+        if (c[campo] && !rag.some(function (p) { return normalizza(p.nome) === normalizza(c[campo]); })) {
+          var o2 = document.createElement('option');
+          o2.value = c[campo]; o2.textContent = c[campo] + ' (non è fra gli iscritti)';
+          o2.selected = true;
+          s.appendChild(o2);
+        }
+        s.addEventListener('change', function () {
+          c[campo] = s.value; salvaBozza(); disegnaSeparati();
+        });
+        return s;
+      }
+      riga.appendChild(tendina('a'));
+      riga.appendChild(crea('span', null, 'mai con'));
+      riga.appendChild(tendina('b'));
+      var via = crea('button', 'btn btn-chiaro btn-piccolo', '🗑️');
+      via.addEventListener('click', function () {
+        DATI.separati.splice(i, 1); salvaBozza(); disegnaSeparati();
+      });
+      riga.appendChild(via);
+      cnt.appendChild(riga);
+      if (c.perche) cnt.appendChild(crea('small', null, c.perche));
+      var manca = !perNomeIscritto(c.a) || !perNomeIscritto(c.b);
+      if (manca) cnt.appendChild(crea('small', null,
+        '⚠️ Uno dei due non è fra gli iscritti: la regola non farà niente.'));
+      r.appendChild(cnt);
+      el.appendChild(r);
+    });
+  }
+
+  /* chi è rimasto insieme nonostante tutto: serve per dirlo, non per tacere */
+  function separazioniRotte(squadre) {
+    return coppieDaSeparare().filter(function (c) { return !!stannoInsieme(squadre, c); })
+      .map(function (c) {
+        var a = perId(c[0]), b = perId(c[1]);
+        return (a ? a.nome : '?') + ' e ' + (b ? b.nome : '?');
+      });
   }
 
   function disegnaTavoloSquadre() {
@@ -4197,11 +4368,25 @@
         'l\'altra. L\'attrezzatura basta sempre.');
     } else {
       var par = Math.floor(n / 2);
+      var mat = quantiAttrezzi('materassino');
       righe.push(n + ' squadre, ' + (par === 1 ? 'uno scontro' : par + ' scontri') + ' per turno' +
         (n % 2 ? ' e una squadra a riposo' : '') + '. ' +
         'Delle ' + giochi.length + ' gare da mettere in calendario, ' + conA + ' vogliono il ' +
-        'materassino e se ne può fare una per volta: ci sono ' +
-        quantiAttrezzi('materassino') + ' materassini.');
+        'materassino: con ' + mat + ' materassini se ne ' +
+        (Math.floor(mat / 2) === 1 ? 'può giocare uno scontro per volta'
+          : 'possono giocare ' + Math.floor(mat / 2) + ' scontri insieme') + '.');
+      /* La domanda vera non è quanti scontri: è se serve ancora dividere.
+         Con un materassino per squadra non serve — giocano tutte insieme,
+         e gli scontri restano solo se piacciono. */
+      if (mat >= n) {
+        righe.push('🛟 Hai ' + mat + ' materassini per ' + n + ' squadre: uno per squadra. ' +
+          'Non c\'è più bisogno di dividersi — a ogni gara possono scendere in acqua ' +
+          'tutte insieme, e i punti si danno per ordine d\'arrivo. Gli scontri restano ' +
+          'se ti piacciono: partite corte, una contro una, e più partite in tutto.');
+      } else if (conA) {
+        righe.push('🛟 I materassini sono ' + mat + ' e le squadre ' + n + ': alle gare col ' +
+          'materassino non ci stanno tutte insieme, per quelle gli scontri servono davvero.');
+      }
     }
     if (finali) {
       righe.push('La finale resta fuori dal calendario e si segna a parte, con l\'ordine ' +

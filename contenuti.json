@@ -1424,11 +1424,11 @@
     "I ragazzi restano comunque sotto la responsabilità dei genitori."
   ],
   "regolamento": [
-    "L'iscrizione è gratuita e si chiude giovedì 13 agosto: serve a formare le squadre e i tavoli in anticipo.",
+    "L'iscrizione è gratuita e resta aperta fino al giorno della festa: serve a formare le squadre e i tavoli in anticipo, quindi prima ci si iscrive e meglio è.",
     "Porta con te il pass, stampato o sul telefono, e mostralo all'accoglienza.",
     "Le squadre dei ragazzi le formano gli organizzatori, equilibrate per età e capacità natatoria: non si cambiano su richiesta.",
     "Chi si iscrive ai tornei di carte da solo viene abbinato a un compagno dagli organizzatori.",
-    "I tornei del blocco A si giocano in contemporanea, e così quelli del blocco B: al massimo un torneo per blocco.",
+    "Il burraco si gioca nel pomeriggio e le carte italiane la sera: chi vuole può fare tutti e due.",
     "Chi non si presenta entro dieci minuti dall'inizio del proprio turno viene sostituito.",
     "Le decisioni dell'animatore e dell'arbitro sono definitive: si gioca per divertirsi.",
     "In caso di maltempo l'evento viene rimandato: l'avviso arriva sul gruppo del residence."
@@ -1629,7 +1629,7 @@
     }
   },
   "attrezzi": {
-    "materassino": 2
+    "materassino": 4
   },
   "collaboratori": {
     "titolo": "Chi fa cosa il 15 agosto",
@@ -1639,7 +1639,7 @@
       "Il materiale della gara successiva lo prepara chi ha le mani libere: non aspettare che lo faccia un altro.",
       "Chi non è impegnato raduna le squadre del turno dopo e le porta al punto di partenza.",
       "A fine gara si recuperano palloni e materassini e si rimettono da parte, sempre nello stesso posto.",
-      "I due materassini vanno alle due squadre che tocca, secondo il calendario appeso.",
+      "Un materassino per squadra: sono quattro, e a ogni gara scendono in acqua tutte insieme.",
       "Se vedi un ragazzo in difficoltà fermi tutto tu: non serve chiedere il permesso a nessuno.",
       "Controlla che all'ombra ci sia sempre acqua da bere: è la prima cosa che finisce.",
       "Tutti possono aprire l'area organizzatori dal telefono: si sincronizza da sola ogni dieci secondi."
@@ -1760,6 +1760,13 @@
       "emoji": "🤝",
       "nome": "Squadra più corretta",
       "tipo": "squadra"
+    }
+  ],
+  "separati": [
+    {
+      "a": "Adriano Gelasi",
+      "b": "Matteo Papale",
+      "perche": "Insieme sbilanciano qualunque squadra"
     }
   ]
 }
