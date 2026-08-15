@@ -225,11 +225,18 @@ cambiano da un gioco all'altro, così non si incontrano sempre le stesse.
 
 Se un domani ti servisse anche per un altro gioco, basta spuntarlo lì.
 
-**Le gare individuali** (se ne rimetti una in programma: nuoto col pallone, King
-of the Mat) adesso hanno anche loro la loro scheda in `🏅 Punteggi`: si sceglie
-il vincitore dall'elenco degli iscritti — con accanto la sua squadra — e il nome
-finisce fra i premi delle classifiche. Non danno punti alle squadre, e la scheda
-lo dice. Prima sparivano: erano in programma e non c'era modo di segnarle.
+**Nessuna gara dà punti a una persona**: tutte danno punti alla squadra, 5/3/2/1
+(la finale il doppio). Anche quelle che si giocano uno alla volta — il nuoto col
+pallone, King of the Mat — sono gare di squadra: nel nuoto col pallone i
+piazzamenti delle batterie si sommano, in King of the Mat i componenti si
+sfidano a duello e la squadra che resta senza ha perso.
+Vuol dire anche che **nessun gioco può più restare senza scheda**: prima i tipi
+«individuale» venivano saltati dai punteggi, ed è così che due gare in programma
+erano diventate impossibili da segnare. Adesso ogni gioco ha la sua strada, o la
+scheda con l'ordine d'arrivo o il calendario a coppie.
+Le corone restano: Re e Regina del materassino, miglior giocatore, miglior
+capitano si assegnano in `🏆 Premi e titoli`, alla fine, e non tolgono né danno
+punti a nessuno.
 
 ## Palla bollente: si segna chi esce
 

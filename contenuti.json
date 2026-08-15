@@ -825,25 +825,28 @@
       "nome": "Nuoto con pallone",
       "emoji": "🏊",
       "illustrazione": "nuoto-pallone",
-      "tipo": "individuale",
+      "tipo": "squadre",
       "durata": 10,
       "orario": "",
       "riserva": true,
-      "formazione": "batterie per età",
-      "partecipanti": "Batterie separate per età e capacità natatoria",
-      "descrizione": "Breve gara di velocità: si percorre una distanza corta spingendo il pallone solo con la testa, il naso, la spalla o l'avambraccio. Le mani non si usano.",
+      "formazione": "tutte le squadre insieme, un componente per volta",
+      "partecipanti": "Una batteria per volta, un componente per squadra",
+      "descrizione": "Gara di velocità a batterie: a ogni batteria parte un componente per squadra e percorre una distanza corta spingendo il pallone solo con la testa, il naso, la spalla o l'avambraccio. Le mani non si usano. I piazzamenti di tutte le batterie si sommano: la squadra che ne ha totalizzati di più arriva prima.",
       "regole": [
+        "A ogni batteria scende in acqua un componente per squadra: partono insieme.",
         "Il pallone si spinge solo con testa, naso, spalla o avambraccio.",
         "Il pallone non può mai essere afferrato con entrambe le mani.",
-        "Le batterie sono separate per età e capacità natatoria.",
-        "Chi perde il pallone lo recupera e riparte dal punto in cui si trovava."
+        "Chi perde il pallone lo recupera e riparte dal punto in cui si trovava.",
+        "Si accoppiano le batterie per età, così ognuno gareggia con i suoi coetanei.",
+        "Chi arriva primo nella sua batteria dà 3 punti alla squadra, il secondo 2, il terzo 1.",
+        "Alla fine si sommano i punti delle batterie: quella somma decide l'ordine delle squadre."
       ],
       "varianti": [
         "Solo naso: la versione più difficile, si spinge esclusivamente con il naso.",
         "Slalom: si aggira un paio di riferimenti prima di arrivare.",
         "A coppie: due concorrenti spingono lo stesso pallone insieme."
       ],
-      "punti": "Titolo individuale",
+      "punti": "5 / 3 / 2 / 1",
       "musica": {
         "titolo": "Eye of the Tiger",
         "artista": "Survivor",
@@ -871,25 +874,30 @@
           "ricerca": "Momenti di gloria Vangelis"
         }
       ],
-      "attrezzo": ""
+      "attrezzo": "",
+      "scontro": false
     },
     {
       "id": "king-of-the-mat",
       "nome": "King of the Mat",
       "emoji": "🥇",
       "illustrazione": "king-of-the-mat",
-      "tipo": "individuale",
+      "tipo": "squadre",
       "durata": 20,
       "orario": "",
       "riserva": true,
-      "formazione": "torneo 1 contro 1",
-      "partecipanti": "Sfide uno contro uno a eliminazione diretta",
-      "descrizione": "Il duello del pomeriggio. Due ragazzi salgono insieme sul materassino al centro della piscina e al via cercano di far cadere l'avversario spingendo solo con le mani. Torneo a eliminazione diretta fino alla finale, per incoronare il Re o la Regina del materassino.",
+      "formazione": "sfide fra due squadre, uno contro uno",
+      "partecipanti": "Un componente per squadra a ogni duello",
+      "descrizione": "Il duello classico, in versione a squadre. Due ragazzi salgono insieme sul materassino e al via cercano di far cadere l'avversario spingendo solo con le mani. Chi tocca l'acqua esce dal gioco: la squadra che resta senza componenti ha perso.",
       "regole": [
         "Si sale sul materassino in ginocchio o in piedi, secondo la profondità e quanto ci si sente sicuri.",
         "Si spinge solo con le mani e le braccia: vietati calci, prese, sgambetti e strattoni.",
-        "Chi tocca l'acqua ha perso la sfida.",
-        "Torneo a eliminazione diretta: chi perde esce, chi vince passa al turno successivo.",
+        "Chi tocca l'acqua ha perso il duello.",
+        "Si sfidano due squadre alla volta: un componente per squadra, uno contro uno.",
+        "Chi perde il duello esce dal gioco e va a fare il tifo: non rientra più.",
+        "Si va avanti a duelli finché una delle due squadre resta senza nessuno: quella ha perso.",
+        "Vince la squadra che ha vinto più duelli, cioè quella che ha ancora componenti in acqua.",
+        "L'ordine con cui mandare i componenti lo decide la squadra: si può tenere il più forte per ultimo.",
         "L'assistente bagnanti sta sempre accanto al materassino durante le sfide."
       ],
       "varianti": [
@@ -898,7 +906,7 @@
         "A squadre: due contro due sullo stesso materassino, vince la coppia che resta a galla.",
         "Torneo a fasce d'età, così i più piccoli non incontrano subito i più grandi."
       ],
-      "punti": "Titolo individuale: Re o Regina del materassino",
+      "punti": "5 / 3 / 2 / 1",
       "musica": {
         "titolo": "Thunderstruck",
         "artista": "AC/DC",
@@ -945,7 +953,8 @@
           "ricerca": "Whatever It Takes Imagine Dragons"
         }
       ],
-      "attrezzo": "materassino"
+      "attrezzo": "materassino",
+      "scontro": true
     },
     {
       "id": "baseball-acqua",
