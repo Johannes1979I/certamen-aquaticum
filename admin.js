@@ -156,6 +156,7 @@
       $(id).addEventListener('input', function () { sqToccato = true; });
     });
     var NOTE_PREF = {
+      mai: 'Non le guardo proprio: contano solo età e capacità in acqua. Le richieste restano scritte nelle iscrizioni, e se vuoi accontentare qualcuno lo sposti a mano.',
       poco: 'Tengo insieme solo chi si è scelto a vicenda, e a coppie. Le richieste a senso unico cedono il passo all\'equilibrio.',
       medio: 'Rispetto anche le richieste a senso unico, con gruppetti fino a tre, purché le squadre restino equilibrate.',
       molto: 'Rispetto tutte le richieste e lascio crescere i gruppi: le squadre possono venire meno equilibrate.'
@@ -2043,8 +2044,11 @@
     if (criterio === 'auto') {
       distribuisciBilanciato(rag, STATO.squadre);
       var rotte = separazioniRotte(STATO.squadre);
-      CA.toast('🎲 Squadre generate: prima l\'equilibrio fra età e capacità in acqua, ' +
-        'poi le preferenze (' + ESITO_PREFERENZE.fatte.length + ' rispettate).' +
+      var ignora = ($('sqPreferenze') || {}).value === 'mai';
+      CA.toast('🎲 Squadre generate: ' + (ignora
+        ? 'solo età e capacità in acqua, preferenze ignorate.'
+        : 'prima l\'equilibrio fra età e capacità in acqua, poi le preferenze (' +
+          ESITO_PREFERENZE.fatte.length + ' rispettate).') +
         (rotte.length ? ' ⚠️ Non sono riuscito a separare ' + CA.elencoConE(rotte) +
           ': non c\'era nessuno scambio possibile.' : ''),
         rotte.length ? 12000 : 7000);
@@ -2075,9 +2079,16 @@
      molto più di un diciassettenne impacciato, e un bambino di otto anni in
      una staffetta pesa poco comunque sia. Questo numero mette insieme le due
      cose ed è quello che si cerca di pareggiare fra le squadre. */
+  /* Quanto sposta il nuoto rispetto all'età. Comanda l'età: in acqua un
+     quindicenne impacciato resta più veloce di un decenne bravo, e prima
+     questi due numeri erano così larghi da ribaltarlo (un decenne che nuota
+     bene valeva 12, un tredicenne che nuota poco 10). Chi nuota poco viene
+     comunque sparpagliato per conto suo dalle fasce, quindi non serve
+     caricarlo anche qui. */
+  var NUOTO_BENE = 1, NUOTO_POCO = -1.5;
   function forza(p) {
     var e = etaDi(p);
-    var n = (p && p.nuoto === 'bene') ? 2 : ((p && p.nuoto === 'poco') ? -3 : 0);
+    var n = (p && p.nuoto === 'bene') ? NUOTO_BENE : ((p && p.nuoto === 'poco') ? NUOTO_POCO : 0);
     return e + n;
   }
   function forzaSquadra(s) {
@@ -2114,14 +2125,26 @@
   function distribuisciBilanciato(persone, squadre) {
     var n = squadre.length;
     var perSquadra = Math.ceil(persone.length / n);
-    var livello = ($('sqPreferenze') || {}).value || 'poco';
+    var livello = ($('sqPreferenze') || {}).value || 'mai';
+    var capitaniPrima = squadre.map(function (s) { return s.capitano; });
+
+    /* Ignorarle del tutto non è «tenerne poco conto»: è non guardarle
+       proprio. Nessun gruppo di amici, nessun vincolo, solo età e capacità.
+       Le richieste restano scritte nelle iscrizioni e si elencano qui sotto,
+       così se vuoi accontentare qualcuno lo sposti a mano. */
+    if (livello === 'mai') {
+      LEGATI = {}; DESIDERI = []; SALTATI = {};
+      var soli = persone.map(function (p) { return { persone: [p], eta: etaDi(p) }; });
+      applicaPiano(squadre, eseguiPiano(squadre, soli, perSquadra, capitaniPrima));
+      scegliCapitani(squadre);
+      ESITO_PREFERENZE = { fatte: [], saltate: elencaRichiesteNonUsate(persone) };
+      return;
+    }
     /* Quanto si lascia crescere un gruppo di amici. Più è grande, più vincola
        la distribuzione e più le squadre rischiano di sbilanciarsi: per questo
        di serie si sta stretti. */
     var maxGruppo = (livello === 'molto') ? Math.max(2, Math.floor(perSquadra / 2))
       : (livello === 'medio') ? 3 : 2;
-
-    var capitaniPrima = squadre.map(function (s) { return s.capitano; });
 
     /* strada A: con gli amici insieme */
     var blocchiA = gruppiDiPreferenza(persone, maxGruppo, livello);
@@ -2145,6 +2168,19 @@
     applicaPiano(squadre, tieniA ? pianoA : pianoB);
     scegliCapitani(squadre);
     verificaPreferenze(squadre, saltatePrima, livello);
+  }
+
+  /* Le richieste ci sono state, ma non le abbiamo usate: si scrivono lo
+     stesso, se no sembra che nessuno abbia chiesto niente e l'organizzatore
+     non può nemmeno decidere di accontentare qualcuno a mano. */
+  function elencaRichiesteNonUsate(persone) {
+    var fuori = [];
+    persone.forEach(function (p) {
+      if (!V(p.amico, '').trim()) return;
+      fuori.push(p.nome + ' aveva chiesto ' + p.amico +
+        ': non l\'ho usata, hai scelto di ignorare le preferenze');
+    });
+    return fuori;
   }
 
   /* Una passata sola: piazza i blocchi e riequilibra. Restituisce com'è

@@ -215,7 +215,9 @@
       box.appendChild(campo('fApp', 'Appartamento', 'Se siete ospiti del residence.', 'text'));
     }
     box.appendChild(campo('fAmico', 'Vorrebbe stare in squadra con… (facoltativo)',
-      'Scrivi il nome di un amico o di un fratello: proviamo a metterli insieme, se le squadre restano equilibrate.', 'text'));
+      'Scrivi pure il nome di un amico o di un fratello: lo leggiamo. Le squadre però le formiamo ' +
+      'per età e capacità in acqua, così le gare sono belle per tutti, e quasi sempre gli amici ' +
+      'finiscono in squadre diverse.', 'text'));
     box.appendChild(campo('fNote', 'Qualcosa che dobbiamo sapere?',
       'Allergie, terapie, paure dell\'acqua, qualsiasi cosa.', 'textarea'));
   }

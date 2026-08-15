@@ -83,11 +83,15 @@ sito, non te.
    Se preferisci la carta, l'elenco stampato è sempre in `🖨️ Stampe`.
 2. **Squadre** — scheda `🚩 Squadre`: la procedura guidata ti dice quante
    squadre conviene fare, poi scegli:
-   - **automatico bilanciato**: l'equilibrio viene prima di tutto, e le
-     preferenze vengono per ultime. Nell'ordine:
+   - **automatico bilanciato**: contano **solo età e capacità in acqua**. Le
+     preferenze («vorrei stare con…») di serie **non si guardano**: si
+     leggono, si elencano, e non entrano nel calcolo. Nell'ordine:
      1. a ogni ragazzo si dà un **peso in acqua** = età + capacità
-        (nuota bene +2, nuota poco −3): è quello che si pareggia, non l'età
-        media, che nasconde gli sbilanciamenti;
+        (nuota bene +1, nuota poco −1,5): è quello che si pareggia, non l'età
+        media, che nasconde gli sbilanciamenti. **Comanda l'età**: il nuoto
+        sposta ma non ribalta. Prima i due numeri erano così larghi che un
+        decenne che nuota bene valeva più di un tredicenne che nuota poco —
+        in acqua non è così;
      2. si mettono tutti in fila dal più forte al più debole e si dividono a
         **scaglioni**: dai primi due uno per squadra, dai secondi due uno per
         squadra, e così via — nessuno può prendersi la fascia alta;
@@ -95,16 +99,12 @@ sito, non te.
         squadra e l'altra: i ragazzi dai 15 in su, i più piccoli fino a 10
         anni, chi nuota poco e — se la categoria è indicata — **maschi e
         femmine**;
-     4. **solo alla fine** le preferenze, e solo se non rovinano niente: le
-        squadre si fanno due volte, una tenendo insieme gli amici e una
-        ignorandoli, e vince la più equilibrata. Due amichetti di otto anni
-        che si scelgono a vicenda vengono separati, perché insieme
-        affonderebbero la loro squadra; due tredicenni che si scelgono
-        restano insieme, perché non costa niente.
-     Con il menù *«Quanto contano le preferenze»* decidi tu quanto pesano:
-     di serie sta su *Prima l'equilibrio* (solo chi si è scelto a vicenda,
-     e a coppie). Alla fine ti dice quante preferenze ha rispettato e quali
-     no, con il motivo;
+     4. per ultimo il vincolo di chi **non deve mai stare insieme**.
+     Con il menù *«Quanto contano le preferenze»* puoi cambiare idea: di serie
+     sta su ***Ignorale***, ma ci sono ancora i tre livelli di prima se un
+     anno vorrai accontentare qualcuno. Anche ignorandole, le richieste
+     arrivate te le elenca lo stesso — se vuoi accontentare due amici basta
+     spostarli a mano dopo;
    - **a mano**: trascini i nomi, o li tocchi e poi tocchi la squadra.
    **Chi non deve mai stare con chi**: nel pieghevole sotto le due tendine,
    `Chi non deve mai finire nella stessa squadra`. Si scelgono i due nomi
