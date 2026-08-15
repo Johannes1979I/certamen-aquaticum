@@ -35,6 +35,11 @@
   box-shadow:var(--shadow-s); background:#fff; cursor:zoom-in;
 }
 .muro img{ width:100%; height:auto; display:block; }
+/* i video si guardano dentro il muro, senza lente: aprirla li farebbe
+   ricominciare da capo e perderebbero l'audio già avviato */
+.muro figure.video{ cursor:default; background:#0a2540; }
+.muro video{ width:100%; height:auto; display:block; background:#0a2540; }
+.muro figure.video figcaption{ background:#fff; }
 .muro figcaption{ padding:9px 13px; font-size:.88rem; color:var(--muted); }
 .lente{
   position:fixed; inset:0; background:rgba(10,37,64,.94); display:none;
@@ -70,7 +75,7 @@
   <div class="velo"></div>
   <div class="hero-dentro wrap">
     <span class="targhetta">📷 Com'è andata</span>
-    <h1 id="titoloAlbum">Le foto della giornata</h1>
+    <h1 id="titoloAlbum">Le foto e i video della giornata</h1>
     <p class="sottotitolo" id="sottoAlbum"></p>
   </div>
   <svg class="onde" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
@@ -118,7 +123,7 @@ var $ = CA.$, V = CA.V, testo = CA.testo, crea = CA.crea;
 CA.carica().then(function(d){
   testo('marchioNome', V(V(d.tema,{}).titolo, 'Certamen Aquaticum'));
   var a = V(d.album, {});
-  testo('titoloAlbum', V(a.titolo, 'Le foto della giornata'));
+  testo('titoloAlbum', V(a.titolo, 'Le foto e i video della giornata'));
   testo('sottoAlbum', V(a.sottotitolo, ''));
   testo('notaAlbum', V(a.nota, ''));
 
@@ -179,6 +184,12 @@ function aggiorna(){
   }).catch(function(){ /* rete assente: si riprova al giro dopo */ });
 }
 
+/* un video si riconosce dal tipo salvato dall'admin, o dall'estensione */
+function eVideo(v){
+  if(v && v.tipo === 'video') return true;
+  return /\.(mp4|mov|m4v|webm)(\?|$)/i.test(String((v && (v.file || v.url)) || ''));
+}
+
 function disegnaMuro(foto){
   var el = $('muro');
   el.textContent = '';
@@ -188,13 +199,28 @@ function disegnaMuro(foto){
     if(!percorso) return;
 
     var f = document.createElement('figure');
-    var img = document.createElement('img');
-    img.src = percorso;
-    img.alt = didascalia || ('Foto ' + (i+1) + ' del Certamen Aquaticum');
-    img.loading = 'lazy';
-    f.appendChild(img);
+    if(eVideo(v)){
+      f.className = 'video';
+      var vid = document.createElement('video');
+      vid.src = percorso;
+      vid.controls = true;
+      vid.playsInline = true;
+      vid.preload = 'metadata';
+      vid.setAttribute('aria-label', didascalia || ('Video ' + (i+1) + ' del Certamen Aquaticum'));
+      /* uno alla volta: se ne parte un altro, questo si ferma */
+      vid.addEventListener('play', function(){
+        [].forEach.call(el.querySelectorAll('video'), function(a){ if(a !== vid) a.pause(); });
+      });
+      f.appendChild(vid);
+    } else {
+      var img = document.createElement('img');
+      img.src = percorso;
+      img.alt = didascalia || ('Foto ' + (i+1) + ' del Certamen Aquaticum');
+      img.loading = 'lazy';
+      f.appendChild(img);
+      f.addEventListener('click', function(){ apriLente(percorso, img.alt); });
+    }
     if(didascalia) f.appendChild(crea('figcaption', null, didascalia));
-    f.addEventListener('click', function(){ apriLente(percorso, img.alt); });
     el.appendChild(f);
   });
 }

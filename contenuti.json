@@ -1636,9 +1636,9 @@
   },
   "album": {
     "attivo": true,
-    "titolo": "Le foto della giornata",
+    "titolo": "Le foto e i video della giornata",
     "sottotitolo": "Come è andata: i giochi, le squadre, le facce di chi ha vinto e di chi ci ha provato.",
-    "nota": "Se in una foto c'è tuo figlio e non vuoi che resti qui, scrivilo agli organizzatori: la togliamo subito.",
+    "nota": "Se in una foto o in un video c'è tuo figlio e non vuoi che resti qui, scrivilo agli organizzatori: lo togliamo subito.",
     "foto": []
   },
   "programmaAuto": {

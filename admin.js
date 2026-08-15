@@ -6481,13 +6481,14 @@
     return scelta ? scelta.r : null;
   }
 
-  function didascaliaAutomatica() {
+  function didascaliaAutomatica(video) {
     var ora = new Date();
     var orario = due(ora.getHours()) + ':' + due(ora.getMinutes());
+    var che = video ? 'video · ' : '';
     var tappa = cosaSuccedeAdesso();
-    if (tappa) return orario + ' — ' + String(tappa.titolo).replace(/^[^\wÀ-ÿ]+/, '').trim();
+    if (tappa) return orario + ' — ' + che + String(tappa.titolo).replace(/^[^\wÀ-ÿ]+/, '').trim();
     var ev = V(DATI.evento, {});
-    return orario + ' — ' + V(V(DATI.tema, {}).titolo, 'Certamen Aquaticum') +
+    return orario + ' — ' + che + V(V(DATI.tema, {}).titolo, 'Certamen Aquaticum') +
       (ev.data ? ' · ' + CA.dataIt(ev.data, false) : '');
   }
 
@@ -6514,10 +6515,37 @@
     });
   }
 
-  function nomeFoto() {
+  function nomeFoto(estensione) {
     var d = new Date();
-    return 'foto_' + d.getFullYear() + due(d.getMonth() + 1) + due(d.getDate()) + '_' +
-      due(d.getHours()) + due(d.getMinutes()) + due(d.getSeconds()) + '.jpg';
+    var e = estensione || 'jpg';
+    return (e === 'jpg' ? 'foto_' : 'video_') +
+      d.getFullYear() + due(d.getMonth() + 1) + due(d.getDate()) + '_' +
+      due(d.getHours()) + due(d.getMinutes()) + due(d.getSeconds()) +
+      Math.floor(Math.random() * 90 + 10) + '.' + e;
+  }
+
+  /* I video non si possono rimpicciolire nel browser: si caricano come sono.
+     Oltre una certa taglia GitHub non li accetta e il telefono resta a
+     macinare per niente, quindi è meglio dirlo prima di partire. */
+  var VIDEO_MAX_MB = 24;
+
+  /* una voce dell'album è un video se lo dice il tipo salvato, o se lo dice
+     l'estensione: le foto vecchie non hanno il campo «tipo» */
+  function eVoceVideo(v) {
+    if (v && v.tipo === 'video') return true;
+    return /\.(mp4|mov|m4v|webm)(\?|$)/i.test(String((v && (v.file || v.url)) || ''));
+  }
+  function eFileVideo(file) {
+    return /^video\//.test((file && file.type) || '') ||
+      /\.(mp4|mov|m4v|webm)$/i.test((file && file.name) || '');
+  }
+  function leggiBase64(file) {
+    return new Promise(function (ok, ko) {
+      var r = new FileReader();
+      r.onerror = function () { ko(new Error('non riesco a leggere il file')); };
+      r.onload = function () { ok(String(r.result).split(',')[1]); };
+      r.readAsDataURL(file);
+    });
   }
 
   function aggiungiFoto(file) {
@@ -6534,15 +6562,31 @@
       chiediGh();
       return Promise.resolve(false);
     }
-    if (!file || !/^image\//.test(file.type || '')) {
-      testo('statoFoto', '⚠️ Questo non è un file di immagine.');
+    var video = eFileVideo(file);
+    if (!file || (!video && !/^image\//.test(file.type || ''))) {
+      testo('statoFoto', '⚠️ Questo non è né una foto né un video.');
       return Promise.resolve(false);
     }
-    testo('statoFoto', '⏳ Preparo la foto…');
-    return rimpicciolisci(file, 1600).then(function (b64) {
-      var nome = nomeFoto();
-      testo('statoFoto', '📤 Sto caricando ' + nome + '…');
-      return ghPut('images/album/' + nome, b64, 'Foto dell\'album: ' + nome)
+    var pesoMb = file.size / 1024 / 1024;
+    if (video && pesoMb > VIDEO_MAX_MB) {
+      testo('statoFoto', '⚠️ Il video pesa ' + pesoMb.toFixed(1) + ' MB: troppo, il limite è ' +
+        VIDEO_MAX_MB + ' MB. Accorcialo dal telefono — apri il video, «Modifica», stringi le ' +
+        'maniglie ai secondi che ti interessano e salvalo — poi ricaricalo.');
+      return Promise.resolve(false);
+    }
+    /* le foto si rimpiccioliscono, i video si caricano come sono */
+    testo('statoFoto', video ? ('⏳ Preparo il video (' + pesoMb.toFixed(1) + ' MB)…')
+      : '⏳ Preparo la foto…');
+    var estensione = video
+      ? ((String(file.name).match(/\.([a-z0-9]+)$/i) || [, 'mp4'])[1].toLowerCase())
+      : 'jpg';
+    var prepara = video ? leggiBase64(file) : rimpicciolisci(file, 1600);
+    return prepara.then(function (b64) {
+      var nome = nomeFoto(estensione);
+      testo('statoFoto', '📤 Sto caricando ' + nome + '…' +
+        (video ? ' Con un video ci vuole un po\'.' : ''));
+      return ghPut('images/album/' + nome, b64,
+        (video ? 'Video' : 'Foto') + ' dell\'album: ' + nome)
         .then(function (risposta) {
           /* l'indirizzo diretto funziona subito, senza aspettare che il sito
              si ricostruisca: è quello che rende l'album istantaneo */
@@ -6551,7 +6595,8 @@
           var voce = {
             url: url,
             file: 'images/album/' + nome,
-            didascalia: didascaliaAutomatica(),
+            tipo: video ? 'video' : 'foto',
+            didascalia: didascaliaAutomatica(video),
             quando: new Date().toISOString(),
             chi: chiSono()
           };
@@ -6564,7 +6609,8 @@
             salvaBozzaFraPoco();
           }
           return salvaAlbum().then(function () {
-            testo('statoFoto', '✅ Foto nell\'album: già visibile a tutti.');
+            testo('statoFoto', video ? '✅ Video nell\'album: già visibile a tutti.'
+              : '✅ Foto nell\'album: già visibile a tutti.');
             disegnaAlbum();
             return true;
           });
@@ -6596,17 +6642,21 @@
     if (!el) return;
     el.textContent = '';
     if (!ALBUM.length) {
-      el.appendChild(crea('p', 'aiuto', 'Nessuna foto ancora. Premi «Scatta una foto».'));
+      el.appendChild(crea('p', 'aiuto',
+        'Ancora niente. Premi «📸 Scatta una foto» oppure «🖼️ Scegli foto o video».'));
       return;
     }
     ALBUM.forEach(function (f, i) {
       var r = crea('div', 'riga-iscr');
-      var img = document.createElement('img');
-      img.src = f.url;
-      img.alt = f.didascalia || '';
-      img.loading = 'lazy';
-      img.style.cssText = 'width:82px;height:82px;object-fit:cover;border-radius:12px;flex:0 0 82px';
-      r.appendChild(img);
+      /* anteprima: per i video un fotogramma, così si riconoscono a colpo d'occhio */
+      var eVid = eVoceVideo(f);
+      var ant = document.createElement(eVid ? 'video' : 'img');
+      ant.src = f.url;
+      if (eVid) { ant.preload = 'metadata'; ant.muted = true; ant.playsInline = true; }
+      else { ant.alt = f.didascalia || ''; ant.loading = 'lazy'; }
+      ant.style.cssText = 'width:82px;height:82px;object-fit:cover;border-radius:12px;' +
+        'flex:0 0 82px;background:#0a2540';
+      r.appendChild(ant);
 
       var c = crea('div', 'cnt');
       var inp = document.createElement('input');
@@ -6624,7 +6674,7 @@
 
       var az = crea('div', 'azioni-r');
       az.appendChild(bottone('🗑️ Togli', 'rosso', function () {
-        if (!confirm('Tolgo questa foto dall\'album?')) return;
+        if (!confirm('Tolgo questo dall\'album?')) return;
         ALBUM.splice(i, 1);
         salvaAlbum().then(function () { disegnaAlbum(); CA.toast('Foto tolta.', 4000); });
       }));

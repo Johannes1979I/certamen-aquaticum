@@ -564,11 +564,16 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
       quella <b>compare subito nell'album</b> del sito, senza dover pubblicare niente.
       La didascalia se la scrive da sola guardando l'ora e il programma — poi la correggi
       come vuoi.</p>
+    <p class="aiuto"><b>Vanno anche i video</b>, con «🖼️ Scegli foto o video»: si guardano
+      nell'album come le foto. Le foto si rimpiccioliscono da sole, i video no — quindi
+      tienili corti, <b>massimo 24 MB</b> (una ventina di secondi). Se è più lungo
+      accorcialo dal telefono: apri il video, <b>Modifica</b>, stringi le maniglie ai
+      secondi che ti interessano e salvalo.</p>
     <div class="azioni" style="justify-content:flex-start;margin-bottom:14px">
       <button class="btn btn-p btn-grande" id="btnScatta">📸 Scatta una foto</button>
-      <input type="file" id="fileScatto" accept="image/*" capture="environment" style="display:none" />
-      <button class="btn btn-chiaro" id="btnCaricaFoto">🖼️ Scegli dalla galleria</button>
-      <input type="file" id="fileFoto" accept="image/*" multiple style="display:none" />
+      <input type="file" id="fileScatto" accept="image/*,video/*" capture="environment" style="display:none" />
+      <button class="btn btn-chiaro" id="btnCaricaFoto">🖼️ Scegli foto o video</button>
+      <input type="file" id="fileFoto" accept="image/*,video/*" multiple style="display:none" />
       <a class="btn btn-chiaro btn-piccolo" href="album.html" target="_blank">👀 Vedi l'album</a>
     </div>
     <p class="aiuto" id="statoFoto"></p>

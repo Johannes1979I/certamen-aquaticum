@@ -39,7 +39,7 @@ Tutto quello che conta vive nel **database Firebase** del progetto
 | `iscrizioni` | Un documento per iscritto, con nome e recapiti | solo con password |
 | `pubblico_certamen/contatore` | Solo numeri: ragazzi, adulti, italiana, burraco | chiunque |
 | `pubblico_certamen/classifica` | Classifiche, tabellone e cronometro della gara | chiunque |
-| `pubblico_certamen/album` | Le foto scattate durante la festa | chiunque |
+| `pubblico_certamen/album` | Le foto e i video della giornata | chiunque |
 | `stato_certamen/<pezzo>` | Squadre, punteggi, tabelloni, cronometro: uno per operatore | solo con password |
 
 **Regola d'oro**: nomi e recapiti si leggono solo con la password. Nei documenti
@@ -571,13 +571,21 @@ tratta come un'app e il token resta molto più a lungo.
 Il token **non lascia mai il browser**: non finisce nel sito, non va nel
 database, non lo vede nessun altro.
 
-## L'album della giornata
+## L'album della giornata: foto e video
 
 Scheda **`📷 Album`**, nel menù in cima alla pagina. Dal telefono premi **📸 Scatta una foto**: si apre
 la fotocamera, scatti, e la foto compare nell'album del sito **subito**, senza
-pubblicare niente. Con `🖼️ Scegli dalla galleria` ne mandi anche parecchie in
-una volta.
+pubblicare niente. Con `🖼️ Scegli foto o video` ne mandi anche parecchie in
+una volta, **e vanno anche i video**.
 
+- I **video** si guardano nell'album come le foto, dentro la pagina, con i
+  comandi di riproduzione. Se ne parte uno, gli altri si fermano da soli.
+  Nell'elenco dell'admin l'anteprima è un fotogramma, così li riconosci al volo.
+- Le foto si rimpiccioliscono da sole, **i video no**: il browser non sa
+  comprimerli. Quindi tienili corti — il limite è **24 MB**, una ventina di
+  secondi. Se ne carichi uno più pesante te lo dice subito, prima di far
+  macinare il telefono per niente: apri il video sul telefono, **Modifica**,
+  stringi le maniglie ai secondi che ti interessano, salva e ricaricalo.
 - La **didascalia se la scrive da sola** guardando l'ora e il programma —
   alle 16:40 scriverà *«16:40 — Staffetta con pallone»*. La correggi scrivendo
   nella riga sotto la foto: si salva da sola.
