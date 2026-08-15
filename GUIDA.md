@@ -185,7 +185,12 @@ sito, non te.
    - 13 e più → tabellone a eliminazione diretta
 4. **Punteggi** — scheda `🏅 Punteggi`. In cima trovi **la sigla e il
    jingle**, pronti da far partire sull'altoparlante senza cercarli nel
-   telefono. Subito sotto c'è il **cronometro della
+   telefono. **Si scaricano da soli appena apri la scheda**, non quando premi
+   play: la sigla pesa quattro megabyte, e cominciare a scaricarla col dito
+   già sul pulsante vuol dire restare lì ad aspettare davanti a tutti. Sotto i
+   due lettori c'è scritto a che punto è — *«⏳ sto scaricando»*, poi
+   *«✅ Musica pronta: parte al primo tocco (3:05 e 0:13)»*. Apri la scheda
+   qualche minuto prima delle 16:00 e non ci pensi più. Subito sotto c'è il **cronometro della
    gara**. Scegli la gara, premi **▶ Via** e il tempo scorre; 🎵 apre la
    scaletta di quel gioco. Quando scade suona la sirena: se nessuna squadra
    ha già vinto, vince chi è avanti in quel momento e scrivi tu l'ordine

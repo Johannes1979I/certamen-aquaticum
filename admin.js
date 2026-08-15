@@ -93,7 +93,7 @@
         window.scrollTo(0, 0);
         if (v === 'squadre') disegnaSquadre();
         if (v === 'tornei') disegnaTornei();
-        if (v === 'punteggi') disegnaPunteggi();
+        if (v === 'punteggi') { disegnaPunteggi(); scaldaAudio(); }
         if (v === 'giochi') disegnaEditGiochi();
         if (v === 'stampe') disegnaRuoli();
         /* l'appello si raggruppa per squadra: se le squadre sono nate dopo
@@ -4579,7 +4579,41 @@
   ];
   var AUDIO_DA_CARICARE = '';
 
+  /* La sigla pesa quattro megabyte: se il telefono comincia a scaricarla solo
+     quando premi «play», resti lì col dito alzato e sembra rotta. Appena apri
+     la scheda dei punteggi la si tira giù in silenzio — c'è tutto il tempo,
+     di solito la scheda si apre molto prima delle 16:00 — e si dice a che
+     punto è, perché una barra che non si muove è peggio di niente. */
+  var AUDIO_SCALDATO = false;
+  function scaldaAudio() {
+    if (AUDIO_SCALDATO) return;
+    var lettori = [].slice.call(document.querySelectorAll('#lettoriAudio audio'));
+    if (!lettori.length) return;
+    AUDIO_SCALDATO = true;
+    var pronti = 0, quanti = lettori.length;
+    testo('statoAudioPronto', '⏳ Sto scaricando la musica, così parte subito quando serve…');
+    lettori.forEach(function (a) {
+      function fatto() {
+        pronti++;
+        if (pronti < quanti) return;
+        var durate = lettori.map(function (x) {
+          return isFinite(x.duration) ? (Math.floor(x.duration / 60) + ':' +
+            due(Math.round(x.duration % 60))) : '?';
+        });
+        testo('statoAudioPronto', '✅ Musica pronta: parte al primo tocco (' + durate.join(' e ') + ').');
+      }
+      a.addEventListener('canplaythrough', fatto, { once: true });
+      a.addEventListener('error', function () {
+        testo('statoAudioPronto', '⚠️ Non riesco a scaricare la musica: controlla la rete. ' +
+          'Il pulsante funziona lo stesso, ma ci metterà qualche secondo.');
+      }, { once: true });
+      a.preload = 'auto';
+      try { a.load(); } catch (e) { }
+    });
+  }
+
   function disegnaAudio() {
+    AUDIO_SCALDATO = false;      /* i lettori sono nuovi: vanno riscaldati di nuovo */
     var el = $('lettoriAudio');
     if (!el) return;
     el.textContent = '';
@@ -4596,7 +4630,9 @@
       if (V(a.file, '')) {
         var p = document.createElement('audio');
         p.controls = true;
-        p.preload = 'none';       /* non scarica 4 MB a ogni apertura della pagina */
+        /* all'apertura della pagina non si scarica niente: i quattro megabyte
+           partono quando si apre la scheda dei punteggi, dove serve */
+        p.preload = 'none';
         p.src = a.file;
         p.style.cssText = 'width:100%;max-width:520px;margin:8px 0';
         box.appendChild(p);
