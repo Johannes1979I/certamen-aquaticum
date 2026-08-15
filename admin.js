@@ -1787,19 +1787,35 @@
     var g = V(DATI.giochi, []).filter(function (x) { return x.id === GARA_APERTA; })[0] || {};
     var scala = scalaGara(g);
 
-    el.appendChild(crea('p', 'aiuto',
-      'Tocca le squadre nell\'ordine in cui sono arrivate. Il primo tocco è il primo posto. ' +
-      'Se sbagli, tocchi di nuovo la squadra e torna in fondo.'));
+    /* Nei giochi a eliminazione durante la gara si vede una cosa sola: chi
+       esce. Segnare l'ordine d'arrivo vorrebbe dire ricostruirlo a mente al
+       contrario, con i ragazzi che urlano: qui si tocca chi esce, nell'ordine
+       in cui esce, e la classifica la gira il programma. */
+    var aEliminazione = (V(g.ordine, '') === 'eliminazione');
+    el.appendChild(crea('p', 'aiuto', aEliminazione
+      ? 'Tocca le squadre nell\'ordine in cui ESCONO: la prima che resta senza nessuno è ' +
+        'l\'ultima in classifica. Chi resta per ultimo vince, e non serve toccarlo. ' +
+        'Se sbagli, tocchi di nuovo la squadra e torna in fondo.'
+      : 'Tocca le squadre nell\'ordine in cui sono arrivate. Il primo tocco è il primo posto. ' +
+        'Se sbagli, tocchi di nuovo la squadra e torna in fondo.'));
+
+    var quante = STATO.squadre.length;
+    /* nell'ordine di uscita, il posto in classifica si conta dal fondo */
+    function postoDi(i) { return aEliminazione ? quante - 1 - i : i; }
 
     var box = crea('div', 'squadre-ordine');
     STATO.squadre.forEach(function (s) {
-      var pos = ORDINE_TEMP.indexOf(s.id);
-      var b = crea('button', 'bottone-squadra' + (pos >= 0 ? ' presa' : ''));
+      var tocco = ORDINE_TEMP.indexOf(s.id);
+      var pos = tocco >= 0 ? postoDi(tocco) : -1;
+      var b = crea('button', 'bottone-squadra' + (tocco >= 0 ? ' presa' : ''));
       b.appendChild(crea('span', 'posto', pos >= 0 ? (['🥇', '🥈', '🥉'][pos] || (pos + 1) + '°') : '·'));
       var n = crea('span', 'nome-sq', s.nome);
       if (s.colore) n.style.borderLeft = '5px solid ' + s.colore, n.style.paddingLeft = '9px';
       b.appendChild(n);
       b.appendChild(crea('span', 'punti-sq', pos >= 0 ? '+' + V(scala[pos], 1) : '—'));
+      if (aEliminazione && tocco >= 0) {
+        b.appendChild(crea('span', 'mini', (tocco + 1) + 'ª uscita'));
+      }
       b.addEventListener('click', function () {
         var i = ORDINE_TEMP.indexOf(s.id);
         if (i >= 0) ORDINE_TEMP.splice(i, 1);
@@ -1857,9 +1873,17 @@
     if (!GARA_APERTA) return;
     var g = V(DATI.giochi, []).filter(function (x) { return x.id === GARA_APERTA; })[0] || {};
     var scala = scalaGara(g);
-    if (!ORDINE_TEMP.length) delete STATO.risultati[GARA_APERTA];
+    /* a eliminazione si è toccato l'ordine di uscita: la classifica è quella
+       rovesciata, e chi non è mai uscito sta davanti a tutti */
+    var ordine = ORDINE_TEMP.slice();
+    if (V(g.ordine, '') === 'eliminazione' && ordine.length) {
+      var rimasti = STATO.squadre.map(function (s) { return s.id; })
+        .filter(function (id) { return ordine.indexOf(id) < 0; });
+      ordine = rimasti.concat(ordine.slice().reverse());
+    }
+    if (!ordine.length) delete STATO.risultati[GARA_APERTA];
     else {
-      STATO.risultati[GARA_APERTA] = ORDINE_TEMP.map(function (idSq, i) {
+      STATO.risultati[GARA_APERTA] = ordine.map(function (idSq, i) {
         return { squadra: idSq, posizione: i + 1, punti: V(scala[i], 1) };
       });
     }
@@ -4281,7 +4305,7 @@
      si segna a parte, con l'ordine d'arrivo di tutte. */
   function giochiDaScontro() {
     return giochiAttivi().filter(function (g) {
-      return !g.riserva && g.tipo !== 'riscaldamento' &&
+      return !g.riserva && g.scontro === true &&
         g.tipo !== 'individuale' && g.tipo !== 'finale';
     });
   }
@@ -4314,63 +4338,34 @@
     var squadre = STATO.squadre;
     if (squadre.length < 2) { CA.toast('Servono almeno due squadre.', 5000); return; }
     var giochi = giochiDaScontro();
-    if (!giochi.length) { CA.toast('Non c\'è nessun gioco da mettere in calendario.', 5000); return; }
-
-    /* Con due squadre si gioca una gara per volta e l'attrezzatura basta
-       sempre: allora si segue l'ordine del programma, che è quello che
-       l'organizzatore ha deciso. Il taglio fra giochi con e senza
-       attrezzo serve solo quando ci sono partite in parallelo. */
-    var parallele = Math.floor(squadre.length / 2);
-    var conAttrezzo = parallele < 2 ? [] : giochi.filter(function (g) { return vuoleAttrezzo(g); });
-    var liberi = parallele < 2 ? giochi.slice() : giochi.filter(function (g) { return !vuoleAttrezzo(g); });
-    var giri = giraSquadre(squadre.length);
-    var usiAttrezzo = {};                      /* quante volte una squadra l'ha avuto */
-    squadre.forEach(function (s) { usiAttrezzo[s.id] = 0; });
-
-    var turni = [], giro = 0;
-    while (conAttrezzo.length || liberi.length) {
-      var coppie = giri[giro % giri.length].slice();
-      giro++;
-      var incontri = [];
-
-      /* il gioco con l'attrezzo tocca a una coppia sola: quella che finora
-         l'ha usato di meno, così alla fine è girato più o meno per tutti */
-      if (conAttrezzo.length) {
-        var g = conAttrezzo[0];
-        var quante = partiteInParallelo(g);
-        coppie.sort(function (x, y) {
-          var cx = usiAttrezzo[squadre[x[0]].id] + usiAttrezzo[squadre[x[1]].id];
-          var cy = usiAttrezzo[squadre[y[0]].id] + usiAttrezzo[squadre[y[1]].id];
-          return cx - cy;
-        });
-        for (var i = 0; i < quante && coppie.length && conAttrezzo.length; i++) {
-          var c = coppie.shift();
-          var gioco = conAttrezzo.shift();
-          incontri.push({ gioco: gioco.id, a: squadre[c[0]].id, b: squadre[c[1]].id });
-          usiAttrezzo[squadre[c[0]].id]++;
-          usiAttrezzo[squadre[c[1]].id]++;
-        }
-      }
-      /* le coppie rimaste giocano a qualcosa che non ha bisogno di niente */
-      while (coppie.length && liberi.length) {
-        var c2 = coppie.shift();
-        var g2 = liberi.shift();
-        incontri.push({ gioco: g2.id, a: squadre[c2[0]].id, b: squadre[c2[1]].id });
-      }
-      if (!incontri.length) break;             /* finiti i giochi */
-      turni.push({ n: turni.length + 1, incontri: incontri });
-      /* chi resta senza gioco in questo turno riposa: è normale quando i
-         giochi liberi finiscono prima di quelli con l'attrezzo */
+    if (!giochi.length) {
+      CA.toast('Nessun gioco è segnato «due squadre alla volta»: si gioca tutto tutti insieme, ' +
+        'e il calendario non serve.', 7000);
+      return;
     }
+
+    /* Ogni gioco segnato ha il suo giro di accoppiamenti: con quattro squadre
+       sono due partite, e giocano tutte. Il giro parte da un punto diverso
+       per ogni gioco, così non si ripetono sempre gli stessi incroci. */
+    var giri = giraSquadre(squadre.length);
+    var turni = [];
+    giochi.forEach(function (g, i) {
+      var coppie = giri[i % giri.length];
+      var incontri = coppie.map(function (c) {
+        return { gioco: g.id, a: squadre[c[0]].id, b: squadre[c[1]].id };
+      });
+      if (!incontri.length) return;
+      turni.push({ n: turni.length + 1, gioco: g.id, incontri: incontri });
+    });
 
     var t = torneoR();
     t.attivo = true;
     t.turni = turni;
-    t.usiAttrezzo = usiAttrezzo;
     salvaStato();
     disegnaPunteggi();
-    CA.toast('🆚 Calendario pronto: ' + turni.length + ' turni, ' +
-      turni.reduce(function (n, x) { return n + x.incontri.length; }, 0) + ' scontri.', 7000);
+    CA.toast('🆚 Calendario pronto: ' + turni.length +
+      (turni.length === 1 ? ' gioco a scontri, ' : ' giochi a scontri, ') +
+      turni.reduce(function (n, x) { return n + x.incontri.length; }, 0) + ' partite.', 7000);
   }
 
   function disegnaScontri() {
@@ -4387,42 +4382,41 @@
       return;
     }
     var giochi = giochiDaScontro();
-    var conA = giochi.filter(function (g) { return vuoleAttrezzo(g); }).length;
+    var tutti = giochiAttivi().filter(function (g) {
+      return !g.riserva && g.tipo !== 'individuale' && g.tipo !== 'finale';
+    });
     var finali = giochiAttivi().filter(function (g) {
       return !g.riserva && g.tipo === 'finale';
     }).length;
 
-    var box = crea('div', 'nota-box' + (t.attivo ? ' sereno' : ' info'));
-    box.appendChild(crea('b', null, t.attivo
-      ? '🆚 Si gioca a scontri'
-      : (n === 2 ? '👥 Due squadre: si gioca una gara per volta'
-        : '👥 ' + n + ' squadre, tutte insieme a ogni gara')));
+    var box = crea('div', 'nota-box' + (giochi.length ? ' sereno' : ' info'));
+    box.appendChild(crea('b', null, '👥 ' + n + ' squadre in acqua tutte insieme' +
+      (giochi.length ? ', tranne ' + giochi.length + (giochi.length === 1 ? ' gioco' : ' giochi') : '')));
     var righe = [];
-    if (n === 2) {
-      righe.push('Con due squadre ogni gioco è già uno scontro diretto: il calendario ' +
-        'mette in fila le ' + giochi.length + ' gare nell\'ordine del programma, una dopo ' +
-        'l\'altra. L\'attrezzatura basta sempre.');
+    righe.push('Di ' + tutti.length + ' gare, ' + (tutti.length - giochi.length) +
+      ' si giocano con tutte e ' + n + ' le squadre insieme: si parte al via, e i punti ' +
+      'si danno per ordine d\'arrivo. Non serve nessun calendario per quelle.');
+    if (giochi.length) {
+      righe.push('🆚 Segnate «due squadre alla volta»: ' +
+        CA.elencoConE(giochi.map(function (g) { return V(g.emoji, '') + ' ' + g.nome; })) +
+        '. Per queste il calendario fa gli accoppiamenti: con ' + n + ' squadre ' +
+        (n % 2 ? 'sono ' + Math.floor(n / 2) + ' partite e una squadra riposa'
+          : 'sono ' + (n / 2) + ' partite e giocano tutte') + ', una per gioco.');
+      righe.push('Si cambia gioco per gioco in 🎯 Settaggio giochi acquatici, con la spunta ' +
+        '«Si gioca due squadre alla volta».');
     } else {
-      var par = Math.floor(n / 2);
-      var mat = quantiAttrezzi('materassino');
-      righe.push(n + ' squadre, ' + (par === 1 ? 'uno scontro' : par + ' scontri') + ' per turno' +
-        (n % 2 ? ' e una squadra a riposo' : '') + '. ' +
-        'Delle ' + giochi.length + ' gare da mettere in calendario, ' + conA + ' vogliono il ' +
-        'materassino: con ' + mat + ' materassini se ne ' +
-        (Math.floor(mat / 2) === 1 ? 'può giocare uno scontro per volta'
-          : 'possono giocare ' + Math.floor(mat / 2) + ' scontri insieme') + '.');
-      /* La domanda vera non è quanti scontri: è se serve ancora dividere.
-         Con un materassino per squadra non serve — giocano tutte insieme,
-         e gli scontri restano solo se piacciono. */
-      if (mat >= n) {
-        righe.push('🛟 Hai ' + mat + ' materassini per ' + n + ' squadre: uno per squadra. ' +
-          'Non c\'è più bisogno di dividersi — a ogni gara possono scendere in acqua ' +
-          'tutte insieme, e i punti si danno per ordine d\'arrivo. Gli scontri restano ' +
-          'se ti piacciono: partite corte, una contro una, e più partite in tutto.');
-      } else if (conA) {
-        righe.push('🛟 I materassini sono ' + mat + ' e le squadre ' + n + ': alle gare col ' +
-          'materassino non ci stanno tutte insieme, per quelle gli scontri servono davvero.');
-      }
+      righe.push('Nessun gioco è segnato «due squadre alla volta»: oggi si gioca tutto insieme. ' +
+        'La spunta sta in 🎯 Settaggio giochi acquatici, dentro ogni gioco.');
+    }
+    var mat = quantiAttrezzi('materassino');
+    var conMat = tutti.filter(function (g) { return !g.scontro && vuoleAttrezzo(g); }).length;
+    if (conMat && mat < n) {
+      righe.push('🛟 Attenzione: i materassini sono ' + mat + ' e le squadre ' + n +
+        '. Alle ' + conMat + ' gare col materassino non ci stanno tutte insieme: o ne trovi ' +
+        (n - mat) + ' in più, o segni anche quelle «due squadre alla volta».');
+    } else if (conMat) {
+      righe.push('🛟 ' + mat + ' materassini per ' + n + ' squadre: alle gare col materassino ' +
+        'ci stanno tutte insieme.');
     }
     if (finali) {
       righe.push('La finale resta fuori dal calendario e si segna a parte, con l\'ordine ' +
@@ -5692,6 +5686,37 @@
       sm.appendChild(cm);
       sm.appendChild(crea('span', null, 'Serve il materassino'));
       det.appendChild(sm);
+
+      /* Di norma scendono in acqua tutte le squadre insieme. Certi giochi
+         però sono partite fra due — pallanuoto, baseball — e lì ha senso
+         accoppiarle. */
+      var ss = crea('label', 'spunta');
+      ss.style.margin = '4px 0 10px';
+      var cs = document.createElement('input');
+      cs.type = 'checkbox';
+      cs.checked = (g.scontro === true);
+      cs.addEventListener('change', function () {
+        g.scontro = cs.checked;
+        salvaBozzaFraPoco();
+        disegnaScontri();
+      });
+      ss.appendChild(cs);
+      ss.appendChild(crea('span', null, 'Si gioca due squadre alla volta (se no giocano tutte insieme)'));
+      det.appendChild(ss);
+
+      /* e come si segna: chi arriva primo, o chi resta per ultimo */
+      var se = crea('label', 'spunta');
+      se.style.margin = '0 0 10px';
+      var ce = document.createElement('input');
+      ce.type = 'checkbox';
+      ce.checked = (g.ordine === 'eliminazione');
+      ce.addEventListener('change', function () {
+        g.ordine = ce.checked ? 'eliminazione' : '';
+        salvaBozzaFraPoco();
+      });
+      se.appendChild(ce);
+      se.appendChild(crea('span', null, 'A eliminazione: si segna chi esce, non chi arriva'));
+      det.appendChild(se);
       det.appendChild(areaMini('Descrizione', g.descrizione, function (v) { g.descrizione = v; }));
       det.appendChild(areaMini('Regole (una per riga)', V(g.regole, []).join('\n'), function (v) { g.regole = righe(v); }));
       det.appendChild(areaMini('Varianti (una per riga)', V(g.varianti, []).join('\n'), function (v) { g.varianti = righe(v); }));

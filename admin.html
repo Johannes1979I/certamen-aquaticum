@@ -493,18 +493,19 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
   </div>
 
   <div class="card" id="sec-scontri">
-    <h2>🆚 Gare a scontri fra squadre</h2>
-    <p class="aiuto">Serve quando l'attrezzatura non basta per tutti: con
-      <b>due materassini</b> e quattro squadre, due si sfidano al gioco col materassino
-      mentre le altre due giocano a qualcosa che non ne ha bisogno. Al turno dopo si
-      scambiano. Con due sole squadre si gioca una gara per volta, senza turni.</p>
-    <label class="spunta" for="scontriAttivi" style="margin:12px 0">
+    <h2>🆚 Chi gioca insieme</h2>
+    <p class="aiuto">Di regola scendono in acqua <b>tutte le squadre insieme</b> e i punti
+      si danno per ordine d'arrivo. Certi giochi però sono partite fra due — la pallanuoto,
+      il baseball — e quelli si segnano gioco per gioco con la spunta
+      <b>«Si gioca due squadre alla volta»</b>, in 🎯 Settaggio giochi acquatici.
+      Il calendario qui sotto fa gli accoppiamenti solo per quelli.</p>
+    <label class="spunta" for="scontriAttivi" style="margin:12px 0;display:none">
       <input type="checkbox" id="scontriAttivi" />
       <span><b>Gioca a scontri invece che tutti insieme</b></span>
     </label>
     <div id="statoScontri"></div>
     <div class="azioni" style="justify-content:flex-start">
-      <button class="btn btn-p" id="btnGeneraScontri">🎲 Genera il calendario</button>
+      <button class="btn btn-p" id="btnGeneraScontri">🎲 Genera gli accoppiamenti</button>
     </div>
   </div>
 

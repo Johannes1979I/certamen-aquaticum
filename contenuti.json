@@ -81,25 +81,28 @@
       "nome": "Palla bollente",
       "emoji": "🔥",
       "illustrazione": "palla-bollente",
-      "tipo": "riscaldamento",
+      "tipo": "squadre",
       "durata": 10,
       "orario": "16:15",
       "riserva": false,
-      "formazione": "tutti insieme",
+      "formazione": "tutte le squadre insieme",
       "partecipanti": "Tutti i ragazzi in un unico cerchio",
-      "descrizione": "Il riscaldamento con cui si rompe il ghiaccio. Tutti in acqua, in un grande cerchio, ci si passa il pallone il più velocemente possibile mentre parte la musica. Quando la musica si ferma, chi ha il pallone in mano deve eseguire una piccola prova.",
+      "descrizione": "Tutti in cerchio in acqua e il pallone che gira. Quando il gioco si ferma, chi ha la palla in mano esce. Si va avanti così finché una squadra sola resta in gioco: la prima squadra a restare senza nessuno è ultima, l'ultima che tiene un componente in acqua vince.",
       "regole": [
-        "Tutti i ragazzi si dispongono in acqua formando un grande cerchio.",
+        "Tutti i ragazzi si dispongono in acqua formando un grande cerchio, mescolati fra squadre.",
         "Il pallone gira veloce da un giocatore all'altro finché suona la musica o l'animatore conta.",
-        "Quando il gioco si ferma, chi ha la palla esegue una prova: cinque battiti di mani sopra la testa, un giro su sé stesso, una breve nuotata oppure il grido della propria squadra.",
-        "Non ci sono eliminazioni: nessuno resta fuori, si gioca per scaldarsi e ridere."
+        "Quando il gioco si ferma, chi ha la palla in mano esce ed esce anche dal cerchio.",
+        "Chi è uscito fa il tifo da bordo vasca: non tocca il pallone e non parla ai compagni in gioco.",
+        "La squadra che per prima resta senza nessuno si classifica ultima, poi la seconda, e così via.",
+        "Vince la squadra che ha in acqua l'ultimo componente rimasto.",
+        "Se due squadre restano senza nessuno nello stesso momento, si guarda chi aveva più giocatori all'inizio del giro."
       ],
       "varianti": [
-        "Palla bollente al contrario: il pallone deve girare passando sempre sopra la testa.",
-        "Doppio pallone: se ne aggiunge un secondo che gira nel senso opposto, così non si sa mai da che parte arriva.",
-        "Prova a sorpresa: la prova la sceglie il ragazzo che ha passato la palla, non l'animatore."
+        "Senza musica: l'animatore conta a voce e si ferma quando vuole.",
+        "A tempo: chi tiene la palla più di tre secondi esce comunque.",
+        "Cerchio che si stringe: ogni due uscite tutti fanno un passo verso il centro."
       ],
-      "punti": "Nessun punteggio: serve solo a scaldarsi",
+      "punti": "5 / 3 / 2 / 1",
       "musica": {
         "titolo": "Boom, Boom, Boom, Boom!!",
         "artista": "Vengaboys",
@@ -134,7 +137,9 @@
         }
       ],
       "escluso": false,
-      "attrezzo": ""
+      "attrezzo": "",
+      "scontro": false,
+      "ordine": "eliminazione"
     },
     {
       "id": "staffetta-materassino",
@@ -732,7 +737,8 @@
         }
       ],
       "escluso": false,
-      "attrezzo": ""
+      "attrezzo": "",
+      "scontro": true
     },
     {
       "id": "passaggi-materassino",
@@ -999,7 +1005,8 @@
         }
       ],
       "escluso": false,
-      "attrezzo": ""
+      "attrezzo": "",
+      "scontro": true
     },
     {
       "id": "super-staffetta",
@@ -1250,8 +1257,8 @@
       "ora": "16:15",
       "area": "ragazzi",
       "gioco": "palla-bollente",
-      "titolo": "Palla bollente — riscaldamento",
-      "nota": ""
+      "titolo": "Palla bollente — a eliminazione",
+      "nota": "Chi resta con la palla in mano esce: vince la squadra con l'ultimo in acqua"
     },
     {
       "ora": "16:15",

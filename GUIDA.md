@@ -208,6 +208,35 @@ sito, non te.
    dal telefono si apre la fotocamera e la foto è **subito** nell'album del
    sito. Vedi sotto.
 
+## Chi gioca insieme e chi due alla volta
+
+**Di regola giocano tutte le squadre insieme**, a ogni gara: si parte al via e i
+punti si danno per ordine d'arrivo. Non serve nessun calendario.
+
+Fanno eccezione i giochi che sono **partite fra due squadre** — la pallanuoto e
+il baseball in acqua. Quelli hanno la spunta *«Si gioca due squadre alla volta»*
+in `🎯 Settaggio giochi acquatici`, dentro ogni gioco, e per loro il pulsante
+`🎲 Genera gli accoppiamenti` in `🏅 Punteggi` fa le partite: con quattro squadre
+sono due partite per gioco, e **giocano tutte lo stesso**. Gli accoppiamenti
+cambiano da un gioco all'altro, così non si incontrano sempre le stesse.
+
+Se un domani ti servisse anche per un altro gioco, basta spuntarlo lì.
+
+## Palla bollente: si segna chi esce
+
+È l'unica gara **a eliminazione**: chi resta con la palla in mano esce, e la
+squadra che per prima finisce i componenti è ultima. In `🏁 Segna il risultato`
+la finestra cambia da sola: **tocchi le squadre nell'ordine in cui escono**, e
+accanto compare *«1ª uscita», «2ª uscita»*. La classifica la gira il programma —
+chi non tocchi mai è quello che è rimasto in acqua per ultimo, e vince.
+
+È fatta così perché durante la gara si vede una cosa sola: chi esce. Segnare
+l'ordine d'arrivo vorrebbe dire ricostruirlo a mente al contrario, con venti
+ragazzi che urlano.
+
+La spunta *«A eliminazione»* sta accanto all'altra, in `🎯 Settaggio giochi
+acquatici`: vale per qualunque gioco tu voglia giocare così.
+
 ## I materassini e le gare in contemporanea
 
 Ne avete **quattro**, uno per squadra: a ogni gara scendono in acqua **tutte
