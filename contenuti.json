@@ -143,8 +143,8 @@
       "illustrazione": "staffetta-materassino",
       "tipo": "squadre",
       "durata": 15,
-      "orario": "16:25",
-      "riserva": false,
+      "orario": "",
+      "riserva": true,
       "formazione": "a squadre",
       "partecipanti": "Un concorrente per volta per ogni squadra",
       "descrizione": "La prima vera gara a squadre. Un concorrente alla volta percorre la distanza stabilita stando sopra il materassino e usando mani e gambe per avanzare, poi torna indietro e passa il materassino al compagno.",
@@ -210,7 +210,7 @@
       "illustrazione": "staffetta-pallone",
       "tipo": "squadre",
       "durata": 15,
-      "orario": "16:40",
+      "orario": "16:25",
       "riserva": false,
       "formazione": "a squadre",
       "partecipanti": "Un concorrente per volta per ogni squadra",
@@ -271,13 +271,67 @@
       "attrezzo": ""
     },
     {
+      "id": "cavalca-materassino",
+      "nome": "Cavalca il materassino",
+      "emoji": "🏄",
+      "illustrazione": "cavalca-materassino",
+      "tipo": "individuale",
+      "durata": 10,
+      "orario": "16:40",
+      "riserva": false,
+      "formazione": "batterie ridotte",
+      "partecipanti": "Batterie con pochi partecipanti alla volta",
+      "descrizione": "Ognuno parte seduto sul proprio materassino e deve raggiungere il lato opposto senza cadere. Chi cade può risalire e continuare, ma perde tempo prezioso.",
+      "regole": [
+        "Si parte seduti sul materassino, al segnale dell'animatore.",
+        "Chi cade può risalire e proseguire.",
+        "Vietato ostacolare o toccare il materassino degli altri.",
+        "Per sicurezza si gioca in batterie con pochi partecipanti alla volta."
+      ],
+      "varianti": [
+        "In ginocchio, per chi vuole rendersela difficile.",
+        "Con remo: si avanza usando una tavoletta o un braccio solo.",
+        "Andata e ritorno, con giro di boa a metà."
+      ],
+      "punti": "Titolo individuale",
+      "musica": {
+        "titolo": "Wipe Out",
+        "artista": "The Surfaris",
+        "perche": "La batteria delle cadute: come quando si scivola giu.",
+        "url": "https://www.youtube.com/watch?v=dBURLdhmmZ8",
+        "ricerca": "Wipe Out The Surfaris"
+      },
+      "playlist": [
+        {
+          "titolo": "Wipe Out",
+          "artista": "The Surfaris",
+          "url": "https://www.youtube.com/watch?v=dBURLdhmmZ8",
+          "ricerca": "Wipe Out The Surfaris"
+        },
+        {
+          "titolo": "Misirlou",
+          "artista": "Dick Dale",
+          "url": "https://www.youtube.com/watch?v=2T8As2kzelk",
+          "ricerca": "Misirlou Dick Dale"
+        },
+        {
+          "titolo": "Hawaii Five-O (tema)",
+          "artista": "The Ventures",
+          "url": "https://www.youtube.com/watch?v=MxT5sfhP_Y0",
+          "ricerca": "Hawaii Five-O (tema) The Ventures"
+        }
+      ],
+      "attrezzo": "materassino",
+      "escluso": false
+    },
+    {
       "id": "trasporto-compagno",
       "nome": "Trasporto del compagno",
       "emoji": "🤝",
       "illustrazione": "trasporto-compagno",
       "tipo": "squadre",
       "durata": 15,
-      "orario": "16:55",
+      "orario": "16:50",
       "riserva": false,
       "formazione": "a squadre",
       "partecipanti": "Tre alla volta: uno trasportato, due che spingono",
@@ -343,7 +397,7 @@
       "illustrazione": "traghetto",
       "tipo": "squadre",
       "durata": 15,
-      "orario": "17:20",
+      "orario": "17:15",
       "riserva": false,
       "formazione": "a squadre",
       "partecipanti": "Tutta la squadra insieme",
@@ -409,8 +463,8 @@
       "illustrazione": "palla-capitano",
       "tipo": "squadre",
       "durata": 20,
-      "orario": "17:35",
-      "riserva": false,
+      "orario": "",
+      "riserva": true,
       "formazione": "sfide tra due squadre",
       "partecipanti": "Due squadre alla volta in acqua",
       "descrizione": "Il capitano di ogni squadra sta in piedi o seduto sul materassino vicino al lato opposto della piscina. I compagni devono far arrivare il pallone fino a lui: ogni presa buona del capitano vale un punto.",
@@ -476,13 +530,79 @@
       "attrezzo": "materassino"
     },
     {
+      "id": "re-materassino",
+      "nome": "Re e regina del materassino",
+      "emoji": "👑",
+      "illustrazione": "re-materassino",
+      "tipo": "individuale",
+      "durata": 15,
+      "orario": "17:30",
+      "riserva": false,
+      "formazione": "batterie da 3-4",
+      "partecipanti": "Batterie da 3 o 4 concorrenti alla volta",
+      "descrizione": "Prova di equilibrio individuale: si resta sul materassino mentre l'animatore chiama i comandi, uno più difficile dell'altro. Vince chi resiste più a lungo. Si assegnano due titoli, Re e Regina del materassino.",
+      "regole": [
+        "L'animatore chiama i comandi uno alla volta: sedersi, inginocchiarsi, alzare un braccio, battere le mani, girarsi lentamente, prendere e rilanciare un pallone.",
+        "Chi cade in acqua è eliminato dalla batteria.",
+        "Si gioca in batterie da massimo 3 o 4 concorrenti, per evitare gli scontri.",
+        "Vince chi resta più a lungo sul materassino."
+      ],
+      "varianti": [
+        "Comandi doppi: due ordini insieme, per esempio in ginocchio e con un braccio alzato.",
+        "Onda: i compagni fuori gara creano piccole onde da bordo vasca, senza toccare il materassino.",
+        "A tempo: si resiste un minuto intero per passare al turno successivo."
+      ],
+      "punti": "Titolo individuale: Re e Regina del materassino",
+      "musica": {
+        "titolo": "The Final Countdown",
+        "artista": "Europe",
+        "perche": "Tensione pura mentre l'animatore chiama i comandi.",
+        "url": "https://www.youtube.com/watch?v=9jK-NcRmVcw",
+        "ricerca": "The Final Countdown Europe"
+      },
+      "escluso": false,
+      "playlist": [
+        {
+          "titolo": "The Final Countdown",
+          "artista": "Europe",
+          "url": "https://www.youtube.com/watch?v=9jK-NcRmVcw",
+          "ricerca": "The Final Countdown Europe"
+        },
+        {
+          "titolo": "Another One Bites the Dust",
+          "artista": "Queen",
+          "url": "https://www.youtube.com/watch?v=rY0WxgSXdEE",
+          "ricerca": "Another One Bites the Dust Queen"
+        },
+        {
+          "titolo": "The Power",
+          "artista": "Snap!",
+          "url": "https://www.youtube.com/watch?v=nm6DO_7px1I",
+          "ricerca": "The Power Snap!"
+        },
+        {
+          "titolo": "Everybody Wants to Rule the World",
+          "artista": "Tears for Fears",
+          "url": "https://www.youtube.com/watch?v=aGCdLKXNF3w",
+          "ricerca": "Everybody Wants to Rule the World Tears for Fears"
+        },
+        {
+          "titolo": "Kung Fu Fighting",
+          "artista": "Carl Douglas",
+          "url": "https://www.youtube.com/watch?v=bjnFXgdyyLw",
+          "ricerca": "Kung Fu Fighting Carl Douglas"
+        }
+      ],
+      "attrezzo": "materassino"
+    },
+    {
       "id": "catena",
       "nome": "La catena acquatica",
       "emoji": "🔗",
       "illustrazione": "catena",
       "tipo": "squadre",
       "durata": 10,
-      "orario": "17:55",
+      "orario": "17:45",
       "riserva": false,
       "formazione": "a squadre",
       "partecipanti": "Tutta la squadra in fila",
@@ -536,7 +656,7 @@
       "illustrazione": "pallanuoto",
       "tipo": "squadre",
       "durata": 10,
-      "orario": "18:05",
+      "orario": "17:55",
       "riserva": false,
       "formazione": "sfide tra due squadre",
       "partecipanti": "4 o 5 giocatori per squadra, partite da 5 minuti",
@@ -680,72 +800,6 @@
       "attrezzo": "materassino"
     },
     {
-      "id": "re-materassino",
-      "nome": "Re e regina del materassino",
-      "emoji": "👑",
-      "illustrazione": "re-materassino",
-      "tipo": "individuale",
-      "durata": 15,
-      "orario": "",
-      "riserva": true,
-      "formazione": "batterie da 3-4",
-      "partecipanti": "Batterie da 3 o 4 concorrenti alla volta",
-      "descrizione": "Prova di equilibrio individuale: si resta sul materassino mentre l'animatore chiama i comandi, uno più difficile dell'altro. Vince chi resiste più a lungo. Si assegnano due titoli, Re e Regina del materassino.",
-      "regole": [
-        "L'animatore chiama i comandi uno alla volta: sedersi, inginocchiarsi, alzare un braccio, battere le mani, girarsi lentamente, prendere e rilanciare un pallone.",
-        "Chi cade in acqua è eliminato dalla batteria.",
-        "Si gioca in batterie da massimo 3 o 4 concorrenti, per evitare gli scontri.",
-        "Vince chi resta più a lungo sul materassino."
-      ],
-      "varianti": [
-        "Comandi doppi: due ordini insieme, per esempio in ginocchio e con un braccio alzato.",
-        "Onda: i compagni fuori gara creano piccole onde da bordo vasca, senza toccare il materassino.",
-        "A tempo: si resiste un minuto intero per passare al turno successivo."
-      ],
-      "punti": "Titolo individuale: Re e Regina del materassino",
-      "musica": {
-        "titolo": "The Final Countdown",
-        "artista": "Europe",
-        "perche": "Tensione pura mentre l'animatore chiama i comandi.",
-        "url": "https://www.youtube.com/watch?v=9jK-NcRmVcw",
-        "ricerca": "The Final Countdown Europe"
-      },
-      "escluso": false,
-      "playlist": [
-        {
-          "titolo": "The Final Countdown",
-          "artista": "Europe",
-          "url": "https://www.youtube.com/watch?v=9jK-NcRmVcw",
-          "ricerca": "The Final Countdown Europe"
-        },
-        {
-          "titolo": "Another One Bites the Dust",
-          "artista": "Queen",
-          "url": "https://www.youtube.com/watch?v=rY0WxgSXdEE",
-          "ricerca": "Another One Bites the Dust Queen"
-        },
-        {
-          "titolo": "The Power",
-          "artista": "Snap!",
-          "url": "https://www.youtube.com/watch?v=nm6DO_7px1I",
-          "ricerca": "The Power Snap!"
-        },
-        {
-          "titolo": "Everybody Wants to Rule the World",
-          "artista": "Tears for Fears",
-          "url": "https://www.youtube.com/watch?v=aGCdLKXNF3w",
-          "ricerca": "Everybody Wants to Rule the World Tears for Fears"
-        },
-        {
-          "titolo": "Kung Fu Fighting",
-          "artista": "Carl Douglas",
-          "url": "https://www.youtube.com/watch?v=bjnFXgdyyLw",
-          "ricerca": "Kung Fu Fighting Carl Douglas"
-        }
-      ],
-      "attrezzo": "materassino"
-    },
-    {
       "id": "nuoto-pallone",
       "nome": "Nuoto con pallone",
       "emoji": "🏊",
@@ -797,59 +851,6 @@
         }
       ],
       "attrezzo": ""
-    },
-    {
-      "id": "cavalca-materassino",
-      "nome": "Cavalca il materassino",
-      "emoji": "🏄",
-      "illustrazione": "cavalca-materassino",
-      "tipo": "individuale",
-      "durata": 10,
-      "orario": "",
-      "riserva": true,
-      "formazione": "batterie ridotte",
-      "partecipanti": "Batterie con pochi partecipanti alla volta",
-      "descrizione": "Ognuno parte seduto sul proprio materassino e deve raggiungere il lato opposto senza cadere. Chi cade può risalire e continuare, ma perde tempo prezioso.",
-      "regole": [
-        "Si parte seduti sul materassino, al segnale dell'animatore.",
-        "Chi cade può risalire e proseguire.",
-        "Vietato ostacolare o toccare il materassino degli altri.",
-        "Per sicurezza si gioca in batterie con pochi partecipanti alla volta."
-      ],
-      "varianti": [
-        "In ginocchio, per chi vuole rendersela difficile.",
-        "Con remo: si avanza usando una tavoletta o un braccio solo.",
-        "Andata e ritorno, con giro di boa a metà."
-      ],
-      "punti": "Titolo individuale",
-      "musica": {
-        "titolo": "Wipe Out",
-        "artista": "The Surfaris",
-        "perche": "La batteria delle cadute: come quando si scivola giu.",
-        "url": "https://www.youtube.com/watch?v=dBURLdhmmZ8",
-        "ricerca": "Wipe Out The Surfaris"
-      },
-      "playlist": [
-        {
-          "titolo": "Wipe Out",
-          "artista": "The Surfaris",
-          "url": "https://www.youtube.com/watch?v=dBURLdhmmZ8",
-          "ricerca": "Wipe Out The Surfaris"
-        },
-        {
-          "titolo": "Misirlou",
-          "artista": "Dick Dale",
-          "url": "https://www.youtube.com/watch?v=2T8As2kzelk",
-          "ricerca": "Misirlou Dick Dale"
-        },
-        {
-          "titolo": "Hawaii Five-O (tema)",
-          "artista": "The Ventures",
-          "url": "https://www.youtube.com/watch?v=MxT5sfhP_Y0",
-          "ricerca": "Hawaii Five-O (tema) The Ventures"
-        }
-      ],
-      "attrezzo": "materassino"
     },
     {
       "id": "king-of-the-mat",
@@ -932,7 +933,7 @@
       "illustrazione": "baseball-acqua",
       "tipo": "squadre",
       "durata": 20,
-      "orario": "18:15",
+      "orario": "18:05",
       "riserva": false,
       "formazione": "a squadre",
       "partecipanti": "Due squadre che si alternano: una batte, l'altra sta in campo",
@@ -1007,7 +1008,7 @@
       "illustrazione": "super-staffetta",
       "tipo": "finale",
       "durata": 20,
-      "orario": "18:35",
+      "orario": "18:25",
       "riserva": false,
       "formazione": "a squadre",
       "partecipanti": "Tutta la squadra, sei frazioni",
@@ -1261,15 +1262,22 @@
     {
       "ora": "16:25",
       "area": "ragazzi",
-      "gioco": "staffetta-materassino",
-      "titolo": "Staffetta sul materassino",
+      "gioco": "staffetta-pallone",
+      "titolo": "Staffetta con pallone",
       "nota": ""
     },
     {
       "ora": "16:40",
       "area": "ragazzi",
-      "gioco": "staffetta-pallone",
-      "titolo": "Staffetta con pallone",
+      "gioco": "cavalca-materassino",
+      "titolo": "Cavalca il materassino",
+      "nota": ""
+    },
+    {
+      "ora": "16:50",
+      "area": "ragazzi",
+      "gioco": "trasporto-compagno",
+      "titolo": "Trasporto del compagno",
       "nota": ""
     },
     {
@@ -1279,20 +1287,13 @@
       "nota": ""
     },
     {
-      "ora": "16:55",
-      "area": "ragazzi",
-      "gioco": "trasporto-compagno",
-      "titolo": "Trasporto del compagno",
-      "nota": ""
-    },
-    {
-      "ora": "17:10",
+      "ora": "17:05",
       "area": "tutti",
       "titolo": "Pausa: tutti a bere",
       "nota": "Dieci minuti d'ombra, obbligatori"
     },
     {
-      "ora": "17:20",
+      "ora": "17:15",
       "area": "ragazzi",
       "gioco": "traghetto",
       "titolo": "Il materassino traghetto",
@@ -1305,18 +1306,25 @@
       "nota": "Si chiude prima delle 18:00: alle 18 i tavoli passano alle carte italiane"
     },
     {
-      "ora": "17:35",
+      "ora": "17:30",
       "area": "ragazzi",
-      "gioco": "palla-capitano",
-      "titolo": "Palla al capitano acquatica",
+      "gioco": "re-materassino",
+      "titolo": "Re e regina del materassino",
+      "nota": ""
+    },
+    {
+      "ora": "17:45",
+      "area": "ragazzi",
+      "gioco": "catena",
+      "titolo": "La catena acquatica",
       "nota": ""
     },
     {
       "ora": "17:55",
       "area": "ragazzi",
-      "gioco": "catena",
-      "titolo": "La catena acquatica",
-      "nota": ""
+      "gioco": "pallanuoto",
+      "titolo": "Pallanuoto semplificata",
+      "nota": "Due mini partite da cinque minuti"
     },
     {
       "ora": "18:00",
@@ -1327,26 +1335,19 @@
     {
       "ora": "18:05",
       "area": "ragazzi",
-      "gioco": "pallanuoto",
-      "titolo": "Pallanuoto semplificata",
-      "nota": "Due mini partite da cinque minuti"
-    },
-    {
-      "ora": "18:15",
-      "area": "ragazzi",
       "gioco": "baseball-acqua",
       "titolo": "Baseball in acqua",
       "nota": "Si batte con la mazza di gommapiuma, si corre alle ciambelle che galleggiano"
     },
     {
-      "ora": "18:35",
+      "ora": "18:25",
       "area": "ragazzi",
       "gioco": "super-staffetta",
       "titolo": "Super staffetta di Ferragosto",
       "nota": "Punti doppi: qui si decide tutto"
     },
     {
-      "ora": "18:55",
+      "ora": "18:45",
       "area": "tutti",
       "titolo": "Premiazione",
       "nota": "Coppe, medaglie e foto di gruppo"
