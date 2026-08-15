@@ -284,25 +284,22 @@
       "durata": 10,
       "orario": "16:40",
       "riserva": false,
-      "formazione": "sfide fra due squadre, uno contro uno",
-      "partecipanti": "Un componente per squadra a ogni duello",
-      "descrizione": "Due squadre, un materassino a testa. A ogni round scende in acqua un componente per squadra: si parte seduti e si corre al lato opposto della piscina. Chi arriva secondo esce dal gioco. Si va avanti così finché una squadra resta senza nessuno: vince chi ha ancora componenti in acqua.",
+      "formazione": "tutte le squadre insieme, a eliminazione",
+      "partecipanti": "Una batteria per volta, un componente per squadra",
+      "descrizione": "Corsa a eliminazione. A ogni batteria parte un componente per squadra, seduto sul suo materassino, e si arriva al lato opposto della piscina. L'ultimo che arriva è eliminato. Si va avanti a batterie finché una squadra resta senza nessuno: quella è ultima, e si continua fino all'ultimo rimasto.",
       "regole": [
         "Si parte seduti sul materassino, al segnale dell'animatore, e si arriva al lato opposto.",
-        "Si sfidano due squadre alla volta: un componente per squadra scende in acqua, uno contro uno.",
-        "Chi perde il duello esce dal gioco e va a fare il tifo: non rientra più.",
-        "Si va avanti a duelli finché una delle due squadre resta senza nessuno: quella ha perso.",
-        "Vince la squadra che ha vinto più duelli, cioè quella che ha ancora componenti in acqua.",
-        "L'ordine con cui mandare i componenti lo decide la squadra: si può tenere il più forte per ultimo.",
-        "Con quattro materassini si giocano due duelli insieme, uno per coppia di squadre.",
-        "L'assistente bagnanti sta sempre accanto ai materassini durante i duelli.",
+        "A ogni batteria scende in acqua un componente per squadra: quattro materassini, quattro partenti.",
+        "L'ultimo che arriva è eliminato ed esce dal gioco: va a fare il tifo.",
         "Chi cade può risalire e proseguire: non è eliminato per la caduta, solo per il ritardo.",
-        "Vietato ostacolare o toccare il materassino dell'avversario."
+        "Vietato ostacolare o toccare il materassino degli altri.",
+        "La squadra che per prima resta senza nessuno si classifica ultima, poi la penultima, e così via.",
+        "Vince la squadra che ha in acqua l'ultimo ragazzo rimasto."
       ],
       "varianti": [
         "Andata e ritorno, con giro di boa a metà.",
         "In ginocchio, per chi vuole rendersela difficile.",
-        "A staffetta: chi vince il duello resta in acqua e affronta il prossimo avversario."
+        "Doppia eliminazione: escono gli ultimi due di ogni batteria, per andare più veloci."
       ],
       "punti": "5 / 3 / 2 / 1",
       "musica": {
@@ -334,7 +331,8 @@
       ],
       "attrezzo": "materassino",
       "escluso": false,
-      "scontro": true
+      "scontro": false,
+      "ordine": "eliminazione"
     },
     {
       "id": "trasporto-compagno",
@@ -547,29 +545,28 @@
       "emoji": "👑",
       "illustrazione": "re-materassino",
       "tipo": "squadre",
-      "durata": 15,
+      "durata": 20,
       "orario": "17:30",
       "riserva": false,
-      "formazione": "sfide fra due squadre, uno contro uno",
-      "partecipanti": "Un componente per squadra a ogni duello",
-      "descrizione": "Il duello del pomeriggio. Due squadre, e a ogni round un componente per parte sale sul materassino: al via si cerca di far cadere l'avversario spingendo solo con le mani. Chi tocca l'acqua esce dal gioco. La squadra che resta senza componenti ha perso; chi vince più duelli si prende la corona.",
+      "formazione": "tutte le squadre insieme, a eliminazione",
+      "partecipanti": "Tutti, fino all'ultimo rimasto",
+      "descrizione": "Il torneo del pomeriggio, all'ultimo rimasto. Tutti in acqua insieme: sui materassini si sale a due per volta e si cerca di far cadere l'avversario spingendo solo con le mani. Chi tocca l'acqua è fuori. Si va avanti finché una squadra sola ha ancora qualcuno a galla, e chi ha vinto più duelli si prende la corona.",
       "regole": [
         "Si sale sul materassino in ginocchio o in piedi, secondo la profondità e quanto ci si sente sicuri.",
         "Si spinge solo con le mani e le braccia: vietati calci, prese, sgambetti e strattoni.",
-        "Chi tocca l'acqua ha perso il duello.",
-        "Si sfidano due squadre alla volta: un componente per squadra scende in acqua, uno contro uno.",
-        "Chi perde il duello esce dal gioco e va a fare il tifo: non rientra più.",
-        "Si va avanti a duelli finché una delle due squadre resta senza nessuno: quella ha perso.",
-        "Vince la squadra che ha vinto più duelli, cioè quella che ha ancora componenti in acqua.",
-        "L'ordine con cui mandare i componenti lo decide la squadra: si può tenere il più forte per ultimo.",
-        "Con quattro materassini si giocano due duelli insieme, uno per coppia di squadre.",
-        "L'assistente bagnanti sta sempre accanto ai materassini durante i duelli.",
+        "Si gioca tutti insieme: ogni squadra manda in acqua i suoi, uno alla volta.",
+        "Sui materassini si combatte a coppie, uno contro uno, e si sfida sempre uno di un'altra squadra.",
+        "Chi tocca l'acqua è eliminato: esce dalla piscina e va a fare il tifo, non rientra più.",
+        "Appena un duello finisce ne comincia un altro: con quattro materassini se ne giocano quattro insieme.",
+        "La squadra che per prima resta senza nessuno si classifica ultima, poi la penultima, e così via.",
+        "Vince la squadra che ha in acqua l'ultimo ragazzo rimasto.",
+        "L'assistente bagnanti sta sempre accanto ai materassini.",
         "Il ragazzo e la ragazza che vincono più duelli sono Re e Regina del materassino."
       ],
       "varianti": [
-        "Sfida a due contro due, se le squadre sono numerose.",
+        "A due contro due sullo stesso materassino, se le squadre sono numerose.",
         "Senza mani: si spinge solo spostando il peso.",
-        "Il vincitore resta sul materassino e affronta subito il prossimo."
+        "Chi vince resta sul materassino e affronta subito il prossimo sfidante."
       ],
       "punti": "5 / 3 / 2 / 1",
       "musica": {
@@ -613,7 +610,8 @@
         }
       ],
       "attrezzo": "materassino",
-      "scontro": true
+      "scontro": false,
+      "ordine": "eliminazione"
     },
     {
       "id": "catena",
@@ -886,19 +884,19 @@
       "durata": 20,
       "orario": "",
       "riserva": true,
-      "formazione": "sfide fra due squadre, uno contro uno",
+      "formazione": "tutte le squadre insieme, a eliminazione",
       "partecipanti": "Un componente per squadra a ogni duello",
-      "descrizione": "Il duello classico, in versione a squadre. Due ragazzi salgono insieme sul materassino e al via cercano di far cadere l'avversario spingendo solo con le mani. Chi tocca l'acqua esce dal gioco: la squadra che resta senza componenti ha perso.",
+      "descrizione": "Come Re e Regina del materassino, ma senza comandi: solo duelli, tutti insieme, fino all'ultimo rimasto in acqua.",
       "regole": [
-        "Si sale sul materassino in ginocchio o in piedi, secondo la profondità e quanto ci si sente sicuri.",
+        "Si sale sul materassino in ginocchio o in piedi.",
         "Si spinge solo con le mani e le braccia: vietati calci, prese, sgambetti e strattoni.",
-        "Chi tocca l'acqua ha perso il duello.",
-        "Si sfidano due squadre alla volta: un componente per squadra, uno contro uno.",
-        "Chi perde il duello esce dal gioco e va a fare il tifo: non rientra più.",
-        "Si va avanti a duelli finché una delle due squadre resta senza nessuno: quella ha perso.",
-        "Vince la squadra che ha vinto più duelli, cioè quella che ha ancora componenti in acqua.",
-        "L'ordine con cui mandare i componenti lo decide la squadra: si può tenere il più forte per ultimo.",
-        "L'assistente bagnanti sta sempre accanto al materassino durante le sfide."
+        "Si gioca tutti insieme: ogni squadra manda in acqua i suoi, uno alla volta.",
+        "Sui materassini si combatte a coppie, uno contro uno, e si sfida sempre uno di un'altra squadra.",
+        "Chi tocca l'acqua è eliminato: esce dalla piscina e va a fare il tifo, non rientra più.",
+        "Appena un duello finisce ne comincia un altro: con quattro materassini se ne giocano quattro insieme.",
+        "La squadra che per prima resta senza nessuno si classifica ultima, poi la penultima, e così via.",
+        "Vince la squadra che ha in acqua l'ultimo ragazzo rimasto.",
+        "L'assistente bagnanti sta sempre accanto ai materassini."
       ],
       "varianti": [
         "Sfida a punti: vince chi fa cadere l'avversario due volte su tre.",
@@ -954,7 +952,8 @@
         }
       ],
       "attrezzo": "materassino",
-      "scontro": true
+      "scontro": false,
+      "ordine": "eliminazione"
     },
     {
       "id": "baseball-acqua",

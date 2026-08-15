@@ -4443,23 +4443,40 @@
   /* Il risultato di uno scontro si scrive nella stessa forma di una gara
      normale — primo e secondo — così classifiche, bacheca, stampe e sito
      continuano a funzionare senza sapere niente del torneo. */
+  /* Un gioco a coppie ha più di una partita nello stesso momento: pallanuoto
+     con quattro squadre sono due campi che giocano insieme. Il risultato del
+     gioco è uno solo, e si costruisce mettendo insieme le partite — prima si
+     sovrascriveva, e segnando la seconda spariva la prima. Chi vince la sua
+     partita prende i punti del primo, chi la perde quelli del terzo: in una
+     sfida diretta si vince o si perde, non c'è un secondo e un quarto. */
   function segnaScontro(inc, vincitore) {
     var g = V(DATI.giochi, []).filter(function (x) { return x.id === inc.gioco; })[0] || {};
+    var pun = V(V(V(DATI.aree, {}).ragazzi, {}).punteggio, {});
     var scala = String(V(g.punti, '')).split('/').map(function (x) {
       return Number(String(x).replace(/\D/g, '')) || 0;
     });
-    /* se il gioco non dichiara un punteggio suo si usa quello dell'area:
-       meglio dei punti di scorta che una vittoria che vale zero */
-    var pun = V(V(V(DATI.aree, {}).ragazzi, {}).punteggio, {});
     var primo = scala[0] || V(pun.primo, 5);
-    var secondo = scala[1] || V(pun.secondo, 3);
-    if (!vincitore) { delete STATO.risultati[inc.gioco]; }
+    var terzo = scala[2] || V(pun.terzo, 2);
+
+    var esiti = V(torneoR().esiti, {});
+    esiti[inc.gioco] = esiti[inc.gioco] || {};
+    var chiave = inc.a + '|' + inc.b;
+    if (!vincitore) delete esiti[inc.gioco][chiave];
+    else esiti[inc.gioco][chiave] = vincitore;
+    torneoR().esiti = esiti;
+
+    /* dalle partite segnate esce la classifica del gioco */
+    var vinte = [], perse = [];
+    Object.keys(esiti[inc.gioco]).forEach(function (k) {
+      var due = k.split('|'), chi = esiti[inc.gioco][k];
+      vinte.push(chi);
+      perse.push(due[0] === chi ? due[1] : due[0]);
+    });
+    if (!vinte.length) delete STATO.risultati[inc.gioco];
     else {
-      var perdente = (vincitore === inc.a) ? inc.b : inc.a;
-      STATO.risultati[inc.gioco] = [
-        { squadra: vincitore, posizione: 1, punti: primo },
-        { squadra: perdente, posizione: 2, punti: secondo }
-      ];
+      STATO.risultati[inc.gioco] =
+        vinte.map(function (id) { return { squadra: id, posizione: 1, punti: primo }; })
+          .concat(perse.map(function (id) { return { squadra: id, posizione: 3, punti: terzo }; }));
     }
     salvaStato();
     aggiornaClassificaRagazziAVideo();
@@ -4522,8 +4539,10 @@
 
     var nota = crea('div', 'card');
     nota.appendChild(crea('p', 'aiuto',
-      'Tocca la squadra che ha vinto: prende ' + 'i punti del primo, l\'altra quelli del ' +
-      'secondo, e la classifica qui sopra si aggiorna da sola. Toccando di nuovo la stessa ' +
+      'Tocca la squadra che ha vinto: prende i punti del primo, l\'altra quelli del ' +
+      'terzo — in una sfida diretta si vince o si perde, non c\'è un secondo. Le partite ' +
+      'dello stesso gioco si sommano, quindi puoi segnarle una alla volta senza perdere le ' +
+      'altre, e la classifica qui sopra si aggiorna da sola. Toccando di nuovo la stessa ' +
       'squadra si annulla il risultato.'));
     if (t.usiAttrezzo) {
       var conti = STATO.squadre.map(function (s) {

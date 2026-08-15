@@ -213,11 +213,8 @@ sito, non te.
 **Di regola giocano tutte le squadre insieme**, a ogni gara: si parte al via e i
 punti si danno per ordine d'arrivo. Non serve nessun calendario.
 
-Fanno eccezione i giochi che sono **sfide fra due squadre**: la pallanuoto, il
-baseball, e i due duelli sul materassino — *Cavalca il materassino* e *Re e
-regina del materassino*, dove i componenti si scontrano uno contro uno, chi
-perde il duello esce, e la squadra che resta senza nessuno ha perso.
-Quelli hanno la spunta *«Si gioca due squadre alla volta»*
+Fanno eccezione **la pallanuoto e il baseball**, che sono partite fra due
+squadre con la palla. Quelli hanno la spunta *«Si gioca due squadre alla volta»*
 in `🎯 Settaggio giochi acquatici`, dentro ogni gioco, e per loro il pulsante
 `🎲 Genera gli accoppiamenti` in `🏅 Punteggi` fa le partite: con quattro squadre
 sono due partite per gioco, e **giocano tutte lo stesso**. Gli accoppiamenti
@@ -238,10 +235,26 @@ Le corone restano: Re e Regina del materassino, miglior giocatore, miglior
 capitano si assegnano in `🏆 Premi e titoli`, alla fine, e non tolgono né danno
 punti a nessuno.
 
-## Palla bollente: si segna chi esce
+## Le gare all'ultimo rimasto
 
-È l'unica gara **a eliminazione**: chi resta con la palla in mano esce, e la
-squadra che per prima finisce i componenti è ultima. In `🏁 Segna il risultato`
+**Palla bollente**, **Cavalca il materassino** e **Re e regina del materassino**
+si giocano tutti insieme, alla *battle royale*: si va avanti a eliminare finché
+resta una squadra sola.
+
+- **Palla bollente** — chi resta con la palla in mano esce.
+- **Cavalca il materassino** — a ogni batteria parte un componente per squadra,
+  quattro materassini, e l'ultimo che arriva esce.
+- **Re e regina del materassino** — sui materassini si sale a due per volta, uno
+  contro uno, e chi tocca l'acqua esce. Con quattro materassini si combattono
+  quattro duelli insieme: si fa in fretta anche con venti ragazzi.
+
+In tutte e tre: **la squadra che per prima resta senza nessuno è ultima**, poi la
+penultima, e vince quella che ha in acqua l'ultimo ragazzo rimasto. I punti sono
+i soliti 5/3/2/1.
+
+## Come si segnano: si tocca chi esce
+
+In `🏁 Segna il risultato`
 la finestra cambia da sola: **tocchi le squadre nell'ordine in cui escono**, e
 accanto compare *«1ª uscita», «2ª uscita»*. La classifica la gira il programma —
 chi non tocchi mai è quello che è rimasto in acqua per ultimo, e vince.
