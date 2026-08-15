@@ -4368,6 +4368,72 @@
       turni.reduce(function (n, x) { return n + x.incontri.length; }, 0) + ' partite.', 7000);
   }
 
+  /* ------------------- le gare che si vincono da soli --------------------
+     Cavalca il materassino, Re e Regina: non c'è un ordine d'arrivo di
+     squadre, c'è un ragazzo che ha vinto. Si sceglie dall'elenco degli
+     iscritti — scriverlo a mano vuol dire sbagliare un cognome e ritrovarsi
+     due vincitori diversi sullo stesso premio. */
+  function premioDelGioco(g) {
+    var suo = V(DATI.premi, []).filter(function (p) {
+      return normalizza(p.nome) === normalizza(g.nome);
+    })[0];
+    return suo ? suo.nome : g.nome;
+  }
+  function titoloDi(nomePremio) {
+    return STATO.titoli.filter(function (x) { return x.premio === nomePremio; })[0] || null;
+  }
+  function schedaIndividuale(g) {
+    var c = crea('div', 'gioco-punti');
+    c.appendChild(crea('h3', null, V(g.emoji, '🏅') + ' ' + g.nome + '  (gara individuale)'));
+    var premio = premioDelGioco(g);
+    c.appendChild(crea('p', 'aiuto',
+      V(g.punti, 'Titolo individuale') + '. Non dà punti alle squadre: qui si segna chi ha vinto, ' +
+      'e il nome finisce fra i premi nella pagina delle classifiche.'));
+
+    var campo = crea('div', 'campo');
+    campo.appendChild(crea('label', null, 'Ha vinto'));
+    var sel = document.createElement('select');
+    sel.className = 'mini';
+    var vuoto = document.createElement('option');
+    vuoto.value = ''; vuoto.textContent = '— non ancora giocata —';
+    sel.appendChild(vuoto);
+    var gia = titoloDi(premio);
+    ragazziIscritti().forEach(function (p) {
+      var o = document.createElement('option');
+      o.value = p.nome; o.textContent = p.nome + squadraDiTesto(p._id);
+      if (gia && gia.chi === p.nome) o.selected = true;
+      sel.appendChild(o);
+    });
+    /* un vincitore scritto a mano prima, o che non risulta iscritto */
+    if (gia && gia.chi && !ragazziIscritti().some(function (p) { return p.nome === gia.chi; })) {
+      var o2 = document.createElement('option');
+      o2.value = gia.chi; o2.textContent = gia.chi + ' (scritto a mano)';
+      o2.selected = true;
+      sel.appendChild(o2);
+    }
+    sel.addEventListener('change', function () {
+      STATO.titoli = STATO.titoli.filter(function (x) { return x.premio !== premio; });
+      if (sel.value) {
+        STATO.titoli.push({
+          premio: premio, chi: sel.value, emoji: V(g.emoji, '🏅'), area: 'ragazzi', gioco: g.id
+        });
+      }
+      salvaStato();
+      disegnaPunteggi();
+      CA.toast(sel.value ? '🏅 ' + premio + ': ' + sel.value : '🏅 ' + premio + ': segnato niente', 5000);
+    });
+    campo.appendChild(sel);
+    c.appendChild(campo);
+    if (gia && gia.chi) {
+      c.appendChild(crea('p', 'aiuto', '✅ Segnato: ' + gia.chi + '. Lo trovi anche in 🏆 Premi e titoli.'));
+    }
+    return c;
+  }
+  function squadraDiTesto(idPersona) {
+    var s = STATO.squadre.filter(function (x) { return x.componenti.indexOf(idPersona) >= 0; })[0];
+    return s ? ' — ' + s.nome : '';
+  }
+
   function disegnaScontri() {
     var sw = $('scontriAttivi');
     if (!sw) return;
@@ -5041,7 +5107,10 @@
     V(DATI.giochi, []).forEach(function (g) {
       if (g.escluso) return;
       if (g.tipo === 'riscaldamento') return;
-      if (g.tipo === 'individuale') return;
+      /* Le gare individuali non danno punti alle squadre, ma un vincitore ce
+         l'hanno: senza una scheda restavano fuori da tutto e a fine giornata
+         nessuno si ricordava chi aveva vinto. */
+      if (g.tipo === 'individuale') { el.appendChild(schedaIndividuale(g)); return; }
       if (aScontri && inCalendario(g.id)) return;
       if (aScontri && g.riserva) return;
       var c = crea('div', 'gioco-punti');

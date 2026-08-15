@@ -280,25 +280,31 @@
       "nome": "Cavalca il materassino",
       "emoji": "🏄",
       "illustrazione": "cavalca-materassino",
-      "tipo": "individuale",
+      "tipo": "squadre",
       "durata": 10,
       "orario": "16:40",
       "riserva": false,
-      "formazione": "batterie ridotte",
-      "partecipanti": "Batterie con pochi partecipanti alla volta",
-      "descrizione": "Ognuno parte seduto sul proprio materassino e deve raggiungere il lato opposto senza cadere. Chi cade può risalire e continuare, ma perde tempo prezioso.",
+      "formazione": "sfide fra due squadre, uno contro uno",
+      "partecipanti": "Un componente per squadra a ogni duello",
+      "descrizione": "Due squadre, un materassino a testa. A ogni round scende in acqua un componente per squadra: si parte seduti e si corre al lato opposto della piscina. Chi arriva secondo esce dal gioco. Si va avanti così finché una squadra resta senza nessuno: vince chi ha ancora componenti in acqua.",
       "regole": [
-        "Si parte seduti sul materassino, al segnale dell'animatore.",
-        "Chi cade può risalire e proseguire.",
-        "Vietato ostacolare o toccare il materassino degli altri.",
-        "Per sicurezza si gioca in batterie con pochi partecipanti alla volta."
+        "Si parte seduti sul materassino, al segnale dell'animatore, e si arriva al lato opposto.",
+        "Si sfidano due squadre alla volta: un componente per squadra scende in acqua, uno contro uno.",
+        "Chi perde il duello esce dal gioco e va a fare il tifo: non rientra più.",
+        "Si va avanti a duelli finché una delle due squadre resta senza nessuno: quella ha perso.",
+        "Vince la squadra che ha vinto più duelli, cioè quella che ha ancora componenti in acqua.",
+        "L'ordine con cui mandare i componenti lo decide la squadra: si può tenere il più forte per ultimo.",
+        "Con quattro materassini si giocano due duelli insieme, uno per coppia di squadre.",
+        "L'assistente bagnanti sta sempre accanto ai materassini durante i duelli.",
+        "Chi cade può risalire e proseguire: non è eliminato per la caduta, solo per il ritardo.",
+        "Vietato ostacolare o toccare il materassino dell'avversario."
       ],
       "varianti": [
+        "Andata e ritorno, con giro di boa a metà.",
         "In ginocchio, per chi vuole rendersela difficile.",
-        "Con remo: si avanza usando una tavoletta o un braccio solo.",
-        "Andata e ritorno, con giro di boa a metà."
+        "A staffetta: chi vince il duello resta in acqua e affronta il prossimo avversario."
       ],
-      "punti": "Titolo individuale",
+      "punti": "5 / 3 / 2 / 1",
       "musica": {
         "titolo": "Wipe Out",
         "artista": "The Surfaris",
@@ -327,7 +333,8 @@
         }
       ],
       "attrezzo": "materassino",
-      "escluso": false
+      "escluso": false,
+      "scontro": true
     },
     {
       "id": "trasporto-compagno",
@@ -539,25 +546,32 @@
       "nome": "Re e regina del materassino",
       "emoji": "👑",
       "illustrazione": "re-materassino",
-      "tipo": "individuale",
+      "tipo": "squadre",
       "durata": 15,
       "orario": "17:30",
       "riserva": false,
-      "formazione": "batterie da 3-4",
-      "partecipanti": "Batterie da 3 o 4 concorrenti alla volta",
-      "descrizione": "Prova di equilibrio individuale: si resta sul materassino mentre l'animatore chiama i comandi, uno più difficile dell'altro. Vince chi resiste più a lungo. Si assegnano due titoli, Re e Regina del materassino.",
+      "formazione": "sfide fra due squadre, uno contro uno",
+      "partecipanti": "Un componente per squadra a ogni duello",
+      "descrizione": "Il duello del pomeriggio. Due squadre, e a ogni round un componente per parte sale sul materassino: al via si cerca di far cadere l'avversario spingendo solo con le mani. Chi tocca l'acqua esce dal gioco. La squadra che resta senza componenti ha perso; chi vince più duelli si prende la corona.",
       "regole": [
-        "L'animatore chiama i comandi uno alla volta: sedersi, inginocchiarsi, alzare un braccio, battere le mani, girarsi lentamente, prendere e rilanciare un pallone.",
-        "Chi cade in acqua è eliminato dalla batteria.",
-        "Si gioca in batterie da massimo 3 o 4 concorrenti, per evitare gli scontri.",
-        "Vince chi resta più a lungo sul materassino."
+        "Si sale sul materassino in ginocchio o in piedi, secondo la profondità e quanto ci si sente sicuri.",
+        "Si spinge solo con le mani e le braccia: vietati calci, prese, sgambetti e strattoni.",
+        "Chi tocca l'acqua ha perso il duello.",
+        "Si sfidano due squadre alla volta: un componente per squadra scende in acqua, uno contro uno.",
+        "Chi perde il duello esce dal gioco e va a fare il tifo: non rientra più.",
+        "Si va avanti a duelli finché una delle due squadre resta senza nessuno: quella ha perso.",
+        "Vince la squadra che ha vinto più duelli, cioè quella che ha ancora componenti in acqua.",
+        "L'ordine con cui mandare i componenti lo decide la squadra: si può tenere il più forte per ultimo.",
+        "Con quattro materassini si giocano due duelli insieme, uno per coppia di squadre.",
+        "L'assistente bagnanti sta sempre accanto ai materassini durante i duelli.",
+        "Il ragazzo e la ragazza che vincono più duelli sono Re e Regina del materassino."
       ],
       "varianti": [
-        "Comandi doppi: due ordini insieme, per esempio in ginocchio e con un braccio alzato.",
-        "Onda: i compagni fuori gara creano piccole onde da bordo vasca, senza toccare il materassino.",
-        "A tempo: si resiste un minuto intero per passare al turno successivo."
+        "Sfida a due contro due, se le squadre sono numerose.",
+        "Senza mani: si spinge solo spostando il peso.",
+        "Il vincitore resta sul materassino e affronta subito il prossimo."
       ],
-      "punti": "Titolo individuale: Re e Regina del materassino",
+      "punti": "5 / 3 / 2 / 1",
       "musica": {
         "titolo": "The Final Countdown",
         "artista": "Europe",
@@ -598,7 +612,8 @@
           "ricerca": "Kung Fu Fighting Carl Douglas"
         }
       ],
-      "attrezzo": "materassino"
+      "attrezzo": "materassino",
+      "scontro": true
     },
     {
       "id": "catena",

@@ -213,14 +213,23 @@ sito, non te.
 **Di regola giocano tutte le squadre insieme**, a ogni gara: si parte al via e i
 punti si danno per ordine d'arrivo. Non serve nessun calendario.
 
-Fanno eccezione i giochi che sono **partite fra due squadre** — la pallanuoto e
-il baseball in acqua. Quelli hanno la spunta *«Si gioca due squadre alla volta»*
+Fanno eccezione i giochi che sono **sfide fra due squadre**: la pallanuoto, il
+baseball, e i due duelli sul materassino — *Cavalca il materassino* e *Re e
+regina del materassino*, dove i componenti si scontrano uno contro uno, chi
+perde il duello esce, e la squadra che resta senza nessuno ha perso.
+Quelli hanno la spunta *«Si gioca due squadre alla volta»*
 in `🎯 Settaggio giochi acquatici`, dentro ogni gioco, e per loro il pulsante
 `🎲 Genera gli accoppiamenti` in `🏅 Punteggi` fa le partite: con quattro squadre
 sono due partite per gioco, e **giocano tutte lo stesso**. Gli accoppiamenti
 cambiano da un gioco all'altro, così non si incontrano sempre le stesse.
 
 Se un domani ti servisse anche per un altro gioco, basta spuntarlo lì.
+
+**Le gare individuali** (se ne rimetti una in programma: nuoto col pallone, King
+of the Mat) adesso hanno anche loro la loro scheda in `🏅 Punteggi`: si sceglie
+il vincitore dall'elenco degli iscritti — con accanto la sua squadra — e il nome
+finisce fra i premi delle classifiche. Non danno punti alle squadre, e la scheda
+lo dice. Prima sparivano: erano in programma e non c'era modo di segnarle.
 
 ## Palla bollente: si segna chi esce
 
