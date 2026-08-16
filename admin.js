@@ -3441,6 +3441,20 @@
       });
       Object.keys(turni).forEach(function (k) {
         ci.appendChild(crea('h3', null, k));
+        /* Dentro un turno si gioca tutto insieme: le partite partono allo
+           stesso momento, una per tavolo. Va detto, se no si legge l'elenco
+           come una fila e si aspetta che finisca la prima. */
+        var quante = turni[k].length;
+        var giocano = {};
+        turni[k].forEach(function (m) { giocano[m.a] = true; giocano[m.b] = true; });
+        var fermi = coppie.filter(function (c) { return !giocano[c.id]; });
+        var riga = '🕓 Si gioca tutto insieme: ' + quante +
+          (quante === 1 ? ' partita a un tavolo' : ' partite ai ' + quante + ' tavoli') +
+          ', tutte e ' + (quante * 2) + ' le coppie in gioco nello stesso momento.';
+        if (fermi.length) {
+          riga += ' Riposa ' + CA.elencoConE(fermi.map(function (c) { return c.nome; })) + '.';
+        }
+        ci.appendChild(crea('p', 'aiuto', riga));
         turni[k].forEach(function (m) { ci.appendChild(rigaIncontroAdmin(m, coppie, TORNEO_APERTO)); });
       });
       el.appendChild(ci);
@@ -4136,6 +4150,10 @@
     var id = idTorneo || TORNEO_APERTO;
     var meta = traguardoDi(m, id);
     var d = crea('div', 'incontro-adm');
+    if (m.tavolo) {
+      var tv = crea('span', 'tavolo-n', '🪑 Tavolo ' + m.tavolo);
+      d.appendChild(tv);
+    }
     d.appendChild(crea('b', null, nomeCoppia(m.a, coppie)));
 
     var cc = crea('div', 'cc');
@@ -4190,6 +4208,10 @@
     function chiusa() {
       return sommaMani(m, 'a') >= meta || sommaMani(m, 'b') >= meta;
     }
+    function vincitriceMani() {
+      var a = sommaMani(m, 'a'), b = sommaMani(m, 'b');
+      return a >= meta ? 'a' : (b >= meta ? 'b' : '');
+    }
     var nota = crea('p', 'aiuto');       /* quanto manca: si riscrive a ogni tocco */
     function scriviTotali() {
       var a = sommaMani(m, 'a'), b = sommaMani(m, 'b');
@@ -4214,9 +4236,16 @@
       return vinta;
     }
 
+    /* Finita la partita non si segna più: i campi si bloccano. Al tavolo
+       succede sempre che qualcuno continui a scrivere «tanto poi si vede»,
+       e il punteggio buono si perde. Se c'è stato un errore c'è il pulsante
+       per riaprire, che è una scelta consapevole e non una distrazione. */
     function disegnaMani() {
       dentro.textContent = '';
       m.mani = V(m.mani, []);
+      var vinta = vincitriceMani();
+      var bloccata = !!vinta && !m.riaperta;
+
       m.mani.forEach(function (mano, i) {
         var r = crea('div', 'mano-riga');
         r.appendChild(crea('span', 'n-mano', (i + 1) + 'ª'));
@@ -4224,20 +4253,30 @@
           var inp = document.createElement('input');
           inp.type = 'number'; inp.inputMode = 'numeric';
           inp.value = (mano[lato[0]] === undefined || mano[lato[0]] === '') ? '' : mano[lato[0]];
+          inp.disabled = bloccata;
           inp.setAttribute('aria-label', (i + 1) + 'ª mano, ' + nomeCoppia(lato[1], coppie));
           inp.addEventListener('input', function () {
             mano[lato[0]] = inp.value === '' ? '' : Number(inp.value);
-            var vinta = scriviTotali();
+            var ora = scriviTotali();
             salvaStato();
-            aggiornaClassificaAVideo(id);
             evidenziaVincente();
-            if (vinta) CA.toast('🏆 ' + nomeCoppia(vinta === 'a' ? m.a : m.b, coppie) +
-              ' ha vinto la partita: ' + sommaMani(m, vinta) + ' punti.', 6000);
+            if (ora && !m.riaperta) {
+              /* è finita adesso: si blocca tutto e si rifà il pannello, così
+                 tabellone, classifica ed eventuali semifinali si allineano */
+              CA.toast('🏆 ' + nomeCoppia(ora === 'a' ? m.a : m.b, coppie) +
+                ' ha vinto: ' + sommaMani(m, ora) + ' punti. Partita chiusa.', 7000);
+              risolviSegnaposto(id);
+              salvaStato();
+              disegnaPannelloTorneo();
+              return;
+            }
+            aggiornaClassificaAVideo(id);
           });
           r.appendChild(inp);
         });
         var via = crea('button', 'btn btn-chiaro btn-piccolo', '🗑️');
         via.title = 'Togli questa mano';
+        via.disabled = bloccata;
         via.addEventListener('click', function () {
           m.mani.splice(i, 1);
           scriviTotali(); salvaStato(); disegnaMani();
@@ -4249,14 +4288,32 @@
 
       var az = crea('div', 'azioni');
       az.style.cssText = 'justify-content:flex-start;margin-top:6px';
-      var piu = crea('button', 'btn btn-p btn-piccolo', '➕ Un\'altra mano');
-      piu.addEventListener('click', function () {
-        m.mani.push({ a: '', b: '' });
-        scriviTotali(); salvaStato(); disegnaMani();
-        var campi = dentro.querySelectorAll('input');
-        if (campi.length) campi[campi.length - 2].focus();
-      });
-      az.appendChild(piu);
+      if (bloccata) {
+        var riapri = crea('button', 'btn btn-chiaro btn-piccolo', '🔓 Riapri per correggere');
+        riapri.addEventListener('click', function () {
+          if (!confirm('La partita è finita. La riapro per correggere un punteggio?')) return;
+          m.riaperta = true;
+          disegnaMani();
+        });
+        az.appendChild(riapri);
+      } else {
+        var piu = crea('button', 'btn btn-p btn-piccolo', '➕ Un\'altra mano');
+        piu.addEventListener('click', function () {
+          m.mani.push({ a: '', b: '' });
+          scriviTotali(); salvaStato(); disegnaMani();
+          var campi = dentro.querySelectorAll('input:not([disabled])');
+          if (campi.length) campi[campi.length - 2].focus();
+        });
+        az.appendChild(piu);
+        if (m.riaperta && vinta) {
+          var chiudi = crea('button', 'btn btn-chiaro btn-piccolo', '🔒 Ho finito');
+          chiudi.addEventListener('click', function () {
+            delete m.riaperta;
+            salvaStato(); disegnaMani();
+          });
+          az.appendChild(chiudi);
+        }
+      }
       dentro.appendChild(az);
 
       dentro.appendChild(nota);
@@ -4265,6 +4322,7 @@
 
     scriviTotali();
     disegnaMani();
+    if (vincitriceMani() && !m.riaperta) d.classList.add('finita');
     setTimeout(evidenziaVincente, 0);
     return d;
   }

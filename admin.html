@@ -135,6 +135,13 @@ body{ background:#eef4fa; }
 .mano-riga input{ width:76px; text-align:center; min-height:46px; padding:8px; }
 .mano-riga button{ min-height:46px; }
 .mani-dentro p.aiuto.vinta{ color:#0f7a4a; font-weight:bold; }
+/* la partita chiusa si riconosce da lontano, e i campi sono spenti */
+.incontro-adm.finita{ background:#eefaf3; border-color:#2f9e5b; }
+.incontro-adm input:disabled{ background:#f2f5f7; color:var(--muted); }
+.incontro-adm .tavolo-n{
+  grid-column:1 / -1; font-size:.82rem; color:var(--muted); font-weight:bold;
+  letter-spacing:.02em; margin-bottom:2px;
+}
 
 /* ---- procedura guidata ---- */
 .guidata{ background:#fff8e5; border:2px solid var(--c3); border-radius:18px; padding:18px; margin-bottom:18px; }
