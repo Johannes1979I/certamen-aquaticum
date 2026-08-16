@@ -172,19 +172,23 @@ sito, non te.
      doppio di una di tresette, e il conto lo tiene in considerazione invece
      di usare una media che non corrisponde a nessuna partita vera.
 
-   Come sta adesso la giornata delle carte: **Burraco 16:15 → 17:55**,
-   **carte italiane dalle 18:00**. Di serie si giocano **scopone e tresette**,
-   e si gioca la **partita intera**: a 11 punti lo scopone (tre smazzate,
-   35 minuti), a 21 il tresette (due o tre mani, 25 minuti). Niente partite
-   troncate dal cronometro.
-   Sono 6 turni su due tavoli, 12 partite: **18:00 → 19:51 il giro di
-   scopone, 19:54 → 21:15 quello di tresette**, coppa alle 21:20. Si finisce
-   il 15 sera, come deve essere.
-   **Domenica 16, dalle 17:00, è la rete di sicurezza**: se qualcosa slitta —
-   si comincia tardi, arrivano più coppie, una partita non finisce più — i
-   turni che avanzano scivolano lì da soli, e il riquadro dei tempi te lo
-   dice con l'ora esatta. Le due giornate si scrivono in ⚙️ Contenuti, nel
-   torneo, alla voce «sessioni».
+   Come sta la giornata delle carte: **16:00 → 18:00**, due ore piene. Si
+   giocano **scopone e tresette**, partite intere **a 41 punti**, segnate mano
+   per mano. Niente partite troncate dal cronometro.
+   Sono **3 turni da quaranta minuti** su due tavoli, 6 partite: girone
+   all'italiana con le prove che si alternano — **16:00 scopone, 16:40
+   tresette, 17:20 scopone** — e coppa alle 18:00. Ogni coppia incontra tutte
+   le altre una volta e gioca tutti e due i giochi.
+   **Si gioca sempre tutto insieme**: dentro un turno le partite partono nello
+   stesso momento, una per tavolo, e tutte le coppie sono in gioco. Sopra ogni
+   turno c'è scritto quante ne partono insieme, ogni partita dice il suo
+   tavolo, e se le coppie fossero dispari dice anche chi riposa.
+   Con partite a 41 un turno vuole quaranta minuti: in due ore ce ne stanno
+   tre, non sei. Per questo le prove si alternano invece di fare un giro
+   completo per ognuna — la scelta è in `🃏 Tornei`, sotto «Quante volte si
+   incontrano le coppie», e un altro anno con più tempo si cambia.
+   Il **burraco è messo da parte**: nessun iscritto, e i tavoli servono alle
+   carte italiane. Si rimette togliendo la spunta «escluso» in ⚙️ Contenuti.
    La **briscola è messa da parte**, non cancellata: le sue regole restano nel
    catalogo e un tocco su `🂡 Briscola` nella scheda Tornei la rimette dentro
    (ma allora i turni diventano 9 e si sfora nella domenica).
