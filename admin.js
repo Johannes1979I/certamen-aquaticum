@@ -3372,6 +3372,29 @@
     });
     g.appendChild(sf);
 
+    /* Andata e ritorno: si rigioca tutto a parti invertite. Ha senso solo nel
+       girone — in un tabellone a eliminazione chi ha perso è già a casa. */
+    if ((stato.formato || c.formato) === 'italiana') {
+      var sr = crea('label', 'spunta');
+      sr.style.margin = '12px 0 0';
+      var cr = document.createElement('input');
+      cr.type = 'checkbox';
+      cr.checked = (stato.ritorno === true);
+      cr.addEventListener('change', function () {
+        STATO.tornei[TORNEO_APERTO] = STATO.tornei[TORNEO_APERTO] || {};
+        STATO.tornei[TORNEO_APERTO].ritorno = cr.checked;
+        salvaStato();
+        disegnaPannelloTorneo();
+        CA.toast(cr.checked
+          ? '🔁 Andata e ritorno: rigenera il tabellone per vedere il ritorno.'
+          : 'Solo andata: rigenera il tabellone.', 6000);
+      });
+      sr.appendChild(cr);
+      sr.appendChild(crea('span', null, 'Andata e ritorno: ogni coppia si incontra due volte, ' +
+        'a parti invertite (raddoppia i turni)'));
+      g.appendChild(sr);
+    }
+
     if (coppie.length >= 2) {
       var rd = riquadroDurata(TORNEO_APERTO, coppie, stato.formato || c.formato);
       if (rd) g.appendChild(rd);
@@ -3540,9 +3563,11 @@
     if (n < 2) return null;
     var conTutteLeProve = (formato === 'italiana' && prove.length > 1 &&
       V(assetto().giro, 'alternato') === 'completo');
-    var turni = turniDi(n, formato, conTutteLeProve ? prove.length : 1);
-    var partite = conTutteLeProve ? (n * (n - 1) / 2) * prove.length
-      : (formato === 'italiana' ? n * (n - 1) / 2 : 0);
+    var ritorno = (formato === 'italiana' && V(STATO.tornei[idTorneo], {}).ritorno === true);
+    var doppio = ritorno ? 2 : 1;
+    var turni = turniDi(n, formato, conTutteLeProve ? prove.length : 1) * doppio;
+    var partite = (conTutteLeProve ? (n * (n - 1) / 2) * prove.length
+      : (formato === 'italiana' ? n * (n - 1) / 2 : 0)) * doppio;
     var base = Number(td.durataPartita) || 25;
 
     /* Ogni gioco ha il suo passo: una partita intera di scopone dura il
@@ -3550,7 +3575,7 @@
        per ogni giro, ognuno con la sua. */
     var perGiro = turni, blocchi = [];
     if (conTutteLeProve) {
-      perGiro = turni / prove.length;
+      perGiro = turni / prove.length;      /* il ritorno è già dentro «turni» */
       prove.forEach(function (p) {
         blocchi.push({ nome: V(p.nome, ''), emoji: V(p.emoji, ''),
           turni: perGiro, durata: Number(p.durataPartita) || base });
@@ -3565,7 +3590,7 @@
     return {
       turni: turni, partite: partite, tavoli: Math.floor(n / 2),
       durata: base, minuti: minuti, prove: prove.length, blocchi: blocchi,
-      conTutteLeProve: conTutteLeProve,
+      conTutteLeProve: conTutteLeProve, ritorno: ritorno,
       finestra: minutiDisponibili(sess), sessioni: sess,
       piano: pianifica(blocchi, sess)
     };
@@ -3685,12 +3710,21 @@
         box.appendChild(crea('p', 'aiuto', 'Si chiude ' +
           (f.giorno ? f.giorno + ' ' : '') + 'alle ' + oraDa(f.finisce) +
           ': la coppa si può dare subito dopo.'));
+      } else if (s.piano.avanzati) {
+        box.appendChild(crea('p', 'aiuto',
+          '⚠️ ' + s.piano.avanzati + (s.piano.avanzati === 1 ? ' turno resta' : ' turni restano') +
+          ' fuori: non c\'è più tempo dove metterli.'));
       }
     }
     if (s.conTutteLeProve) {
       box.appendChild(crea('p', 'aiuto',
         'Ogni coppia incontra tutte le altre a tutte e ' + s.prove + ' le prove: sono ' +
         s.prove + ' gironi interi, uno per gioco, con i punti che si sommano in una classifica sola.'));
+    }
+    if (s.ritorno) {
+      box.appendChild(crea('p', 'aiuto',
+        '🔁 Andata e ritorno: ogni coppia si incontra due volte, a parti invertite. ' +
+        'I turni sono il doppio, e nella classifica ognuna gioca il doppio delle partite.'));
     }
     if (s.finestra) {
       box.appendChild(crea('p', 'aiuto', 'Il tempo che hai è ' + oreEMinuti(s.finestra) +
@@ -3718,10 +3752,14 @@
       function riga(testo) { vie.appendChild(crea('li', null, testo)); }
 
       var q = quanto(s.turni);
+      var cosiComE = s.conTutteLeProve
+        ? ('tenere tutte e ' + s.prove + ' le prove')
+        : (s.ritorno ? 'tenere andata e ritorno' : 'tenere tutto così');
       riga(q >= 8
-        ? 'tenere tutte e ' + (s.conTutteLeProve ? s.prove : 1) + ' le prove e fare partite da ' +
-          q + ' minuti invece di ' + s.durata
-        : 'tenere tutto così non si può: verrebbero partite da ' + Math.max(q, 0) + ' minuti');
+        ? (cosiComE + ' e fare partite da ' + q + ' minuti invece di ' + s.durata)
+        : (cosiComE + ' non si può: verrebbero partite da ' + Math.max(q, 0) + ' minuti'));
+      if (s.ritorno) riga('giocare solo l\'andata: torna a ' + (s.turni / 2) +
+        ' turni e ci sta con le partite da ' + s.durata + ' minuti');
       if (s.conTutteLeProve) {
         for (var k = s.prove - 1; k >= 1; k--) {
           var qk = quanto(turniDi(n, 'italiana', k));
@@ -3951,6 +3989,7 @@
     else if (formato === 'italiana') incontri = calendarioItaliana(coppie);
     else if (formato === 'gironi') incontri = calendarioGironi(coppie);
     else incontri = calendarioEliminazione(coppie);
+    if (formato === 'italiana' && st.ritorno === true) incontri = aggiungiRitorno(incontri);
 
     /* negli altri formati ogni turno ha il suo gioco, a rotazione */
     if (!gironeCompleto) incontri = assegnaProve(incontri, prove, V(td.provaFinale, ''), formato);
@@ -4012,6 +4051,23 @@
       out = out.concat(giro);
     });
     return out;
+  }
+
+  /* Andata e ritorno: si rigioca lo stesso girone a parti invertite — chi
+     scriveva a sinistra passa a destra. Punteggi e mani ripartono da zero,
+     se no il ritorno nascerebbe già giocato. */
+  function aggiungiRitorno(incontri) {
+    var ritorno = incontri.map(function (m) {
+      var r = {};
+      Object.keys(m).forEach(function (k) { r[k] = m[k]; });
+      r.id = 'r' + m.id;
+      r.a = m.b; r.b = m.a;
+      r.puntiA = ''; r.puntiB = '';
+      r.mani = [];
+      r.turno = 'Ritorno · ' + m.turno;
+      return r;
+    });
+    return incontri.concat(ritorno);
   }
 
   /* due gironi, poi semifinali incrociate e finale */

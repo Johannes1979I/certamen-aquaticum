@@ -194,6 +194,11 @@ sito, non te.
    (ma allora i turni diventano 9 e si sfora nella domenica).
    Con due prove il torneo non si chiama più «Trittico»: il sito lo ribattezza
    da solo col nome dei giochi che si fanno.
+   Sotto la formula c'è la spunta **«Andata e ritorno»**: ogni coppia incontra
+   tutte le altre **due volte**, a parti invertite. Raddoppia i turni e le
+   partite, e il riquadro dei tempi ricalcola subito — se non ci stanno te lo
+   dice, con quanti turni restano fuori. Vale solo per il girone: in un
+   tabellone a eliminazione chi ha perso è già a casa.
    La formula la consiglia il sito in base a quante coppie ci sono:
    - 2 coppie → sfida diretta al meglio delle tre
    - 3–6 coppie → girone all'italiana
