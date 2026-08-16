@@ -401,6 +401,9 @@
     return {
       prove: ids,
       forma: 'unico',
+      /* di serie un girone solo con le prove che si alternano: è quello che
+         sta dentro un pomeriggio. L'altro modo si sceglie apposta. */
+      giro: 'alternato',
       provaFinale: ids.indexOf(finale) >= 0 ? finale : (ids[ids.length - 1] || '')
     };
   }

@@ -3171,6 +3171,27 @@
       el.appendChild(box);
     }
 
+    /* --- quante volte ci si incontra --- */
+    if (a.prove.length > 1 && V(a.forma, 'unico') === 'unico') {
+      el.appendChild(crea('h3', null, 'Quante volte si incontrano le coppie'));
+      var modi = [
+        { id: 'alternato', tit: '🔄 Le prove si alternano',
+          spiega: 'Un girone solo: ogni coppia incontra tutte le altre una volta, e ogni turno si gioca a un gioco diverso. Pochi turni, partite lunghe.' },
+        { id: 'completo', tit: '🎴 Un giro per ogni prova',
+          spiega: 'Ogni coppia incontra tutte le altre a ogni gioco: molto più completo, ma i turni si moltiplicano per il numero delle prove.' }
+      ];
+      var bg = crea('div', 'scelte-formato');
+      modi.forEach(function (s) {
+        var scelto = V(a.giro, 'alternato') === s.id;
+        var b = crea('button', 'scelta-f' + (scelto ? ' presa' : ''));
+        b.appendChild(crea('b', null, s.tit));
+        b.appendChild(crea('small', null, s.spiega));
+        b.addEventListener('click', function () { a.giro = s.id; applicaAssetto(); });
+        bg.appendChild(b);
+      });
+      el.appendChild(bg);
+    }
+
     /* --- con quale gioco si chiude --- */
     if (a.prove.length > 1 && V(a.forma, 'unico') === 'unico') {
       var c = crea('div', 'campo');
@@ -3503,7 +3524,8 @@
     var prove = V(td.prove, []);
     var n = coppie.length;
     if (n < 2) return null;
-    var conTutteLeProve = (formato === 'italiana' && prove.length > 1);
+    var conTutteLeProve = (formato === 'italiana' && prove.length > 1 &&
+      V(assetto().giro, 'alternato') === 'completo');
     var turni = turniDi(n, formato, conTutteLeProve ? prove.length : 1);
     var partite = conTutteLeProve ? (n * (n - 1) / 2) * prove.length
       : (formato === 'italiana' ? n * (n - 1) / 2 : 0);
@@ -3908,7 +3930,8 @@
     /* Nel girone all'italiana di un torneo a più prove si gioca tutto: ogni
        coppia incontra tutte le altre a ognuna delle prove. Sono tre gironi
        interi, non un girone solo con i giochi che si alternano. */
-    var gironeCompleto = (formato === 'italiana' && prove.length > 1);
+    var gironeCompleto = (formato === 'italiana' && prove.length > 1 &&
+      V(assetto().giro, 'alternato') === 'completo');
     if (gironeCompleto) incontri = calendarioItalianaPerProva(coppie, prove);
     else if (formato === 'sfida') incontri = calendarioSfida(coppie);
     else if (formato === 'italiana') incontri = calendarioItaliana(coppie);
@@ -4094,7 +4117,24 @@
      il pannello a ogni cifra: a bordo piscina si scrive col telefono, e un
      ridisegno fa perdere il campo sotto il dito. Si aggiorna solo la
      classifica, che è l'unica cosa che cambia davvero. */
+  /* A quanti punti finisce una partita. Sta nella prova, così scopone e
+     tresette possono avere traguardi diversi; se non c'è scritto niente si
+     usa quello del torneo, e in mancanza di tutto i 41 classici. */
+  function traguardoDi(m, idTorneo) {
+    var td = torneoDati(idTorneo || TORNEO_APERTO);
+    var pr = V(td.prove, []).filter(function (p) { return p.id === m.prova; })[0];
+    var n = Number(V(pr && pr.traguardo, td.traguardo));
+    return isFinite(n) && n > 0 ? n : 41;
+  }
+  function sommaMani(m, lato) {
+    var t = 0;
+    V(m.mani, []).forEach(function (x) { t += Number(V(x[lato], 0)) || 0; });
+    return t;
+  }
+
   function rigaIncontroAdmin(m, coppie, idTorneo) {
+    var id = idTorneo || TORNEO_APERTO;
+    var meta = traguardoDi(m, id);
     var d = crea('div', 'incontro-adm');
     d.appendChild(crea('b', null, nomeCoppia(m.a, coppie)));
 
@@ -4110,7 +4150,6 @@
       m.puntiB = ib.value === '' ? '' : Number(ib.value);
       /* questo punteggio può aver deciso chi va in semifinale o in finale:
          se sì il tabellone cambia, e va ridisegnato tutto */
-      var id = idTorneo || TORNEO_APERTO;
       var mosso = risolviSegnaposto(id);
       salvaStato();
       if (mosso) { disegnaPannelloTorneo(); return; }
@@ -4120,10 +4159,11 @@
     function evidenziaVincente() {
       var a = Number(m.puntiA), b = Number(m.puntiB);
       var vale = m.puntiA !== '' && m.puntiB !== '' && isFinite(a) && isFinite(b);
-      d.querySelectorAll('b').forEach(function (x) { x.style.color = ''; });
+      var nomi = d.querySelectorAll('b');
+      nomi[0].style.color = ''; nomi[1].style.color = '';
       if (!vale) return;
-      if (a > b) d.querySelectorAll('b')[0].style.color = '#0f7a4a';
-      if (b > a) d.querySelectorAll('b')[1].style.color = '#0f7a4a';
+      if (a > b) nomi[0].style.color = '#0f7a4a';
+      if (b > a) nomi[1].style.color = '#0f7a4a';
     }
     ia.addEventListener('change', cambia);
     ib.addEventListener('change', cambia);
@@ -4131,8 +4171,100 @@
     cc.appendChild(crea('span', null, '–'));
     cc.appendChild(ib);
     d.appendChild(cc);
-
     d.appendChild(crea('b', 'dx', nomeCoppia(m.b, coppie)));
+
+    /* ------------------------- le mani, una per una --------------------
+       Al tavolo si segnano i punti di ogni mano su un foglietto e alla fine
+       qualcuno sbaglia la somma. Qui si scrivono mano per mano: il totale
+       si aggiorna da solo e appena una coppia arriva al traguardo la
+       partita si chiude, senza che nessuno debba contare. */
+    var pieghevole = document.createElement('details');
+    pieghevole.className = 'mani';
+    pieghevole.open = V(m.mani, []).length > 0 && !chiusa();
+    var somm = document.createElement('summary');
+    pieghevole.appendChild(somm);
+    var dentro = crea('div', 'mani-dentro');
+    pieghevole.appendChild(dentro);
+    d.appendChild(pieghevole);
+
+    function chiusa() {
+      return sommaMani(m, 'a') >= meta || sommaMani(m, 'b') >= meta;
+    }
+    var nota = crea('p', 'aiuto');       /* quanto manca: si riscrive a ogni tocco */
+    function scriviTotali() {
+      var a = sommaMani(m, 'a'), b = sommaMani(m, 'b');
+      m.mani = V(m.mani, []);
+      if (m.mani.length) {                    /* le mani comandano sul totale */
+        m.puntiA = a; m.puntiB = b;
+        ia.value = a; ib.value = b;
+      }
+      var vinta = a >= meta ? 'a' : (b >= meta ? 'b' : '');
+      somm.textContent = m.mani.length
+        ? ('🧮 ' + m.mani.length + (m.mani.length === 1 ? ' mano' : ' mani') +
+           ' · ' + a + ' – ' + b + (vinta ? '  🏆 ' + nomeCoppia(vinta === 'a' ? m.a : m.b, coppie) : ''))
+        : ('🧮 Segna le mani, una per una (si arriva a ' + meta + ')');
+      somm.className = vinta ? 'vinta' : '';
+      nota.textContent = !m.mani.length ? ''
+        : (vinta
+          ? ('🏆 Partita finita: ' + nomeCoppia(vinta === 'a' ? m.a : m.b, coppie) +
+             ' ha passato i ' + meta + ' con ' + (vinta === 'a' ? a : b) + ' punti.')
+          : ('Mancano ' + Math.max(0, meta - a) + ' punti a ' + nomeCoppia(m.a, coppie) +
+             ' e ' + Math.max(0, meta - b) + ' a ' + nomeCoppia(m.b, coppie) + '.'));
+      nota.className = 'aiuto' + (vinta ? ' vinta' : '');
+      return vinta;
+    }
+
+    function disegnaMani() {
+      dentro.textContent = '';
+      m.mani = V(m.mani, []);
+      m.mani.forEach(function (mano, i) {
+        var r = crea('div', 'mano-riga');
+        r.appendChild(crea('span', 'n-mano', (i + 1) + 'ª'));
+        [['a', m.a], ['b', m.b]].forEach(function (lato) {
+          var inp = document.createElement('input');
+          inp.type = 'number'; inp.inputMode = 'numeric';
+          inp.value = (mano[lato[0]] === undefined || mano[lato[0]] === '') ? '' : mano[lato[0]];
+          inp.setAttribute('aria-label', (i + 1) + 'ª mano, ' + nomeCoppia(lato[1], coppie));
+          inp.addEventListener('input', function () {
+            mano[lato[0]] = inp.value === '' ? '' : Number(inp.value);
+            var vinta = scriviTotali();
+            salvaStato();
+            aggiornaClassificaAVideo(id);
+            evidenziaVincente();
+            if (vinta) CA.toast('🏆 ' + nomeCoppia(vinta === 'a' ? m.a : m.b, coppie) +
+              ' ha vinto la partita: ' + sommaMani(m, vinta) + ' punti.', 6000);
+          });
+          r.appendChild(inp);
+        });
+        var via = crea('button', 'btn btn-chiaro btn-piccolo', '🗑️');
+        via.title = 'Togli questa mano';
+        via.addEventListener('click', function () {
+          m.mani.splice(i, 1);
+          scriviTotali(); salvaStato(); disegnaMani();
+          aggiornaClassificaAVideo(id); evidenziaVincente();
+        });
+        r.appendChild(via);
+        dentro.appendChild(r);
+      });
+
+      var az = crea('div', 'azioni');
+      az.style.cssText = 'justify-content:flex-start;margin-top:6px';
+      var piu = crea('button', 'btn btn-p btn-piccolo', '➕ Un\'altra mano');
+      piu.addEventListener('click', function () {
+        m.mani.push({ a: '', b: '' });
+        scriviTotali(); salvaStato(); disegnaMani();
+        var campi = dentro.querySelectorAll('input');
+        if (campi.length) campi[campi.length - 2].focus();
+      });
+      az.appendChild(piu);
+      dentro.appendChild(az);
+
+      dentro.appendChild(nota);
+      scriviTotali();
+    }
+
+    scriviTotali();
+    disegnaMani();
     setTimeout(evidenziaVincente, 0);
     return d;
   }

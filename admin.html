@@ -125,6 +125,16 @@ body{ background:#eef4fa; }
 .incontro-adm .cc{ display:flex; gap:6px; align-items:center; }
 .incontro-adm b{ font-size:.93rem; }
 .incontro-adm .dx{ text-align:right; }
+/* le mani di una partita: sta sotto ai due nomi e occupa tutta la riga */
+.incontro-adm .mani{ grid-column:1 / -1; margin-top:6px; border-top:1px dashed var(--linea); padding-top:8px; }
+.incontro-adm .mani summary{ cursor:pointer; font-size:.9rem; color:var(--muted); }
+.incontro-adm .mani summary.vinta{ color:#0f7a4a; font-weight:bold; }
+.mani-dentro{ margin-top:8px; }
+.mano-riga{ display:flex; gap:8px; align-items:center; margin-bottom:6px; }
+.mano-riga .n-mano{ flex:0 0 34px; font-size:.85rem; color:var(--muted); }
+.mano-riga input{ width:76px; text-align:center; min-height:46px; padding:8px; }
+.mano-riga button{ min-height:46px; }
+.mani-dentro p.aiuto.vinta{ color:#0f7a4a; font-weight:bold; }
 
 /* ---- procedura guidata ---- */
 .guidata{ background:#fff8e5; border:2px solid var(--c3); border-radius:18px; padding:18px; margin-bottom:18px; }

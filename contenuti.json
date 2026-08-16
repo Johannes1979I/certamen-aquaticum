@@ -1115,25 +1115,20 @@
       "illustrazione": "briscola",
       "gruppo": "italiana",
       "blocco": "B",
-      "orario": "18:00",
-      "fine": "22:00",
+      "orario": "16:00",
+      "fine": "18:00",
       "sessioni": [
         {
           "giorno": "sabato 15",
-          "dalle": "18:00",
-          "alle": "22:00"
-        },
-        {
-          "giorno": "domenica 16",
-          "dalle": "17:00",
-          "alle": "20:00"
+          "dalle": "16:00",
+          "alle": "18:00"
         }
       ],
       "formazione": "coppia",
       "coppiaObbligatoria": true,
       "giocatoriTavolo": 4,
       "postiTotali": 24,
-      "durataPartita": 35,
+      "durataPartita": 37,
       "escluso": false,
       "descrizione": "Un torneo solo con le carte italiane, in tre prove: si comincia a briscola, si passa allo scopone e si chiude a tresette. La stessa coppia gioca tutte e tre le prove e i punti si sommano: non vince chi è bravo a un gioco, vince chi se la cava con tutti e tre.",
       "partita": "Nel girone all'italiana ogni coppia incontra tutte le altre a ognuna delle prove che si giocano: un giro completo per gioco. Una partita è una smazzata a scopone o una mano a tresette — si finisce di giocare quella e si cambia — con un tetto di 17 minuti: se scade, vince chi è avanti. Se invece le coppie sono tante e si gioca a gironi, ogni turno ha la sua prova e la finale si disputa a scopone. Vittoria 3 punti, pareggio 1, sconfitta 0: la classifica è unica.",
@@ -1182,7 +1177,7 @@
           "emoji": "🂱",
           "illustrazione": "scopone",
           "descrizione": "Il torneo dei veterani: dieci carte a testa, niente mazzo da pescare, solo memoria e testa. Si gioca rigorosamente a coppie e il compagno va scelto bene.",
-          "partita": "Partita intera, a 11 punti: di solito tre smazzate, poco più di mezz'ora. Non si interrompe a metà.",
+          "partita": "Partita intera, a 41 punti: si segna mano per mano e si chiude appena una coppia arriva a 41.",
           "regole": [
             "Quattro giocatori, due coppie: i compagni siedono uno di fronte all'altro.",
             "Tutte e 40 le carte vengono distribuite: 10 a testa, 4 scoperte sul tavolo.",
@@ -1196,7 +1191,8 @@
             "Scopa normale a coppie, più semplice per chi non ha mai giocato a scopone.",
             "Scopone con l'asso piglia tutto, per una versione più mossa."
           ],
-          "durataPartita": 35
+          "durataPartita": 37,
+          "traguardo": 41
         },
         {
           "id": "tresette",
@@ -1204,7 +1200,7 @@
           "emoji": "🂲",
           "illustrazione": "tresette",
           "descrizione": "Il gioco del silenzio e delle parole giuste: si può parlare solo con le frasi ammesse, e il resto lo deve capire il compagno. Elegante, lento e spietato.",
-          "partita": "Partita intera, a 21 punti: due o tre mani, circa venticinque minuti. Non si interrompe a metà.",
+          "partita": "Partita intera, a 41 punti: si segna mano per mano e si chiude appena una coppia arriva a 41.",
           "regole": [
             "Quattro giocatori, due coppie: i compagni siedono uno di fronte all'altro.",
             "Mazzo da 40 carte, 10 a testa. Si deve sempre rispondere al seme di uscita.",
@@ -1218,11 +1214,13 @@
             "Tresette con l'accuso di napoletana e buon gioco, per chi lo gioca così da sempre.",
             "Tresette in due, se qualcuno resta senza compagno."
           ],
-          "durataPartita": 25
+          "durataPartita": 37,
+          "traguardo": 41
         }
       ],
       "premio": "Coppa del Trittico",
-      "provaFinale": "scopone"
+      "provaFinale": "scopone",
+      "traguardo": 41
     },
     {
       "id": "burraco",
@@ -1254,7 +1252,8 @@
       ],
       "premio": "Coppa Burraco",
       "partita": "Ogni partita dura 30 minuti a tempo: vince la coppia che ha totalizzato più punti.",
-      "gruppo": "burraco"
+      "gruppo": "burraco",
+      "escluso": true
     }
   ],
   "programma": [
@@ -1277,17 +1276,17 @@
       "nota": "Chi si è iscritto da solo viene abbinato adesso"
     },
     {
+      "ora": "16:00",
+      "area": "adulti",
+      "titolo": "Carte italiane — 1º turno: scopone scientifico",
+      "nota": "Due tavoli insieme, partita a 41 punti: si segna mano per mano"
+    },
+    {
       "ora": "16:15",
       "area": "ragazzi",
       "titolo": "Palla bollente — a eliminazione",
       "nota": "Chi resta con la palla in mano esce: vince la squadra con l'ultimo in acqua",
       "gioco": "palla-bollente"
-    },
-    {
-      "ora": "16:15",
-      "area": "adulti",
-      "titolo": "Burraco — primo turno",
-      "nota": "Sui tavoli all'ombra, mentre in acqua si scaldano i ragazzi"
     },
     {
       "ora": "16:25",
@@ -1304,17 +1303,17 @@
       "gioco": "cavalca-materassino"
     },
     {
+      "ora": "16:40",
+      "area": "adulti",
+      "titolo": "Carte italiane — 2º turno: tresette",
+      "nota": "Cambio avversari: ogni coppia incontra tutte le altre una volta"
+    },
+    {
       "ora": "16:50",
       "area": "ragazzi",
       "titolo": "Trasporto del compagno",
       "nota": "",
       "gioco": "trasporto-compagno"
-    },
-    {
-      "ora": "16:50",
-      "area": "adulti",
-      "titolo": "Burraco — secondo turno",
-      "nota": ""
     },
     {
       "ora": "17:05",
@@ -1330,10 +1329,10 @@
       "gioco": "traghetto"
     },
     {
-      "ora": "17:25",
+      "ora": "17:20",
       "area": "adulti",
-      "titolo": "Burraco — finale",
-      "nota": "Si chiude prima delle 18:00: alle 18 i tavoli passano alle carte italiane"
+      "titolo": "Carte italiane — 3º turno: scopone scientifico",
+      "nota": "L'ultimo giro: qui si decide la classifica"
     },
     {
       "ora": "17:30",
@@ -1359,8 +1358,8 @@
     {
       "ora": "18:00",
       "area": "adulti",
-      "titolo": "Carte italiane — giro di scopone",
-      "nota": "Tre turni, due tavoli insieme: partita intera a 11 punti, si finisce verso le 19:50"
+      "titolo": "Coppa delle carte italiane",
+      "nota": "Si sommano i punti dei tre turni e si premia la coppia vincitrice"
     },
     {
       "ora": "18:05",
@@ -1381,18 +1380,6 @@
       "area": "tutti",
       "titolo": "Premiazione",
       "nota": "Coppe, medaglie e foto di gruppo"
-    },
-    {
-      "ora": "19:55",
-      "area": "adulti",
-      "titolo": "Carte italiane — giro di tresette",
-      "nota": "Altri tre turni, partita intera a 21 punti"
-    },
-    {
-      "ora": "21:20",
-      "area": "adulti",
-      "titolo": "Coppa delle carte italiane",
-      "nota": "Si sommano i punti dei due giri. Se qualcosa slitta si finisce domenica 16, dalle 17:00"
     }
   ],
   "premi": [

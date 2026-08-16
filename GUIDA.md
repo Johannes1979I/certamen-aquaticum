@@ -145,6 +145,18 @@ sito, non te.
    stessa e i punti si sommano in una classifica unica. Se scegli due giochi su
    tre, i giri diventano due. Negli altri formati — gironi, eliminazione — le
    prove si alternano invece turno dopo turno, se no non ci starebbe.
+   **Segnare una partita mano per mano.** Sotto ogni partita del tabellone c'è
+   `🧮 Segna le mani, una per una`: si apre, si preme `➕ Un'altra mano` e si
+   scrivono i punti dei due lati. Il totale in cima si aggiorna da solo a ogni
+   cifra, e sotto c'è scritto quanto manca a ciascuna coppia — *«Mancano 15
+   punti a Marco R. – Sara N. e 36 a Anna B. – Paolo G.»*. Appena una arriva al
+   traguardo, la riga diventa verde e dice **«🏆 Partita finita: … ha passato i
+   41»**: non devi sommare niente e non devi dichiarare il vincitore, la
+   classifica si aggiorna da sé. Se sbagli una mano la correggi o la butti col
+   cestino, e tutto si ricalcola.
+   Il traguardo si cambia in `⚙️ Contenuti`, dentro il torneo o dentro la
+   singola prova, alla voce «traguardo»: di serie 41.
+
    Sotto la formula c'è il **riquadro dei tempi**: quanti turni, quante
    partite, quanti tavoli in parallelo e quanto dura in tutto, confrontato con
    la finestra vera del torneo. Se non ci sta te lo dice prima, con le vie
