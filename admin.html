@@ -11,6 +11,7 @@
 <script src="qr.js"></script>
 <script src="firebase.js"></script>
 <script src="comune.js"></script>
+<script src="torneo-veloce.js"></script>
 <script src="locandina-img.js"></script>
 <style>
 /* =========================================================================
@@ -128,6 +129,44 @@ body{ background:#eef4fa; }
 /* le mani di una partita: sta sotto ai due nomi e occupa tutta la riga */
 .incontro-adm .mani{ grid-column:1 / -1; margin-top:6px; border-top:1px dashed var(--linea); padding-top:8px; }
 .incontro-adm .mani summary{ cursor:pointer; font-size:.9rem; color:var(--muted); }
+
+/* ---- la procedura guidata del torneo veloce (torneo-veloce.js) ---- */
+.velo-tv{
+  position:fixed; inset:0; background:rgba(10,37,64,.55); display:none;
+  align-items:center; justify-content:center; padding:18px; z-index:80;
+}
+.velo-tv.aperto{ display:flex; }
+.finestra-tv{
+  background:#fff; border-radius:20px; padding:22px; max-width:560px; width:100%;
+  box-sizing:border-box; max-height:88vh; overflow:auto; min-width:0; overflow-wrap:break-word;
+}
+.finestra-tv *{ max-width:100%; box-sizing:border-box; }
+.finestra-tv .btn{ white-space:normal; }
+.passo h3{ font-size:1.05rem; margin:14px 0 4px; }
+.passo .aiuto{ margin-bottom:10px; }
+.gente{ display:grid; grid-template-columns:1fr; gap:8px; max-height:40vh; overflow:auto; margin-bottom:10px; }
+@media(min-width:520px){ .gente{ grid-template-columns:1fr 1fr; } }
+.tipo-g{
+  display:flex; align-items:center; gap:10px; background:#f4f8fc; border:2px solid var(--linea);
+  border-radius:12px; padding:10px 12px; cursor:pointer; min-height:52px;
+}
+.tipo-g.preso{ border-color:var(--c1); background:rgba(11,127,212,.09); }
+.tipo-g input{ width:22px; height:22px; flex:0 0 22px; }
+.tipo-g .chi{ flex:1; font-weight:bold; font-size:.95rem; }
+.scelte-r{ display:grid; grid-template-columns:1fr; gap:8px; margin-bottom:12px; }
+@media(min-width:520px){ .scelte-r{ grid-template-columns:1fr 1fr; } }
+.scelta-r{
+  text-align:left; background:#fff; border:2px solid var(--linea); border-radius:14px;
+  padding:11px 13px; cursor:pointer; min-height:56px;
+}
+.scelta-r.presa{ border-color:var(--c1); background:rgba(11,127,212,.07); }
+.scelta-r b{ display:block; }
+.scelta-r small{ color:var(--muted); }
+.coppia-r{
+  display:flex; align-items:center; gap:8px; background:#f4f8fc; border:1px solid var(--linea);
+  border-radius:12px; padding:9px 11px; margin-bottom:7px;
+}
+.coppia-r .n{ flex:0 0 26px; color:var(--muted); font-size:.85rem; }
 .incontro-adm .mani summary.vinta{ color:#0f7a4a; font-weight:bold; }
 .mani-dentro{ margin-top:8px; }
 .mano-riga{ display:flex; gap:8px; align-items:center; margin-bottom:6px; }
@@ -489,7 +528,7 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
       Nomi, regole, tabelloni, classifiche e coppe si rifanno da soli su quello che scegli.</p>
     <div class="azioni" style="justify-content:flex-start;margin-bottom:14px">
       <a class="btn btn-p" href="partite.html" target="_blank" rel="noopener">🃏 Apri la pagina delle partite</a>
-      <a class="btn btn-p" href="partite.html?nuovo=1" target="_blank" rel="noopener">⚡ Torneo veloce</a>
+      <button class="btn btn-p" data-tv="1">⚡ Torneo veloce o partita</button>
       <a class="btn btn-chiaro" href="tabellone-carte.html" target="_blank" rel="noopener">📺 Tabellone del torneo</a>
       <a class="btn btn-chiaro" href="statistiche.html" target="_blank" rel="noopener">📊 Statistiche</a>
     </div>
@@ -1081,6 +1120,8 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
     </div>
   </div>
 </div>
+
+<div class="velo-tv" id="veloTv"><div class="finestra-tv" id="finestraTv"></div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 

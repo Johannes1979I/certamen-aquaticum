@@ -713,6 +713,7 @@
     if (nome === 'squadre') return 'le squadre';
     if (nome === 'risultati') return 'i punteggi dei giochi';
     if (nome === 'titoli') return 'i premi';
+    if (nome === 'rubrica') return 'la rubrica dei giocatori';
     if (nome.indexOf('torneo_') === 0) {
       var t = torneoDati(nome.slice(7));
       return t.nome ? ('il torneo ' + t.nome) : 'un torneo';
@@ -834,6 +835,7 @@
         menzioni: STATO.menzioni
       },
       titoli: { titoli: STATO.titoli },
+      rubrica: STATO.rubrica || { giocatori: [] },
       cronometro: { cronometro: STATO.cronometro },
       presenze: { presenze: STATO.presenze },
       assetto_carte: { assettoCarte: STATO.assettoCarte }
@@ -854,6 +856,8 @@
       STATO.risultati = V(dati.risultati, {});
       STATO.torneoRagazzi = V(dati.torneoRagazzi, { attivo: false, turni: [] });
       STATO.menzioni = V(dati.menzioni, {});
+    } else if (nome === 'rubrica') {
+      STATO.rubrica = dati && Array.isArray(dati.giocatori) ? dati : { giocatori: [] };
     } else if (nome === 'titoli') {
       STATO.titoli = V(dati.titoli, []);
     } else if (nome === 'cronometro') {
@@ -3119,6 +3123,68 @@
     return STATO.assettoCarte;
   }
 
+  /* ------------------- il torneo veloce, dall'admin ---------------------
+     La stessa procedura guidata della sala da gioco (torneo-veloce.js): si
+     scelgono i giocatori — dagli iscritti o dalla rubrica, o scrivendoli —
+     si formano le coppie e si genera il tabellone. Il torneo nasce qui e si
+     gioca nella pagina delle partite, che è fatta per quello. */
+  /* Chi ha giocato non si perde: entra in rubrica col compagno di quella
+     volta, e la prossima volta il nome è già lì da toccare. */
+  function archiviaGiocatori(st) {
+    var r = rubricaAdmin();
+    r.giocatori = V(r.giocatori, []);
+    var per = {};
+    r.giocatori.forEach(function (g) { per[normalizza(g.nome)] = g; });
+    V(st.coppie, []).forEach(function (c) {
+      var nomi = [[c.a, c.b], [c.b, c.a]];
+      /* nei tornei nati dalle iscrizioni a e b sono codici: si traducono */
+      nomi.forEach(function (due) {
+        var chi = perId(due[0]), altro = perId(due[1]);
+        var nome = chi ? chi.nome : (String(due[0] || '').length > 12 ? '' : due[0]);
+        var compagno = altro ? altro.nome : (String(due[1] || '').length > 12 ? '' : due[1]);
+        if (!nome) return;
+        var k = normalizza(nome);
+        if (per[k]) { per[k].volte = (per[k].volte || 0) + 1; if (compagno) per[k].compagno = compagno; }
+        else { per[k] = { nome: nome, compagno: V(compagno, ''), volte: 1 }; r.giocatori.push(per[k]); }
+      });
+    });
+    r.giocatori.sort(function (a, b) { return (b.volte || 0) - (a.volte || 0); });
+    STATO.rubrica = r;
+  }
+
+  function rubricaAdmin() {
+    STATO.rubrica = STATO.rubrica || { giocatori: [] };
+    return STATO.rubrica;
+  }
+  function iscrittiPerTorneoVeloce() {
+    return attive('adulti').map(function (p) {
+      return { nome: p.nome, compagno: V(p.compagno, '') };
+    });
+  }
+  function apriTorneoVeloce() {
+    if (!SESS) { CA.toast('Prima entra nel database: il torneo va salvato.', 6000); return; }
+    if (!window.TV) { CA.toast('Manca torneo-veloce.js: ricarica la pagina con ⌘⇧R.', 8000); return; }
+    TV.apri({
+      velo: $('veloTv'),
+      finestra: $('finestraTv'),
+      rubrica: rubricaAdmin(),
+      iscritti: iscrittiPerTorneoVeloce(),
+      salvaRubrica: function (r) { STATO.rubrica = r; salvaStato(); },
+      fatto: function (torneo) {
+        var id = 'v' + Date.now();
+        STATO.tornei = STATO.tornei || {};
+        STATO.tornei[id] = torneo;
+        salvaStato(true);
+        CA.toast('✅ ' + torneo.nome + ' creato: si gioca nella pagina delle partite.', 8000);
+        window.open('partite.html?t=' + encodeURIComponent(id), '_blank', 'noopener');
+      }
+    });
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-tv]');
+    if (b) { e.preventDefault(); apriTorneoVeloce(); }
+  });
+
   /* Le tre prove delle carte italiane si possono mettere insieme o dividere.
      Qui si sceglie: da questa scelta escono tornei, nomi, regole e coppe. */
   function disegnaAssetto() {
@@ -3538,6 +3604,9 @@
           STATO.tornei[TORNEO_APERTO] = STATO.tornei[TORNEO_APERTO] || {};
           STATO.tornei[TORNEO_APERTO].archiviato = true;
           if (!STATO.tornei[TORNEO_APERTO].fine) STATO.tornei[TORNEO_APERTO].fine = new Date().toISOString();
+          /* i giocatori restano in rubrica col compagno di questa volta:
+             l'archivio conserva le partite, la rubrica le persone */
+          archiviaGiocatori(STATO.tornei[TORNEO_APERTO]);
           salvaStato(true);
           disegnaPannelloTorneo();
           CA.toast('📦 In archivio. Lo ritrovi nelle statistiche.', 6000);
