@@ -217,6 +217,20 @@ function token(){
     SESS.scadenza = s.scadenza;
     sessSalva();
     return SESS.idToken;
+  }).catch(function(e){
+    /* Il collegamento è scaduto o non vale più. Restare lì con scritto «rete
+       assente» non aiuta nessuno: si butta via il collegamento vecchio e si
+       richiede nome e password, che è quello che serve davvero. */
+    SESS = null;
+    try{ CA.memScrivi('ca_fbsess', ''); }catch(x){ }
+    try{ localStorage.removeItem('ca_fbsess'); }catch(x){ }
+    var box = $('entra');
+    if(box){
+      box.style.display = '';
+      testo('erroreEntra', 'Il collegamento è scaduto: rientra con la tua email e la password.');
+    }
+    testo('statoRete', '🔴 da rifare l’accesso');
+    throw e;
   });
 }
 
