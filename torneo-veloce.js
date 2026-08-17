@@ -385,6 +385,15 @@
       }
     } else if (N.formato === 'eliminazione') {
       incontri = giroEliminazione(coppie);
+    } else if (N.formato === 'gironi' && coppie.length >= 6) {
+      incontri = giroGironi(coppie);
+    } else if (N.formato === 'gironi') {
+      /* Con meno di sei coppie i due gironi verrebbero da due o tre squadre
+         l'uno: non è un torneo, è un sorteggio. Si gioca all'italiana e si
+         dice perché, invece di consegnare un tabellone storto. */
+      N.formato = 'italiana';
+      incontri = giroItaliana(coppie);
+      avvisa('Siete in ' + coppie.length + ' coppie: i due gironi verrebbero troppo piccoli. Ho fatto un girone all\'italiana, tutte contro tutte.');
     } else {
       incontri = giroItaliana(coppie);
       if (N.ritorno) {
@@ -456,12 +465,48 @@
     }
     return out;
   }
+  /* Due gironi e finale: le coppie si dividono in due, ognuna gioca il suo
+     girone all'italiana, e la finale la mette insieme la pagina delle
+     partite quando i due gironi sono finiti — prima non si sa chi la gioca.
+     La divisione è a serpentina (1ª e 4ª di qua, 2ª e 3ª di là) così, se
+     l'ordine delle coppie rispecchia la forza, i gironi restano pari. */
+  function giroGironi(coppie) {
+    coppie.forEach(function (c, i) {
+      c.girone = (i % 4 === 0 || i % 4 === 3) ? 'A' : 'B';
+    });
+    var out = [], k = 0;
+    ['A', 'B'].forEach(function (g) {
+      var sue = coppie.filter(function (c) { return c.girone === g; });
+      if (sue.length < 2) return;
+      giroItaliana(sue).forEach(function (m) {
+        k++;
+        m.id = 'g' + g + k;
+        m.turno = 'Girone ' + g + ' · ' + m.turno;
+        m.girone = g;
+        out.push(m);
+      });
+    });
+    return out;
+  }
+
+  /* Come si chiama il turno, secondo quante coppie ci sono ancora. I turni
+     dopo il primo li mette la pagina delle partite, quando si sa chi ha
+     vinto: qui si può solo cominciare. */
+  function nomeGiro(quante) {
+    if (quante <= 2) return '🏁 Finale';
+    if (quante <= 4) return 'Semifinali';
+    if (quante <= 8) return 'Quarti';
+    if (quante <= 16) return 'Ottavi';
+    return 'Primo turno';
+  }
+
   function giroEliminazione(coppie) {
     var out = [], k = 0;
     for (var i = 0; i + 1 < coppie.length; i += 2) {
       k++;
       out.push({
-        id: 'm' + k, turno: 'Primo turno', a: coppie[i].id, b: coppie[i + 1].id,
+        id: 'm' + k, turno: nomeGiro(coppie.length), giro: 1,
+        a: coppie[i].id, b: coppie[i + 1].id,
         tavolo: k, puntiA: '', puntiB: '', mani: []
       });
     }

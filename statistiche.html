@@ -274,7 +274,8 @@ function disegna(){
   n.textContent = '';
   [[TORNEI.length, 'tornei e partite'], [c.partite, 'partite giocate'], [c.mani, 'mani segnate'],
    [c.gente.length, 'giocatori'], [c.coppie.length, 'coppie diverse'],
-   [c.conTempo ? Math.round(c.minuti / c.conTempo) + "'" : '—', 'durata media di una partita']
+   [c.conTempo ? (c.minuti / c.conTempo < 1 ? '<1\u2032' : Math.round(c.minuti / c.conTempo) + "\u2032") : '—',
+    'durata media di una partita']
   ].forEach(function(x){
     var d = crea('div', 'numerone');
     d.appendChild(crea('b', null, String(x[0])));
@@ -406,7 +407,8 @@ function durata(t){
   var ms = new Date(t.fine).getTime() - new Date(t.inizio).getTime();
   if(!isFinite(ms) || ms <= 0) return '';
   var min = Math.round(ms / 60000);
-  if(min < 60) return min + "'";
+  if(min < 1) return 'meno di 1\u2032';     /* «0'» non vuol dire niente */
+  if(min < 60) return min + "\u2032";
   return Math.floor(min / 60) + 'h' + due(min % 60);
 }
 function dataOra(iso){

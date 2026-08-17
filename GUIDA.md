@@ -616,8 +616,19 @@ quando non c'è nessun torneo cominciato.
    compagno abituale: si toccano e via. Chi è nuovo si aggiunge scrivendolo una
    volta sola, poi resta in rubrica.
 2. **Che cosa si gioca** — con due sole coppie compare anche **partita singola**,
-   secca o al meglio delle tre; se no la formula del torneo, con l'andata e
-   ritorno. Si sceglie il gioco e a quanti punti finisce una partita (41).
+   secca o al meglio delle tre; se no la formula del torneo. Si sceglie il gioco
+   e a quanti punti finisce una partita (41). Le formule:
+   - **girone all'italiana** — tutte contro tutte, con la spunta **andata e
+     ritorno** se c'è tempo;
+   - **due gironi e finale** — le coppie si dividono in due gironi (a
+     serpentina, così restano pari), ognuno gioca il suo girone all'italiana e
+     poi **la finale compare da sola** fra la prima di un girone e la prima
+     dell'altro. Da sei coppie in su: sotto, il sito avvisa e fa un girone
+     unico, perché due gironi da due coppie non sono un torneo;
+   - **eliminazione diretta** — chi perde esce. In calendario c'è solo il primo
+     turno, perché il secondo lo decide il primo: appena un turno finisce
+     **compare quello dopo** (quarti, semifinali, finale) con chi ha vinto. Se
+     le coppie sono dispari, chi resta in panchina passa il turno.
 3. **Le coppie** — già formate secondo i compagni dichiarati. Per cambiarle si
    toccano due nomi e si scambiano.
 
@@ -628,8 +639,17 @@ aperte restano aperte**, così chi stava segnando non si ritrova altrove.
 
 Poi si gioca: sotto ogni partita si segnano **le mani, una per una**. Il totale
 corre da solo e appena una coppia arriva al traguardo **la partita si chiude e
-si blocca** — niente più mani per sbaglio. Se hai sbagliato una cifra c'è
+si blocca** — niente più mani per sbaglio. Il blocco scatta quando togli il
+dito dalla riga, non nell'istante in cui scrivi: così fai in tempo a segnare
+anche il punteggio degli avversari. Se hai sbagliato una cifra c'è
 `✏️ Correggi il risultato`.
+
+**Il tabellone grande.** `📺 Tabellone` apre `tabellone-carte.html` in una
+scheda nuova: classifica a sinistra, partite a destra, scritte grandi da
+guardare da lontano. Ci finisce **da solo** anche il torneo cominciato qui al
+tavolo — la pagina delle partite lo scrive sulla bacheca pubblica a ogni
+risultato, senza toccare le classifiche dei ragazzi né il cronometro. Quando il
+torneo finisce, sul tabellone compare la coppa col vincitore.
 
 **Più telefoni insieme.** La pagina si aggiorna da sé ogni cinque secondi e
 *non tocca mai il campo in cui stai scrivendo*: due tavoli possono segnare

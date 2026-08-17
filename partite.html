@@ -364,6 +364,7 @@ function manda(quale){
   }).then(function(){
     if(!quale) DAMANDARE = false;
     testo('statoRete', '🟢 salvato alle ' + oraOra());
+    pubblica(id);            /* e sul tabellone, che lo guardano tutti */
   }).catch(function(){
     testo('statoRete', '🔴 non salvato: riprovo');
     setTimeout(function(){ manda(quale); }, 4000);
@@ -723,10 +724,18 @@ function rigaPartita(partenza, coppie){
      dito qui dentro non si tocca niente, se no si rifanno le mani solo
      quando ne è cambiato il numero. */
   var quanteMani = V(m.mani, []).length;
+  var eraFinita = finita(m, APERTO);
   RIGHE[idP] = function(){
-    if(d.contains(document.activeElement)) return;
+    if(d.contains(document.activeElement)) return;   /* mai sotto le dita */
     var ora = V(m0().mani, []).length;
-    if(ora !== quanteMani){ quanteMani = ora; disegnaMani(); }
+    var adesso = finita(m0(), APERTO);
+    /* Quando la partita passa il traguardo il pulsante «un'altra mano» deve
+       sparire — ma non nell'istante in cui si scrive, che si sta ancora
+       segnando il punteggio degli avversari: si toglie appena il dito va
+       via dalla riga. Stessa cosa al contrario, se la si riapre. */
+    if(ora !== quanteMani || adesso !== eraFinita){
+      quanteMani = ora; eraFinita = adesso; disegnaMani();
+    }
     aggiorna();
   };
   return d;
@@ -854,6 +863,8 @@ function guardaSeFinito(){
     return m.puntiA !== '' && m.puntiA !== undefined && m.puntiA !== null;
   });
   if(!tutte){ CHIUSO = false; if(st.fine){ st.fine = ''; salva(); } return; }
+  if(creaFinale(st)) return;      /* due gironi: manca ancora la finale */
+  if(creaTurnoElim(st)) return;   /* eliminazione: c'è un altro turno */
   if(!st.fine){ st.fine = new Date().toISOString(); salva(); }
   if(CHIUSO) return;
   CHIUSO = true;
@@ -867,6 +878,15 @@ function mostraFine(){
   var pari = righe.filter(function(r){
     return r.punti === primo.punti && (r.fatti - r.subiti) === (primo.fatti - primo.subiti);
   });
+  /* Se c'è stata una finale, comanda lei: la classifica generale dei due
+     gironi non dice chi ha vinto il torneo. */
+  var fin = V(V(STATO[APERTO], {}).incontri, []).filter(function(m){ return m.finale && finita(m, APERTO); })[0];
+  if(fin){
+    var vinc = somma(fin, 'a') >= somma(fin, 'b') ? fin.a : fin.b;
+    if(V(fin.mani, []).length === 0){ vinc = Number(fin.puntiA) >= Number(fin.puntiB) ? fin.a : fin.b; }
+    var riga = righe.filter(function(r){ return r.id === vinc; })[0];
+    if(riga){ primo = riga; pari = [riga]; }
+  }
   var f = $('finestra');
   f.textContent = '';
 
@@ -881,9 +901,10 @@ function mostraFine(){
         ? ('ha vinto la sfida, ' + vinte[0] + ' partite a ' + V(vinte[1], 0) + '.')
         : 'ha vinto la partita.'));
     } else {
-      f.appendChild(crea('p', null, 'vince ' + V(torneoDati(APERTO).nome, 'il torneo') +
-        ' con ' + primo.punti + ' punti in classifica.'));
-      var seconda = righe[1];
+      f.appendChild(crea('p', null, fin
+        ? ('vince la finale, e con lei ' + V(torneoDati(APERTO).nome, 'il torneo') + '.')
+        : ('vince ' + V(torneoDati(APERTO).nome, 'il torneo') + ' con ' + primo.punti + ' punti in classifica.')));
+      var seconda = righe.filter(function(r){ return r.id !== primo.id; })[0];
       if(seconda) f.appendChild(crea('p', 'aiuto', 'Seconda: ' + seconda.coppia + ' con ' + seconda.punti + '.'));
     }
   } else {
@@ -921,6 +942,150 @@ function aggiornaFine(){
   if(!FINEAPERTA) return;
   if(!$('velo').classList.contains('aperto')){ FINEAPERTA = false; return; }
   mostraFine();
+}
+
+/* ------------------------- il tabellone grande -------------------------
+   Il tabellone (tabellone-carte.html) legge il documento pubblico, quello
+   che chiunque può vedere senza password. I tornei preparati nell'area
+   organizzatori ci finiscono quando si preme «Pubblica»; quelli fatti qui
+   al tavolo non ci finivano affatto, e il tabellone restava vuoto. Adesso
+   ce li mette questa pagina, da sola: legge il documento com'è, sostituisce
+   solo il pezzo di questo torneo e lo riscrive — così le classifiche dei
+   ragazzi, il cronometro e tutto il resto restano dove sono. */
+var TIMERPUB = 0;
+function pubblica(id){
+  if(!id || !STATO[id]) return;
+  if(TIMERPUB) clearTimeout(TIMERPUB);
+  TIMERPUB = setTimeout(function(){ pubblicaOra(id); }, 1500);
+}
+
+function pubblicaOra(id){
+  var st = STATO[id];
+  if(!st) return;
+  var coppie = V(st.coppie, []);
+  var righe = classifica(id);
+  var quello = {
+    id: id,
+    nome: V(torneoDati(id).nome, 'Torneo di carte'),
+    emoji: '🃏',
+    gruppo: 'veloce',
+    premio: '',
+    formato: V(st.formato, ''),
+    stato: V(st.incontri, []).every(function(m){
+      return m.saltata || (V(m.mani, []).length ? finita(m, id)
+        : (m.puntiA !== '' && m.puntiA !== undefined && m.puntiA !== null));
+    }) ? 'concluso' : 'in corso',
+    classifica: righe.map(function(r){
+      return { coppia:r.coppia, g:r.g, v:r.v, n:r.n, p:r.p, punti:r.punti };
+    }),
+    incontri: V(st.incontri, []).map(function(m){
+      return {
+        turno: m.turno, tavolo: m.tavolo,
+        a: nomeCoppia(m.a, coppie), b: nomeCoppia(m.b, coppie),
+        puntiA: V(m.mani, []).length ? somma(m, 'a') : m.puntiA,
+        puntiB: V(m.mani, []).length ? somma(m, 'b') : m.puntiB
+      };
+    })
+  };
+  FB.leggiClassifica().catch(function(){ return null; }).then(function(doc){
+    doc = doc && typeof doc === 'object' ? doc : {};
+    doc.carte = doc.carte && typeof doc.carte === 'object' ? doc.carte : {};
+    var elenco = V(doc.carte.tornei, []).filter(function(x){ return x.id !== id; });
+    if(!st.archiviato) elenco.unshift(quello);
+    doc.carte.tornei = elenco;
+    doc.carte.generale = V(doc.carte.generale, []);
+    doc.carte.titoli = V(doc.carte.titoli, []);
+    doc.aggiornato = new Date().toISOString();
+    return token().then(function(tk){ return FB.scriviClassifica(tk, doc); });
+  }).catch(function(){ /* il tabellone non è vitale: se non va, pazienza */ });
+}
+
+/* Chi ha vinto una partita: con le mani comanda il totale, se no il
+   punteggio scritto a mano. */
+function vincitoreDi(m){
+  if(V(m.mani, []).length) return somma(m, 'a') >= somma(m, 'b') ? m.a : m.b;
+  return Number(m.puntiA) >= Number(m.puntiB) ? m.a : m.b;
+}
+
+/* Eliminazione diretta: si può mettere in calendario solo il primo turno,
+   perché il secondo lo decide il primo. Appena un turno è finito si crea
+   quello dopo, con chi ha vinto e con chi era rimasto in panchina — capita
+   quando le coppie sono dispari. Alla fine restano in due: quella è la
+   finale, e chi la vince ha vinto il torneo. */
+function nomeGiroElim(quante){
+  if(quante <= 2) return '🏁 Finale';
+  if(quante <= 4) return 'Semifinali';
+  if(quante <= 8) return 'Quarti';
+  if(quante <= 16) return 'Ottavi';
+  return 'Turno';
+}
+
+function creaTurnoElim(st){
+  if(V(st.formato, '') !== 'eliminazione') return false;
+  var inc = V(st.incontri, []);
+  if(!inc.length) return false;
+  var ultimo = inc.reduce(function(n, m){ return Math.max(n, V(m.giro, 1)); }, 1);
+  var diQuesto = inc.filter(function(m){ return V(m.giro, 1) === ultimo; });
+  if(!diQuesto.length || !diQuesto.every(function(m){ return finita(m, APERTO); })) return false;
+
+  /* chi è ancora in gara: si ricostruisce turno per turno, senza tenere
+     conti da nessuna parte — così non si sbaglia mai */
+  var vive = V(st.coppie, []).map(function(c){ return c.id; });
+  for(var g = 1; g <= ultimo; g++){
+    var q = inc.filter(function(m){ return V(m.giro, 1) === g; });
+    var schierati = {};
+    q.forEach(function(m){ schierati[m.a] = 1; schierati[m.b] = 1; });
+    vive = vive.filter(function(id){ return !schierati[id]; })
+               .concat(q.map(vincitoreDi));
+  }
+  if(vive.length < 2) return false;
+
+  var nome = nomeGiroElim(vive.length);
+  var k = 0;
+  for(var i = 0; i + 1 < vive.length; i += 2){
+    k++;
+    st.incontri.push({
+      id: 'e' + (ultimo + 1) + '_' + k, turno: nome, giro: ultimo + 1,
+      a: vive[i], b: vive[i + 1], tavolo: k,
+      puntiA: '', puntiB: '', mani: [], finale: vive.length === 2
+    });
+  }
+  st.fine = '';
+  salva();
+  ULTIMO = '';
+  disegna(true);
+  toast(vive.length === 2 ? '🏁 Si va in finale.' : ('▶️ ' + nome + ': ' + k + (k === 1 ? ' partita' : ' partite') + ' da giocare.'), 8000);
+  var giu = document.querySelectorAll('.turno-box');
+  if(giu.length) giu[giu.length - 1].scrollIntoView({ behavior:'smooth', block:'start' });
+  return true;
+}
+
+/* Con la formula «due gironi e finale» la finale non si può mettere in
+   calendario all'inizio: non si sa chi la gioca. Si crea qui, appena i due
+   gironi sono finiti, fra la prima di ognuno. */
+function creaFinale(st){
+  if(V(st.formato, '') !== 'gironi') return false;
+  if(V(st.incontri, []).some(function(m){ return m.finale; })) return false;
+  var righe = classifica(APERTO);
+  var per = {};
+  V(st.coppie, []).forEach(function(c){ per[c.id] = V(c.girone, ''); });
+  var prima = {};
+  righe.forEach(function(r){ var g = per[r.id]; if(g && !prima[g]) prima[g] = r; });
+  if(!prima.A || !prima.B) return false;
+  st.incontri.push({
+    id: 'fin' + Date.now(),
+    turno: '🏁 Finale',
+    a: prima.A.id, b: prima.B.id,
+    tavolo: 1, puntiA: '', puntiB: '', mani: [], finale: true
+  });
+  st.fine = '';
+  salva();
+  ULTIMO = '';
+  disegna(true);
+  toast('🏁 Gironi finiti: la finale è ' + prima.A.coppia + ' contro ' + prima.B.coppia + '.', 9000);
+  var giu = document.querySelectorAll('.turno-box');
+  if(giu.length) giu[giu.length - 1].scrollIntoView({ behavior:'smooth', block:'start' });
+  return true;
 }
 
 function generaSpareggio(pari){
@@ -1099,6 +1264,7 @@ function apriGestione(){
   box.appendChild(crea('h3', null, 'La formula'));
   var fm = crea('div', 'scelte-r');
   [{ id:'italiana', tit:'Girone all\'italiana', sotto:'Tutti contro tutti.' },
+   { id:'gironi', tit:'Due gironi e finale', sotto:'Da sette coppie in su.' },
    { id:'eliminazione', tit:'Eliminazione diretta', sotto:'Chi perde esce.' },
    { id:'sfida', tit:'Sfida fra due coppie', sotto:'Una secca o al meglio delle tre.' }
   ].forEach(function(s){
@@ -1177,11 +1343,39 @@ function rifaiTabellone(st){
     var e = [], k = 0;
     for(var j = 0; j + 1 < coppie.length; j += 2){
       k++;
-      e.push({ id:'m' + k, turno:'Primo turno', a:coppie[j].id, b:coppie[j + 1].id,
+      e.push({ id:'m' + k, turno:nomeGiroElim(coppie.length), giro:1,
+               a:coppie[j].id, b:coppie[j + 1].id,
                tavolo:k, puntiA:'', puntiB:'', mani:[] });
     }
     return e;
   }
+  if(st.formato === 'gironi' && coppie.length < 6){
+    /* due gironi da due coppie non sono due gironi: meglio dirlo */
+    st.formato = 'italiana';
+    toast('Con ' + coppie.length + ' coppie i due gironi sarebbero troppo piccoli: ho fatto un girone all’italiana.', 8000);
+    return giroSemplice(coppie);
+  }
+  if(st.formato === 'gironi'){
+    /* a serpentina, così i due gironi restano pari; la finale la mette la
+       pagina quando si sa chi l'ha guadagnata */
+    coppie.forEach(function(c, i){ c.girone = (i % 4 === 0 || i % 4 === 3) ? 'A' : 'B'; });
+    var gg = [], kk = 0;
+    ['A', 'B'].forEach(function(g){
+      var sue = coppie.filter(function(c){ return c.girone === g; });
+      if(sue.length < 2) return;
+      giroSemplice(sue).forEach(function(m){
+        kk++;
+        m.id = 'g' + g + kk; m.turno = 'Girone ' + g + ' · ' + m.turno; m.girone = g;
+        gg.push(m);
+      });
+    });
+    return gg;
+  }
+  return giroSemplice(coppie);
+}
+
+/* Il girone all'italiana secco: tutte contro tutte, col metodo del cerchio. */
+function giroSemplice(coppie){
   var ids = coppie.map(function(c){ return c.id; });
   if(ids.length % 2) ids.push(null);
   var n = ids.length, fuori = [], q = 0;
