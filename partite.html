@@ -609,6 +609,7 @@ function rigaPartita(partenza, coppie){
           if(!vinta && m.fine) m.fine = '';
           salva();
           disegnaClassifica();
+          disegnaChiusura();          /* «3 su 6» deve dire il vero adesso */
           if(vinta){
             festeggia(m, vinta, coppie);
             /* può essere l'ultima partita del torneo: si guarda subito, non
@@ -622,7 +623,7 @@ function rigaPartita(partenza, coppie){
       via.title = 'Togli questa mano';
       via.addEventListener('click', function(){
         m.mani.splice(i, 1);
-        aggiorna(); disegnaMani(); salva(); disegnaClassifica();
+        aggiorna(); disegnaMani(); salva(); disegnaClassifica(); disegnaChiusura();
       });
       r.appendChild(via);
       dentro.appendChild(r);
