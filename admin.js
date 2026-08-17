@@ -3289,8 +3289,23 @@
 
   function disegnaPannelloTorneo() {
     var el = $('pannelloTorneo');
+    /* Quando una partita finisce si rifà tutto il pannello — tabellone,
+       classifica, semifinali — e la pagina tornava in cima con i pieghevoli
+       delle mani richiusi: chi stava segnando si ritrovava altrove. Si
+       annota dov'era e cos'era aperto, e si rimette com'era. */
+    var dovEro = window.scrollY;
+    var aperti = {};
+    el.querySelectorAll('details.mani[data-p]').forEach(function (d) {
+      if (d.open) aperti[d.getAttribute('data-p')] = true;
+    });
     el.textContent = '';
     if (!TORNEO_APERTO) return;
+    setTimeout(function () {
+      el.querySelectorAll('details.mani[data-p]').forEach(function (d) {
+        if (aperti[d.getAttribute('data-p')]) d.open = true;
+      });
+      if (Math.abs(window.scrollY - dovEro) > 4) window.scrollTo(0, dovEro);
+    }, 0);
     var t = torneoDati(TORNEO_APERTO);
     var stato = STATO.tornei[TORNEO_APERTO] || {};
     var iscritti = iscrittiTorneo(TORNEO_APERTO);
@@ -4254,6 +4269,7 @@
        partita si chiude, senza che nessuno debba contare. */
     var pieghevole = document.createElement('details');
     pieghevole.className = 'mani';
+    pieghevole.setAttribute('data-p', V(m.id, ''));
     pieghevole.open = V(m.mani, []).length > 0 && !chiusa();
     var somm = document.createElement('summary');
     pieghevole.appendChild(somm);

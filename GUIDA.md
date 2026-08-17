@@ -615,6 +615,11 @@ diretto. È la pagina che si tiene aperta **sul telefono, al tavolo**.
 3. **Le coppie** — già formate secondo i compagni dichiarati. Per cambiarle si
    toccano due nomi e si scambiano.
 
+Le stesse mani si possono segnare anche dall'area organizzatori, nel tabellone
+del torneo: lì il pannello si rifà quando una partita si chiude — perché
+cambiano classifica e semifinali — ma **la pagina resta dov'era e le mani
+aperte restano aperte**, così chi stava segnando non si ritrova altrove.
+
 Poi si gioca: sotto ogni partita si segnano **le mani, una per una**. Il totale
 corre da solo e appena una coppia arriva al traguardo **la partita si chiude e
 si blocca** — niente più mani per sbaglio. Se hai sbagliato una cifra c'è

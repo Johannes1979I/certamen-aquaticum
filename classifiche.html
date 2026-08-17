@@ -379,6 +379,19 @@ function disegnaCarte(){
     return;
   }
 
+  /* Il tabellone grande sta in una pagina a sé: qui si offre il collegamento,
+     perché a bordo tavolo lo si vuole a schermo pieno su un tablet. */
+  var vai = crea('p', 'centro');
+  vai.style.margin = '0 0 18px';
+  var a = document.createElement('a');
+  a.className = 'btn btn-chiaro btn-piccolo';
+  a.href = 'tabellone-carte.html';
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.textContent = '📺 Apri il tabellone a schermo pieno';
+  vai.appendChild(a);
+  el.appendChild(vai);
+
   /* classifica combinata dei giochi all'italiana */
   var gen = c ? V(c.generale, []) : [];
   if(gen.length){
