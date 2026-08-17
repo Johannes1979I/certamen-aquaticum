@@ -218,12 +218,18 @@ function chiSono(){
 /* --------------------------------- avvio ------------------------------- */
 CA.carica().then(function(d){
   DATI = d;
-  $('linkTabellone').href = 'tabellone-carte.html';
   SESS = sessLeggi();
   if(!SESS){ $('entra').style.display = ''; return; }
   avvia();
 }).catch(function(e){
-  testo('statoRete', 'contenuti non letti: ' + e.message);
+  /* Una pagina bianca non dice niente a nessuno: se l'avvio inciampa lo si
+     scrive grosso, con l'errore vero, così si capisce cosa è successo. */
+  testo('statoRete', '🔴 errore');
+  var box = crea('div', 'turno-box');
+  box.appendChild(crea('h2', null, 'Qualcosa non ha funzionato all\'avvio'));
+  box.appendChild(crea('p', 'aiuto', String(e && e.message || e)));
+  box.appendChild(crea('p', 'aiuto', 'Prova a ricaricare con ⌘⇧R. Se resta così, dillo a chi tiene il sito.'));
+  $('corpo').appendChild(box);
 });
 
 $('btnEntra').addEventListener('click', function(){
@@ -873,6 +879,14 @@ function normale(s){
 $('btnNuovo').addEventListener('click', apriNuovo);
 
 function apriNuovo(){
+  if(!SESS){
+    /* senza sessione non si salva niente: inutile far compilare tutto per poi
+       perderlo. Si porta prima al riquadro dell'entrata. */
+    $('entra').style.display = '';
+    toast('Prima entra: senza collegamento al database il torneo non si salva.', 7000);
+    $('entra').scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
+  }
   NUOVO = { scelti: {}, nuovi: [], tipo:'torneo', formato:'italiana', formula:'secca',
             gioco:'scopone', traguardo:41, ritorno:false, coppie:[] };
   passoGente();
@@ -887,6 +901,22 @@ function passoGente(){
   box.appendChild(crea('h3', null, '1 · Chi gioca'));
   box.appendChild(crea('p', 'aiuto',
     'Tocca i nomi di chi c\'è. Quelli che hanno già giocato sono qui: i nuovi si aggiungono sotto.'));
+
+  if(RUBRICA.giocatori.length){
+    var rapide = crea('div', 'azioni');
+    rapide.style.cssText = 'justify-content:flex-start;margin-bottom:8px';
+    var tutti = crea('button', 'btn btn-chiaro btn-piccolo', '✅ Tutti');
+    tutti.addEventListener('click', function(){
+      RUBRICA.giocatori.concat(NUOVO.nuovi).forEach(function(g){
+        NUOVO.scelti[normale(g.nome)] = { nome:g.nome, compagno:V(g.compagno, '') };
+      });
+      passoGente();
+    });
+    var nessuno = crea('button', 'btn btn-chiaro btn-piccolo', '✖️ Nessuno');
+    nessuno.addEventListener('click', function(){ NUOVO.scelti = {}; passoGente(); });
+    rapide.appendChild(tutti); rapide.appendChild(nessuno);
+    box.appendChild(rapide);
+  }
 
   var gente = crea('div', 'gente');
   RUBRICA.giocatori.concat(NUOVO.nuovi).forEach(function(g){
@@ -913,23 +943,41 @@ function passoGente(){
     box.appendChild(crea('p', 'aiuto', 'La rubrica è vuota: scrivi qui sotto il primo nome.'));
   }
 
+  /* Inserimento rapido: si scrivono tutti i nomi in una volta, uno per riga
+     o separati da virgola. La prima sera la rubrica è vuota e scrivere otto
+     nomi uno alla volta, con un tocco fra l'uno e l'altro, è una penitenza. */
+  box.appendChild(crea('h3', null, 'Aggiungi giocatori'));
+  box.appendChild(crea('p', 'aiuto',
+    'Scrivili tutti insieme: uno per riga, oppure separati da virgola. ' +
+    'Restano in rubrica per le prossime volte.'));
   var campo = crea('div', 'campo');
-  var inp = document.createElement('input');
-  inp.type = 'text'; inp.placeholder = 'Nome e cognome';
+  var inp = document.createElement('textarea');
+  inp.rows = 3;
+  inp.placeholder = 'Gianpaolo Zarletti\nVeronica Sarti\nLaura Bini, Serena Rossi';
   campo.appendChild(inp);
   box.appendChild(campo);
-  var agg = crea('button', 'btn btn-chiaro btn-largo', '➕ Aggiungi questo giocatore');
+  var agg = crea('button', 'btn btn-chiaro btn-largo', '➕ Aggiungi questi giocatori');
   agg.addEventListener('click', function(){
-    var n = inp.value.trim();
-    if(!n) return;
-    if(RUBRICA.giocatori.concat(NUOVO.nuovi).some(function(g){ return normale(g.nome) === normale(n); })){
-      toast('C\'è già.', 3500); return;
-    }
-    NUOVO.nuovi.push({ nome:n, compagno:'' });
-    NUOVO.scelti[normale(n)] = { nome:n, compagno:'' };
+    var nomi = String(inp.value || '').split(/[\n,;]+/)
+      .map(function(s){ return s.trim(); }).filter(Boolean);
+    if(!nomi.length) return;
+    var messi = 0, gia = 0;
+    nomi.forEach(function(n){
+      var k = normale(n);
+      if(RUBRICA.giocatori.concat(NUOVO.nuovi).some(function(g){ return normale(g.nome) === k; })){
+        NUOVO.scelti[k] = NUOVO.scelti[k] || { nome:n, compagno:'' };   /* c'era: lo scelgo */
+        gia++;
+        return;
+      }
+      NUOVO.nuovi.push({ nome:n, compagno:'' });
+      NUOVO.scelti[k] = { nome:n, compagno:'' };
+      messi++;
+    });
+    inp.value = '';
     passoGente();
+    toast((messi ? messi + (messi === 1 ? ' giocatore aggiunto' : ' giocatori aggiunti') : '') +
+      (gia ? (messi ? ', ' : '') + gia + ' c\'erano già e li ho scelti' : ''), 5000);
   });
-  inp.addEventListener('keydown', function(e){ if(e.key === 'Enter') agg.click(); });
   box.appendChild(agg);
 
   var conto = crea('p', 'aiuto');
