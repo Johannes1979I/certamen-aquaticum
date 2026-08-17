@@ -183,6 +183,7 @@ body{ background:#f2f7fb; }
    ========================================================================= */
 var $ = CA.$, V = CA.V, testo = CA.testo, crea = CA.crea;
 var DATI = {}, SESS = null, TORNEI = [], APERTO = '', STATO = {}, ASSETTO = null;
+var ISCRITTI = [];               /* chi si è iscritto: si propone nella procedura guidata */
 var SCRIVENDO = null;            /* id della partita che ho sotto le dita */
 var DAMANDARE = false, timerInvio = null, ULTIMO = '';
 
@@ -264,7 +265,19 @@ function avvia(){
 
 /* ------------------------------- lettura ------------------------------- */
 function leggi(prima){
-  return token().then(function(t){ return FB.leggiPezzi(t); }).then(function(pezzi){
+  return token().then(function(t){
+    /* i pezzi del torneo e l'elenco degli iscritti: i secondi servono alla
+       procedura guidata, che se no propone una pagina vuota la prima volta */
+    return Promise.all([FB.leggiPezzi(t), FB.elenco(t).catch(function(){ return []; })]);
+  }).then(function(r){
+    ISCRITTI = (r[1] || []).map(function(doc){
+      var o = {};
+      try{ o = JSON.parse(doc.json || '{}') || {}; }catch(e){ o = {}; }
+      return { nome: V(o.nome, doc.nome), compagno: V(o.compagno, ''),
+               area: V(o.area, doc.area), stato: V(doc.stato, 'attiva') };
+    }).filter(function(p){ return p.nome && p.stato !== 'cestino'; });
+    return r[0];
+  }).then(function(pezzi){
     ASSETTO = (pezzi.assetto_carte && pezzi.assetto_carte.dati) || null;
     caricaRubrica(pezzi);
     TORNEI = CA.componiTornei(V(DATI.tornei, []), ASSETTO);
@@ -486,6 +499,9 @@ function disegnaChiusura(){
     : 'Puoi archiviarlo lo stesso, se avete deciso di chiuderla qui: quello che è stato giocato resta.'));
   var az = crea('div', 'azioni');
   az.style.cssText = 'justify-content:flex-start;flex-wrap:wrap';
+  var bG = crea('button', 'btn btn-chiaro', '⚙️ Gestisci');
+  bG.addEventListener('click', function(){ apriGestione(); });
+  az.appendChild(bG);
   var b1 = crea('button', 'btn ' + (tutte ? 'btn-p' : 'btn-chiaro'), '📦 Archivia');
   b1.addEventListener('click', function(){
     if(!tutte && !confirm('Il torneo non è finito: ' + fatte + ' partite su ' + inc.length +
@@ -510,7 +526,7 @@ function disegnaChiusura(){
 
 function scegliTorneo(){
   var ids = Object.keys(STATO).filter(function(id){
-    return V(STATO[id].coppie, []).length && !STATO[id].archiviato;
+    return V(STATO[id].coppie, []).length && !STATO[id].archiviato && !STATO[id].buttato;
   });
   var el = $('scelta');
   if(ids.length < 2){ el.style.display = 'none'; return; }
@@ -952,7 +968,7 @@ function apriNuovo(){
     velo: $('velo'),
     finestra: $('finestra'),
     rubrica: RUBRICA,
-    iscritti: [],
+    iscritti: ISCRITTI.filter(function(p){ return p.area !== 'ragazzi'; }),
     salvaRubrica: function(r){
       RUBRICA = r;
       token().then(function(t){ return FB.scriviPezzo(t, 'rubrica', r, chiSono()); }).catch(function(){ });
@@ -968,6 +984,154 @@ function apriNuovo(){
       toast('✅ ' + torneo.nome + ': si gioca. Il link da mandare è nel pulsante «Manda il link».', 8000);
     }
   });
+}
+
+/* ----------------------- gestire quello che c'è ------------------------
+   Dopo aver cominciato si può ancora cambiare idea: rifare le coppie,
+   cambiare formula e rigenerare il tabellone, cambiare il traguardo, o
+   buttare via tutto. Senza dover ricominciare da capo dalla procedura. */
+function apriGestione(){
+  var st = STATO[APERTO];
+  if(!st) return;
+  var f = $('finestra');
+  f.textContent = '';
+  var box = crea('div', 'passo');
+  box.appendChild(crea('h3', null, '⚙️ ' + V(st.nome, 'Il torneo')));
+  box.appendChild(crea('p', 'aiuto',
+    V(st.coppie, []).length + ' coppie · ' + V(st.incontri, []).length + ' partite · ' +
+    'si arriva a ' + V(st.traguardo, 41) + ' punti'));
+
+  /* le coppie, da cambiare a tocchi */
+  box.appendChild(crea('h3', null, 'Le coppie'));
+  var presa = null;
+  var elenco = crea('div');
+  function disegnaCoppie(){
+    elenco.textContent = '';
+    V(st.coppie, []).forEach(function(c, i){
+      var r = crea('div', 'coppia-r');
+      r.appendChild(crea('span', 'n', (i + 1) + '.'));
+      ['a', 'b'].forEach(function(lato){
+        var b = crea('button', 'btn btn-piccolo ' +
+          (presa && presa.i === i && presa.lato === lato ? 'btn-p' : 'btn-chiaro'),
+          c[lato] || '— libero —');
+        b.style.flex = '1';
+        b.addEventListener('click', function(){
+          if(!presa){ presa = { i:i, lato:lato }; disegnaCoppie(); return; }
+          var altro = st.coppie[presa.i], tmp = altro[presa.lato];
+          altro[presa.lato] = c[lato]; c[lato] = tmp;
+          [altro, c].forEach(function(x){ x.nome = (x.a || '(vuoto)') + ' – ' + (x.b || '(da abbinare)'); });
+          presa = null; disegnaCoppie(); salva(); ULTIMO = ''; disegna(true);
+        });
+        r.appendChild(b);
+      });
+      elenco.appendChild(r);
+    });
+  }
+  disegnaCoppie();
+  box.appendChild(elenco);
+
+  /* la formula, con il tabellone da rifare */
+  box.appendChild(crea('h3', null, 'La formula'));
+  var fm = crea('div', 'scelte-r');
+  [{ id:'italiana', tit:'Girone all\'italiana', sotto:'Tutti contro tutti.' },
+   { id:'eliminazione', tit:'Eliminazione diretta', sotto:'Chi perde esce.' },
+   { id:'sfida', tit:'Sfida fra due coppie', sotto:'Una secca o al meglio delle tre.' }
+  ].forEach(function(s){
+    var b = crea('button', 'scelta-r' + (V(st.formato, 'italiana') === s.id ? ' presa' : ''));
+    b.appendChild(crea('b', null, s.tit));
+    b.appendChild(crea('small', null, s.sotto));
+    b.addEventListener('click', function(){ st.formato = s.id; salva(); apriGestione(); });
+    fm.appendChild(b);
+  });
+  box.appendChild(fm);
+
+  var tg = crea('div', 'campo');
+  tg.appendChild(crea('label', null, 'La partita finisce a quanti punti'));
+  var it = document.createElement('input');
+  it.type = 'number'; it.inputMode = 'numeric'; it.value = V(st.traguardo, 41);
+  it.addEventListener('change', function(){
+    st.traguardo = Math.max(1, Number(it.value) || 41);
+    salva(); ULTIMO = ''; disegna(true);
+    toast('Adesso si arriva a ' + st.traguardo + ' punti.', 4000);
+  });
+  tg.appendChild(it);
+  box.appendChild(tg);
+
+  f.appendChild(box);
+  f.appendChild(bottoniGestione(st));
+  $('velo').classList.add('aperto');
+}
+
+function bottoniGestione(st){
+  var az = crea('div', 'azioni');
+  az.style.cssText = 'margin-top:14px;justify-content:center;flex-wrap:wrap';
+  function b(testoB, primo, fn){
+    var x = crea('button', 'btn ' + (primo ? 'btn-p' : 'btn-chiaro'), testoB);
+    x.addEventListener('click', fn);
+    az.appendChild(x);
+  }
+  b('🎲 Rifai il tabellone', true, function(){
+    var giocate = V(st.incontri, []).filter(function(m){ return V(m.mani, []).length; }).length;
+    if(giocate && !confirm('Ci sono ' + giocate + ' partite con dei punti segnati: rifacendo il ' +
+      'tabellone si perdono. Procedo?')) return;
+    st.incontri = rifaiTabellone(st);
+    salva(); ULTIMO = ''; disegna(true);
+    $('velo').classList.remove('aperto');
+    toast('🎲 Tabellone rifatto: ' + st.incontri.length + ' partite.', 6000);
+  });
+  b('🗑️ Butta via il torneo', false, function(){
+    if(!confirm('Butto via «' + V(st.nome, 'il torneo') + '» con tutte le sue partite? ' +
+      'Se vuoi solo toglierlo di mezzo, usa Archivia: resta nelle statistiche.')) return;
+    st.archiviato = true; st.buttato = true;
+    var quale = APERTO;
+    manda(quale);
+    APERTO = ''; ULTIMO = ''; CHIUSO = false;
+    $('velo').classList.remove('aperto');
+    disegna(true);
+    toast('🗑️ Buttato via.', 5000);
+  });
+  b('Chiudi', false, function(){ $('velo').classList.remove('aperto'); });
+  return az;
+}
+
+/* Il tabellone si rifà con la formula scelta adesso: le coppie restano
+   quelle, i punteggi ripartono da zero. */
+function rifaiTabellone(st){
+  var coppie = V(st.coppie, []).filter(function(c){ return c.a; });
+  if(coppie.length < 2) return [];
+  if(st.formato === 'sfida'){
+    var quante = st.formula === 'tre' ? 3 : 1;
+    var out = [];
+    for(var i = 1; i <= quante; i++){
+      out.push({ id:'m' + i, turno: quante === 1 ? 'La partita' : ('Partita ' + i),
+        a:coppie[0].id, b:coppie[1].id, tavolo:1, puntiA:'', puntiB:'', mani:[] });
+    }
+    return out;
+  }
+  if(st.formato === 'eliminazione'){
+    var e = [], k = 0;
+    for(var j = 0; j + 1 < coppie.length; j += 2){
+      k++;
+      e.push({ id:'m' + k, turno:'Primo turno', a:coppie[j].id, b:coppie[j + 1].id,
+               tavolo:k, puntiA:'', puntiB:'', mani:[] });
+    }
+    return e;
+  }
+  var ids = coppie.map(function(c){ return c.id; });
+  if(ids.length % 2) ids.push(null);
+  var n = ids.length, fuori = [], q = 0;
+  for(var t = 0; t < n - 1; t++){
+    var tav = 1;
+    for(var i2 = 0; i2 < n / 2; i2++){
+      var a = ids[i2], b = ids[n - 1 - i2];
+      if(a === null || b === null) continue;
+      q++;
+      fuori.push({ id:'m' + q, turno:'Turno ' + (t + 1), a:a, b:b, tavolo:tav++,
+                   puntiA:'', puntiB:'', mani:[] });
+    }
+    ids.splice(1, 0, ids.pop());
+  }
+  return fuori;
 }
 
 /* --------------------------- archiviare -------------------------------
