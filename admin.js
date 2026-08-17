@@ -3504,6 +3504,49 @@
       dentroCl.appendChild(tabellaClassificaAdmin(classificaTorneo(TORNEO_APERTO)));
       cl.appendChild(dentroCl);
       el.appendChild(cl);
+
+      /* ------------------------ metterlo via -------------------------
+         Un torneo finito resta lì per sempre finché non lo si archivia:
+         sparisce dalla sala da gioco e resta nelle statistiche, con i suoi
+         punteggi. Non si cancella niente. */
+      var arc = crea('div', 'card');
+      var giocate = inc.filter(function (m) {
+        return m.puntiA !== '' && m.puntiA !== undefined && m.puntiA !== null;
+      }).length;
+      var tutte = giocate === inc.length;
+      arc.appendChild(crea('h2', null, stato.archiviato ? '📦 In archivio'
+        : (tutte ? '🏁 Torneo finito' : '📦 Mettere via il torneo')));
+      arc.appendChild(crea('p', 'aiuto', stato.archiviato
+        ? 'È in archivio: non compare più nella pagina delle partite, ma resta nelle statistiche con tutti i suoi punteggi. Puoi rimetterlo in gioco quando vuoi.'
+        : (tutte
+          ? 'Tutte le ' + inc.length + ' partite sono giocate. Mettilo in archivio: sparisce dalla pagina delle partite e resta nelle statistiche.'
+          : giocate + (giocate === 1 ? ' partita giocata su ' : ' partite giocate su ') + inc.length +
+            '. Puoi archiviarlo lo stesso: quello che è stato giocato resta.')));
+      var azA = crea('div', 'azioni');
+      azA.style.cssText = 'justify-content:flex-start;flex-wrap:wrap';
+      if (stato.archiviato) {
+        azA.appendChild(bottone('↩️ Rimettilo in gioco', 'chiaro', function () {
+          STATO.tornei[TORNEO_APERTO].archiviato = false;
+          salvaStato();
+          disegnaPannelloTorneo();
+          CA.toast('↩️ Torna nella pagina delle partite.', 5000);
+        }));
+      } else {
+        azA.appendChild(bottone('📦 Archivia il torneo', tutte ? 'p' : 'chiaro', function () {
+          if (!tutte && !confirm('Il torneo non è finito: ' + giocate + ' partite su ' + inc.length +
+            '. Lo archivio lo stesso?')) return;
+          STATO.tornei[TORNEO_APERTO] = STATO.tornei[TORNEO_APERTO] || {};
+          STATO.tornei[TORNEO_APERTO].archiviato = true;
+          if (!STATO.tornei[TORNEO_APERTO].fine) STATO.tornei[TORNEO_APERTO].fine = new Date().toISOString();
+          salvaStato(true);
+          disegnaPannelloTorneo();
+          CA.toast('📦 In archivio. Lo ritrovi nelle statistiche.', 6000);
+        }));
+      }
+      azA.appendChild(crea('a', 'btn btn-chiaro', '📊 Vedi le statistiche')).setAttribute('href', 'statistiche.html');
+      azA.lastChild.setAttribute('target', '_blank');
+      arc.appendChild(azA);
+      el.appendChild(arc);
     }
   }
 
