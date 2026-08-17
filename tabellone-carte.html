@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Tabellone delle carte — Certamen Aquaticum</title>
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#0a2540" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🂱</text></svg>" />
+<link rel="stylesheet" href="stile.css" />
+<script src="firebase.js"></script>
+<script src="comune.js"></script>
+<style>
+/* =========================================================================
+   Il tabellone del torneo di carte, da appoggiare su un tablet accanto ai
+   tavoli o da proiettare. Si guarda da lontano: fondo scuro, caratteri
+   grossi, nessun comando. Legge la bacheca pubblica — la stessa delle
+   classifiche — quindi non serve nessuna password.
+   ========================================================================= */
+body{ background:#0a2540; color:#fff; margin:0; }
+.schermo{ min-height:100vh; min-height:100dvh; padding:clamp(12px,2vw,26px); }
+.riga-alta{ display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:clamp(10px,2vh,20px); }
+.marchio-c{ font-size:clamp(1.05rem,2.4vw,1.7rem); font-weight:800; }
+.orologio{ margin-left:auto; font-size:clamp(.95rem,2vw,1.4rem); opacity:.75; font-variant-numeric:tabular-nums; }
+.stato-t{ font-size:clamp(.8rem,1.6vw,1rem); opacity:.6; }
+
+.griglia{ display:grid; gap:clamp(12px,2vw,22px); grid-template-columns:1fr; }
+@media(min-width:900px){ .griglia{ grid-template-columns:1.05fr .95fr; } }
+
+.riquadro{ background:rgba(255,255,255,.07); border-radius:20px; padding:clamp(12px,1.8vw,20px); }
+.riquadro h2{ font-size:clamp(1rem,2vw,1.4rem); margin:0 0 10px; }
+
+.riga-cl{
+  display:flex; align-items:center; gap:clamp(8px,1.6vw,18px);
+  background:rgba(255,255,255,.06); border-radius:14px;
+  padding:clamp(7px,1.2vh,14px) clamp(10px,1.6vw,18px); margin-bottom:8px;
+}
+.riga-cl.prima{ background:linear-gradient(90deg, rgba(255,194,51,.34), rgba(255,194,51,.10)); }
+.riga-cl.prima .nome, .riga-cl.prima .pt{ color:#ffd75e; }
+.riga-cl .pos{ font-size:clamp(1.1rem,2.4vw,1.9rem); width:clamp(40px,4vw,64px); text-align:center; }
+.riga-cl .nome{ flex:1; font-size:clamp(.95rem,2vw,1.6rem); font-weight:bold; }
+.riga-cl .dett{ font-size:clamp(.72rem,1.2vw,.95rem); opacity:.7; white-space:nowrap; }
+.riga-cl .pt{ font-size:clamp(1.2rem,2.6vw,2.2rem); font-weight:800; font-variant-numeric:tabular-nums; }
+
+.part{ display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:center;
+  padding:clamp(6px,1vh,11px) 0; border-top:1px solid rgba(255,255,255,.12); }
+.part:first-of-type{ border-top:none; }
+.part .sq{ font-size:clamp(.85rem,1.5vw,1.15rem); }
+.part .sq.dx{ text-align:right; }
+.part .sq.vince{ color:#7ce8ab; font-weight:bold; }
+.part .ris{ font-size:clamp(1rem,1.9vw,1.5rem); font-weight:800; font-variant-numeric:tabular-nums; }
+.part .ris.aperta{ opacity:.45; font-weight:normal; }
+.turno-t{ font-size:clamp(.78rem,1.4vw,1rem); opacity:.65; margin:12px 0 2px; text-transform:uppercase; letter-spacing:.05em; }
+.vuoto{ opacity:.6; text-align:center; padding:30px 10px; font-size:clamp(.95rem,2vw,1.3rem); }
+.piede-t{ text-align:center; opacity:.45; font-size:clamp(.7rem,1.3vw,.9rem); margin-top:16px; }
+</style>
+</head>
+<body>
+
+<div class="schermo">
+  <div class="riga-alta">
+    <span class="marchio-c">🂱 <span id="titoloT">Torneo di carte</span></span>
+    <span class="stato-t" id="statoT"></span>
+    <span class="orologio" id="oraT">--:--</span>
+  </div>
+  <div class="griglia">
+    <div class="riquadro"><h2>📊 Classifica</h2><div id="classificaT"></div></div>
+    <div class="riquadro"><h2>🗓️ Le partite</h2><div id="partiteT"></div></div>
+  </div>
+  <p class="piede-t" id="piedeT"></p>
+</div>
+
+<script>
+/* =========================================================================
+   Legge «pubblico_certamen/classifica», la bacheca che l'area organizzatori
+   manda da sola a ogni punteggio: qui non si tocca niente e non serve
+   entrare. Si aggiorna da sé ogni quindici secondi.
+   ========================================================================= */
+var $ = CA.$, V = CA.V, testo = CA.testo, crea = CA.crea;
+var QUALE = '';   /* ?torneo=trittico per fissarne uno */
+
+function due(n){ return (n < 10 ? '0' : '') + n; }
+setInterval(function(){
+  var d = new Date();
+  testo('oraT', due(d.getHours()) + ':' + due(d.getMinutes()));
+}, 1000);
+
+CA.carica().then(function(d){
+  var m = /[?&]torneo=([^&]+)/.exec(location.search);
+  QUALE = m ? decodeURIComponent(m[1]) : '';
+  testo('piedeT', 'Le classifiche complete su ' +
+    CA.urlSito().replace(/^https?:\/\//, '') + 'classifiche.html');
+  leggi();
+  setInterval(function(){ if(!document.hidden) leggi(); }, 15000);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) leggi(); });
+});
+
+function leggi(){
+  if(!window.FB || !FB.attivo()){ testo('statoT', 'database non collegato'); return; }
+  FB.leggiClassifica().then(function(c){
+    var tornei = V(V(c && c.carte, {}).tornei, []);
+    if(QUALE) tornei = tornei.filter(function(t){ return t.id === QUALE || t.gruppo === QUALE; });
+    /* se non è stato chiesto un torneo preciso si mostra quello in corso,
+       che è quello che la gente sta guardando adesso */
+    var t = tornei.filter(function(x){ return x.stato === 'in corso'; })[0] || tornei[0];
+    disegna(t, c && c.aggiornato);
+  }).catch(function(){ testo('statoT', 'bacheca non raggiungibile'); });
+}
+
+function disegna(t, quando){
+  if(!t){
+    testo('titoloT', 'Torneo di carte');
+    $('classificaT').textContent = '';
+    $('partiteT').textContent = '';
+    $('classificaT').appendChild(crea('p', 'vuoto', 'Il torneo non è ancora cominciato.'));
+    testo('statoT', '');
+    return;
+  }
+  testo('titoloT', V(t.nome, 'Torneo di carte'));
+  testo('statoT', (t.stato === 'concluso' ? '🏁 concluso' : '● in corso') +
+    (quando ? ' · aggiornato alle ' + oraDi(quando) : ''));
+
+  var cl = $('classificaT');
+  cl.textContent = '';
+  V(t.classifica, []).forEach(function(r, i){
+    var d = crea('div', 'riga-cl' + (i === 0 ? ' prima' : ''));
+    d.appendChild(crea('span', 'pos', ['🥇','🥈','🥉'][i] || (i + 1) + '°'));
+    d.appendChild(crea('span', 'nome', V(r.coppia, '—')));
+    d.appendChild(crea('span', 'dett', V(r.g, 0) + ' giocate · ' + V(r.v, 0) + ' vinte'));
+    d.appendChild(crea('span', 'pt', String(V(r.punti, 0))));
+    cl.appendChild(d);
+  });
+  if(!V(t.classifica, []).length) cl.appendChild(crea('p', 'vuoto', 'Ancora nessuna partita.'));
+
+  var el = $('partiteT');
+  el.textContent = '';
+  var turni = [];
+  V(t.incontri, []).forEach(function(m){
+    var k = V(m.turno, 'Incontri');
+    var g = turni.filter(function(x){ return x.nome === k; })[0];
+    if(!g){ g = { nome:k, righe:[] }; turni.push(g); }
+    g.righe.push(m);
+  });
+  if(!turni.length){ el.appendChild(crea('p', 'vuoto', 'Il tabellone non c’è ancora.')); return; }
+  turni.forEach(function(g){
+    el.appendChild(crea('div', 'turno-t', g.nome));
+    g.righe.forEach(function(m){
+      var r = crea('div', 'part');
+      var fatta = m.puntiA !== '' && m.puntiA !== undefined && m.puntiB !== '' && m.puntiB !== undefined;
+      var a = Number(m.puntiA), b = Number(m.puntiB);
+      r.appendChild(crea('span', 'sq' + (fatta && a > b ? ' vince' : ''), V(m.a, '—')));
+      r.appendChild(crea('span', 'ris' + (fatta ? '' : ' aperta'), fatta ? (a + ' – ' + b) : 'in corso'));
+      r.appendChild(crea('span', 'sq dx' + (fatta && b > a ? ' vince' : ''), V(m.b, '—')));
+      el.appendChild(r);
+    });
+  });
+}
+
+function oraDi(iso){
+  var d = new Date(iso);
+  return isNaN(d.getTime()) ? '' : (due(d.getHours()) + ':' + due(d.getMinutes()));
+}
+</script>
+</body>
+</html>

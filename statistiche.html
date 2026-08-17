@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Statistiche — Certamen Aquaticum</title>
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#0b7fd4" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>" />
+<link rel="stylesheet" href="stile.css" />
+<script src="firebase.js"></script>
+<script src="comune.js"></script>
+<style>
+/* =========================================================================
+   L'albo d'oro delle carte: tutti i tornei e tutte le partite giocate, con
+   quello che se ne può capire — chi vince davvero, chi va forte con
+   chiunque, e quanto dura una serata.
+
+   La domanda che conta: se uno gioca sempre con lo stesso compagno non si
+   sa se è bravo lui o l'altro. Perciò accanto alle coppie ci sono i singoli
+   giocatori, con quanti compagni diversi hanno avuto.
+   ========================================================================= */
+body{ background:#f2f7fb; }
+.barra-st{
+  position:sticky; top:0; z-index:20; background:var(--c1); color:#fff;
+  padding:10px 14px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+}
+.barra-st b{ font-size:1.05rem; }
+.barra-st a{ color:#fff; text-decoration:underline; font-size:.9rem; }
+.barra-st .stato{ margin-left:auto; font-size:.85rem; opacity:.9; }
+.dentro{ max-width:980px; margin:0 auto; padding:16px 14px 60px; }
+.scheda-st{ background:#fff; border:1px solid var(--linea); border-radius:18px; padding:16px; margin-bottom:14px; }
+.scheda-st h2{ font-size:1.1rem; margin:0 0 4px; }
+.scheda-st .occhiello{ font-size:.9rem; color:var(--muted); margin-bottom:12px; }
+.numeroni{ display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:6px; }
+.numerone{ background:#f4f8fc; border-radius:14px; padding:12px; text-align:center; }
+.numerone b{ display:block; font-size:1.7rem; color:var(--c1); }
+.numerone span{ font-size:.82rem; color:var(--muted); }
+.filtri-st{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+.torneo-riga{
+  display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+  border-top:1px solid var(--linea); padding:11px 0;
+}
+.torneo-riga:first-of-type{ border-top:none; }
+.torneo-riga .che{ flex:1 1 240px; }
+.torneo-riga .che b{ display:block; }
+.torneo-riga .che small{ color:var(--muted); }
+.torneo-riga .vinto{ font-weight:bold; color:#0f7a4a; }
+.medaglia{ font-size:1.1rem; }
+@media(max-width:620px){
+  .barra-st{ gap:8px; } .barra-st b{ flex:1 1 100%; } .barra-st .stato{ flex:1 1 100%; margin-left:0; }
+}
+</style>
+</head>
+<body>
+
+<div class="barra-st">
+  <b>📊 Statistiche delle carte</b>
+  <a href="partite.html">🃏 Le partite</a>
+  <a href="tabellone-carte.html" target="_blank" rel="noopener">📺 Tabellone</a>
+  <a href="admin.html">⚙️</a>
+  <span class="stato" id="statoSt">—</span>
+</div>
+
+<div class="dentro">
+  <div id="entra" class="scheda-st" style="display:none;max-width:420px;margin:40px auto">
+    <h2>Entra per vedere</h2>
+    <p class="occhiello">Le statistiche stanno nella parte riservata del database:
+      servono la stessa email e la stessa password dell'area organizzatori.</p>
+    <div class="campo"><label for="em">Email</label><input type="email" id="em" autocomplete="username" /></div>
+    <div class="campo"><label for="pw">Password</label><input type="password" id="pw" autocomplete="current-password" /></div>
+    <p class="errore" id="erroreEntra"></p>
+    <button class="btn btn-p btn-largo" id="btnEntra">Entra</button>
+  </div>
+
+  <div id="tutto" style="display:none">
+    <div class="scheda-st">
+      <h2>In tutto</h2>
+      <div class="numeroni" id="numeroni"></div>
+      <p class="occhiello" id="periodo"></p>
+    </div>
+
+    <div class="scheda-st">
+      <h2>👥 Le coppie</h2>
+      <p class="occhiello">Ordinate per partite vinte. Fra parentesi quante ne hanno giocate.</p>
+      <div id="tabCoppie"></div>
+    </div>
+
+    <div class="scheda-st">
+      <h2>🙋 I giocatori</h2>
+      <p class="occhiello">Qui ognuno conta per sé, anche quando cambia compagno: è il modo
+        per capire quanto vale davvero uno che ha sempre giocato con lo stesso.</p>
+      <div id="tabGiocatori"></div>
+    </div>
+
+    <div class="scheda-st">
+      <h2>🗓️ Tornei e partite</h2>
+      <p class="occhiello">Dal più recente. Con quanto è durato ognuno.</p>
+      <div id="elencoTornei"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+var $ = CA.$, V = CA.V, testo = CA.testo, crea = CA.crea;
+var SESS = null, TORNEI = [], DATI = {};
+
+function due(n){ return (n < 10 ? '0' : '') + n; }
+function sessLeggi(){
+  try{ var s = JSON.parse(CA.memLeggi('ca_fbsess') || 'null'); return (s && s.refreshToken) ? s : null; }
+  catch(e){ return null; }
+}
+function token(){
+  if(!SESS) return Promise.reject(new Error('non collegato'));
+  if(SESS.idToken && SESS.scadenza && Date.now() < SESS.scadenza - 60000) return Promise.resolve(SESS.idToken);
+  return FB.refresh(SESS.refreshToken).then(function(s){
+    SESS.idToken = s.idToken; SESS.refreshToken = s.refreshToken; SESS.scadenza = s.scadenza;
+    CA.memScrivi('ca_fbsess', JSON.stringify(SESS));
+    return SESS.idToken;
+  });
+}
+
+CA.carica().then(function(d){
+  DATI = d;
+  SESS = sessLeggi();
+  if(!SESS){ $('entra').style.display = ''; return; }
+  carica();
+});
+
+$('btnEntra').addEventListener('click', function(){
+  var e = $('em').value.trim(), p = $('pw').value;
+  if(!e || !p){ testo('erroreEntra', 'Scrivi email e password.'); return; }
+  FB.signIn(e, p).then(function(s){
+    SESS = { idToken:s.idToken, refreshToken:s.refreshToken, scadenza:s.scadenza, email:s.email };
+    CA.memScrivi('ca_fbsess', JSON.stringify(SESS));
+    $('entra').style.display = 'none';
+    carica();
+  }).catch(function(err){ testo('erroreEntra', 'Email o password sbagliate.'); });
+});
+
+function carica(){
+  token().then(function(t){ return FB.leggiPezzi(t); }).then(function(pezzi){
+    TORNEI = [];
+    Object.keys(pezzi).forEach(function(nome){
+      var m = /^torneo_(.+)$/.exec(nome);
+      if(!m) return;
+      var d = pezzi[nome].dati || {};
+      if(!V(d.coppie, []).length) return;
+      d._id = m[1];
+      d._nome = V(d.nome, nomeDalCatalogo(m[1]));
+      TORNEI.push(d);
+    });
+    TORNEI.sort(function(a, b){ return String(V(b.inizio, '')).localeCompare(String(V(a.inizio, ''))); });
+    testo('statoSt', TORNEI.length + (TORNEI.length === 1 ? ' torneo' : ' tornei') + ' in archivio');
+    $('tutto').style.display = '';
+    disegna();
+  }).catch(function(e){
+    testo('statoSt', e.message === 'non collegato' ? 'non collegato' : 'non riesco a leggere');
+  });
+}
+function nomeDalCatalogo(id){
+  var t = V(DATI.tornei, []).filter(function(x){ return x.id === id; })[0];
+  return t ? t.nome : 'Torneo';
+}
+
+/* --------------------- da chi ha giocato a chi ha vinto ----------------
+   Una partita conta solo se è finita. Da ogni partita si ricavano due
+   righe per la coppia e quattro per i giocatori: così un giocatore che
+   cambia compagno porta i suoi risultati con sé. */
+function conti(){
+  var coppie = {}, gente = {}, partite = 0, mani = 0, minuti = 0, conTempo = 0;
+
+  function perCoppia(nome){
+    if(!coppie[nome]) coppie[nome] = { nome:nome, g:0, v:0, punti:0, subiti:0, tornei:{} };
+    return coppie[nome];
+  }
+  function perUno(nome){
+    if(!gente[nome]) gente[nome] = { nome:nome, g:0, v:0, punti:0, subiti:0, compagni:{} };
+    return gente[nome];
+  }
+
+  TORNEI.forEach(function(t){
+    var perId = {};
+    V(t.coppie, []).forEach(function(c){ perId[c.id] = c; });
+    V(t.incontri, []).forEach(function(m){
+      var a = perId[m.a], b = perId[m.b];
+      if(!a || !b) return;
+      var pa = punteggio(m, 'a'), pb = punteggio(m, 'b');
+      if(pa === null) return;
+      partite++;
+      mani += V(m.mani, []).length;
+      if(m.inizio && m.fine){
+        var ms = new Date(m.fine).getTime() - new Date(m.inizio).getTime();
+        if(isFinite(ms) && ms > 0 && ms < 6 * 3600000){ minuti += ms / 60000; conTempo++; }
+      }
+      [[a, pa, pb], [b, pb, pa]].forEach(function(x){
+        var c = perCoppia(x[0].nome);
+        c.g++; c.punti += x[1]; c.subiti += x[2];
+        if(x[1] > x[2]) c.v++;
+        c.tornei[t._id] = true;
+        membri(x[0]).forEach(function(chi, i, tutti){
+          var u = perUno(chi);
+          u.g++; u.punti += x[1]; u.subiti += x[2];
+          if(x[1] > x[2]) u.v++;
+          tutti.forEach(function(altro){ if(altro !== chi) u.compagni[altro] = (u.compagni[altro] || 0) + 1; });
+        });
+      });
+    });
+  });
+
+  return { coppie:valori(coppie), gente:valori(gente), partite:partite, mani:mani,
+           minuti:minuti, conTempo:conTempo };
+}
+function valori(o){
+  return Object.keys(o).map(function(k){ return o[k]; })
+    .sort(function(x, y){
+      if(y.v !== x.v) return y.v - x.v;
+      if(y.g !== x.g) return x.g - y.g;
+      return (y.punti - y.subiti) - (x.punti - x.subiti);
+    });
+}
+/* i due nomi di una coppia: se l'admin li ha scritti come «Tizio – Caio» si
+   ricavano dal nome, se la coppia è nata qui ci sono già separati */
+function membri(c){
+  if(c.a && c.b) return [c.a, c.b];
+  if(c.a) return [c.a];
+  return String(V(c.nome, '')).split(/\s+–\s+|\s+-\s+/).map(function(s){ return s.trim(); })
+    .filter(function(s){ return s && !/da abbinare|vuoto/i.test(s); });
+}
+function punteggio(m, lato){
+  var mani = V(m.mani, []);
+  if(mani.length){
+    var t = 0;
+    mani.forEach(function(x){ t += Number(V(x[lato], 0)) || 0; });
+    return t;
+  }
+  var v = lato === 'a' ? m.puntiA : m.puntiB;
+  return (v === '' || v === undefined || v === null) ? null : Number(v);
+}
+
+function disegna(){
+  var c = conti();
+
+  var n = $('numeroni');
+  n.textContent = '';
+  [[TORNEI.length, 'tornei e partite'], [c.partite, 'partite giocate'], [c.mani, 'mani segnate'],
+   [c.gente.length, 'giocatori'], [c.coppie.length, 'coppie diverse'],
+   [c.conTempo ? Math.round(c.minuti / c.conTempo) + "'" : '—', 'durata media di una partita']
+  ].forEach(function(x){
+    var d = crea('div', 'numerone');
+    d.appendChild(crea('b', null, String(x[0])));
+    d.appendChild(crea('span', null, x[1]));
+    n.appendChild(d);
+  });
+  var primi = TORNEI[TORNEI.length - 1], ultimo = TORNEI[0];
+  testo('periodo', (primi && primi.inizio)
+    ? ('Dal ' + dataOra(primi.inizio) + ' a ' + dataOra(ultimo.inizio) + '.')
+    : '');
+
+  tabella('tabCoppie', ['#', 'Coppia', 'Giocate', 'Vinte', '%', 'Fatti', 'Subiti'],
+    c.coppie.map(function(r, i){
+      return [medaglia(i), r.nome, r.g, r.v, quota(r), r.punti, r.subiti];
+    }));
+
+  tabella('tabGiocatori', ['#', 'Giocatore', 'Giocate', 'Vinte', '%', 'Compagni'],
+    c.gente.map(function(r, i){
+      var quanti = Object.keys(r.compagni).length;
+      return [medaglia(i), r.nome, r.g, r.v, quota(r),
+        quanti + (quanti === 1 ? ' (' + Object.keys(r.compagni)[0] + ')' : ' diversi')];
+    }));
+
+  var el = $('elencoTornei');
+  el.textContent = '';
+  if(!TORNEI.length){ el.appendChild(crea('p', 'occhiello', 'Ancora niente in archivio.')); return; }
+  TORNEI.forEach(function(t){
+    var r = crea('div', 'torneo-riga');
+    var che = crea('div', 'che');
+    che.appendChild(crea('b', null, V(t._nome, 'Torneo')));
+    var fatte = V(t.incontri, []).filter(function(m){ return punteggio(m, 'a') !== null; }).length;
+    che.appendChild(crea('small', null,
+      (t.inizio ? dataOra(t.inizio) : 'senza data') + ' · ' +
+      V(t.coppie, []).length + ' coppie · ' + fatte + ' di ' + V(t.incontri, []).length + ' partite' +
+      (t.archiviato ? ' · in archivio' : (t.fine ? ' · finito' : ' · in corso'))));
+    r.appendChild(che);
+    var d = durata(t);
+    if(d) r.appendChild(crea('span', 'medaglia', '⏱️ ' + d));
+    var vinc = vincitore(t);
+    if(vinc) r.appendChild(crea('span', 'vinto', '🏆 ' + vinc));
+    el.appendChild(r);
+  });
+}
+function quota(r){ return r.g ? Math.round(r.v * 100 / r.g) + '%' : '—'; }
+function medaglia(i){ return ['🥇','🥈','🥉'][i] || String(i + 1); }
+
+function tabella(id, intestazioni, righe){
+  var el = $(id);
+  el.textContent = '';
+  if(!righe.length){ el.appendChild(crea('p', 'occhiello', 'Ancora niente.')); return; }
+  var scroll = crea('div', 'tabella-scroll');
+  var t = document.createElement('table');
+  t.className = 'tab';
+  var th = document.createElement('thead'), tr = document.createElement('tr');
+  intestazioni.forEach(function(x, i){
+    var c = document.createElement('th');
+    c.textContent = x;
+    if(i >= 2) c.className = 'n';
+    tr.appendChild(c);
+  });
+  th.appendChild(tr); t.appendChild(th);
+  var tb = document.createElement('tbody');
+  righe.forEach(function(riga){
+    var x = document.createElement('tr');
+    riga.forEach(function(v, i){
+      var c = document.createElement('td');
+      c.textContent = String(v);
+      if(i >= 2) c.className = 'n';
+      if(i === 1) c.style.fontWeight = 'bold';
+      x.appendChild(c);
+    });
+    tb.appendChild(x);
+  });
+  t.appendChild(tb);
+  scroll.appendChild(t);
+  el.appendChild(scroll);
+}
+
+function vincitore(t){
+  var righe = classifica(t);
+  if(!righe.length) return '';
+  var fatte = V(t.incontri, []).filter(function(m){ return punteggio(m, 'a') !== null; }).length;
+  if(fatte < V(t.incontri, []).length) return '';
+  return righe[0].coppia;
+}
+function classifica(t){
+  var perId = {}, tab = {};
+  V(t.coppie, []).forEach(function(c){
+    perId[c.id] = c;
+    tab[c.id] = { coppia:c.nome, punti:0, dif:0 };
+  });
+  V(t.incontri, []).forEach(function(m){
+    var pa = punteggio(m, 'a'), pb = punteggio(m, 'b');
+    if(pa === null || !tab[m.a] || !tab[m.b]) return;
+    tab[m.a].dif += pa - pb; tab[m.b].dif += pb - pa;
+    if(pa > pb) tab[m.a].punti += 3;
+    else if(pb > pa) tab[m.b].punti += 3;
+    else { tab[m.a].punti++; tab[m.b].punti++; }
+  });
+  return Object.keys(tab).map(function(k){ return tab[k]; })
+    .sort(function(x, y){ return (y.punti - x.punti) || (y.dif - x.dif); });
+}
+
+function durata(t){
+  if(!t.inizio || !t.fine) return '';
+  var ms = new Date(t.fine).getTime() - new Date(t.inizio).getTime();
+  if(!isFinite(ms) || ms <= 0) return '';
+  var min = Math.round(ms / 60000);
+  if(min < 60) return min + "'";
+  return Math.floor(min / 60) + 'h' + due(min % 60);
+}
+function dataOra(iso){
+  var d = new Date(iso);
+  if(isNaN(d.getTime())) return '';
+  return d.getDate() + ' ' + ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'][d.getMonth()] +
+    ', ' + due(d.getHours()) + ':' + due(d.getMinutes());
+}
+</script>
+</body>
+</html>

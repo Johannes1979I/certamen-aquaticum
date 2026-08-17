@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Le partite — Certamen Aquaticum</title>
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#0b7fd4" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>" />
+<link rel="stylesheet" href="stile.css" />
+<script src="firebase.js"></script>
+<script src="comune.js"></script>
+<style>
+/* =========================================================================
+   La pagina del tavolo. Si tiene aperta sul telefono mentre si gioca, e
+   serve a una cosa sola: segnare le mani. Niente configurazione, niente
+   menù: quella sta nell'area organizzatori.
+
+   Regola di ferro: questa pagina non ridisegna mai quello che hai sotto le
+   dita. Gli aggiornamenti degli altri tavoli entrano di lato, riga per
+   riga, senza toccare il campo in cui stai scrivendo.
+   ========================================================================= */
+body{ background:#f2f7fb; }
+/* La barra sta in due righe: sopra il nome di quello che si gioca, sotto i
+   pulsanti in fila. Su un telefono stretto la fila scorre di lato invece di
+   andare a capo cinque volte e mangiarsi mezzo schermo. */
+.barra-partite{
+  position:sticky; top:0; z-index:20; background:var(--c1); color:#fff; padding:8px 12px;
+}
+.barra-partite .riga1{ display:flex; gap:10px; align-items:baseline; }
+.barra-partite b{ font-size:1.05rem; flex:1; min-width:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.barra-partite .stato{ font-size:.8rem; opacity:.9; white-space:nowrap; }
+.barra-partite .voci{
+  display:flex; gap:8px; margin-top:7px; overflow-x:auto; padding-bottom:2px;
+  scrollbar-width:none;
+}
+.barra-partite .voci::-webkit-scrollbar{ display:none; }
+.barra-partite a{ color:#fff; text-decoration:none; }
+.btn-barra{
+  background:rgba(255,255,255,.18); color:#fff; border:1px solid rgba(255,255,255,.35);
+  border-radius:10px; padding:7px 11px; font-size:.9rem; font-weight:bold; cursor:pointer;
+  min-height:38px;
+}
+.btn-barra:hover{ background:rgba(255,255,255,.3); }
+.btn-barra{ white-space:nowrap; flex:0 0 auto; display:inline-flex; align-items:center; }
+
+/* ---- la finestra che crea un torneo o una partita ---- */
+.passo{ text-align:left; }
+.passo h3{ font-size:1.05rem; margin:0 0 4px; }
+.passo .aiuto{ margin-bottom:10px; }
+.gente{ display:grid; grid-template-columns:1fr; gap:8px; max-height:44vh; overflow:auto; margin-bottom:10px; }
+@media(min-width:520px){ .gente{ grid-template-columns:1fr 1fr; } }
+.tipo-g{
+  display:flex; align-items:center; gap:10px; background:#f4f8fc; border:2px solid var(--linea);
+  border-radius:12px; padding:10px 12px; cursor:pointer; min-height:52px;
+}
+.tipo-g.preso{ border-color:var(--c1); background:rgba(11,127,212,.09); }
+.tipo-g input{ width:22px; height:22px; flex:0 0 22px; }
+.tipo-g .chi{ flex:1; font-weight:bold; font-size:.95rem; }
+.scelte-r{ display:grid; grid-template-columns:1fr; gap:8px; margin-bottom:12px; }
+@media(min-width:520px){ .scelte-r{ grid-template-columns:1fr 1fr; } }
+.scelta-r{
+  text-align:left; background:#fff; border:2px solid var(--linea); border-radius:14px;
+  padding:11px 13px; cursor:pointer; min-height:56px;
+}
+.scelta-r.presa{ border-color:var(--c1); background:rgba(11,127,212,.07); }
+.scelta-r b{ display:block; }
+.scelta-r small{ color:var(--muted); }
+.coppia-r{
+  display:flex; align-items:center; gap:8px; background:#f4f8fc; border:1px solid var(--linea);
+  border-radius:12px; padding:9px 11px; margin-bottom:7px;
+}
+.coppia-r .n{ flex:0 0 26px; color:var(--muted); font-size:.85rem; }
+.coppia-r .g{ flex:1; font-size:.95rem; }
+
+.dentro{ max-width:900px; margin:0 auto; padding:16px 14px 60px; }
+
+.turno-box{ background:#fff; border:1px solid var(--linea); border-radius:18px; padding:14px 16px; margin-bottom:14px; }
+.turno-box > h2{ font-size:1.08rem; margin:0 0 4px; }
+.turno-box .quando{ font-size:.85rem; color:var(--muted); margin-bottom:10px; }
+
+.partita{
+  border:2px solid var(--linea); border-radius:16px; padding:12px; margin-bottom:12px;
+  background:#fbfdff;
+}
+.partita.finita{ border-color:#2f9e5b; background:#f2fbf6; }
+.partita .tavolo{ font-size:.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+.sfidanti{ display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:center; margin:8px 0 4px; }
+.sfidanti .nome{ font-weight:bold; font-size:.98rem; }
+.sfidanti .nome.dx{ text-align:right; }
+.sfidanti .nome.vince{ color:#0f7a4a; }
+.sfidanti .tot{
+  font-size:1.5rem; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+.mano-riga{ display:flex; gap:8px; align-items:center; margin:6px 0; }
+.mano-riga .n{ flex:0 0 38px; font-size:.85rem; color:var(--muted); }
+.mano-riga input{
+  flex:1 1 0; min-width:0; text-align:center; min-height:52px; font-size:1.2rem;
+  border:1px solid var(--linea); border-radius:12px; padding:6px;
+}
+.mano-riga input:focus{ border-color:var(--c1); outline:2px solid rgba(11,127,212,.25); }
+.mano-riga button{ flex:0 0 auto; min-height:52px; }
+.quanto-manca{ font-size:.88rem; color:var(--muted); margin:6px 0 0; }
+.quanto-manca.vinta{ color:#0f7a4a; font-weight:bold; }
+
+.classifica-box{ background:#fff; border:1px solid var(--linea); border-radius:18px; padding:14px 16px; }
+.entra-box{ max-width:420px; margin:40px auto; background:#fff; border:1px solid var(--linea);
+  border-radius:18px; padding:22px; }
+
+.velo{
+  position:fixed; inset:0; background:rgba(10,37,64,.55); display:none;
+  align-items:center; justify-content:center; padding:18px; z-index:60;
+}
+.velo.aperto{ display:flex; }
+.finestra{
+  background:#fff; border-radius:20px; padding:22px; max-width:520px; width:100%;
+  box-sizing:border-box; max-height:88vh; overflow:auto; text-align:center;
+  /* dentro un contenitore flex un riquadro non si stringe sotto la larghezza
+     del suo contenuto se non glielo si dice: senza questo, un nome di coppia
+     lungo faceva uscire la finestra dallo schermo del telefono */
+  min-width:0; overflow-wrap:break-word;
+}
+/* i pulsanti lunghi vanno a capo invece di allargare la finestra oltre lo
+   schermo: su un telefono stretto era proprio quello che succedeva */
+.finestra .btn{ white-space:normal; max-width:100%; }
+.finestra *{ max-width:100%; box-sizing:border-box; }
+@media(max-width:420px){
+  .velo{ padding:10px; }
+  .finestra{ padding:16px; }
+}
+.finestra .coppa{ font-size:3rem; }
+.finestra h2{ margin:6px 0 10px; }
+</style>
+</head>
+<body>
+
+<div class="barra-partite">
+  <div class="riga1">
+    <b id="titoloTorneo">Le partite</b>
+    <span class="stato" id="statoRete">—</span>
+  </div>
+  <div class="voci">
+    <button class="btn-barra" id="btnNuovo">⚡ Nuovo</button>
+    <button class="btn-barra" id="btnManda">💬 Manda il link</button>
+    <a class="btn-barra" href="tabellone-carte.html" target="_blank" rel="noopener">📺 Tabellone</a>
+    <a class="btn-barra" href="statistiche.html">📊 Statistiche</a>
+    <a class="btn-barra" href="admin.html">⚙️ Organizzatori</a>
+  </div>
+</div>
+
+<div class="dentro">
+  <div id="entra" class="entra-box" style="display:none">
+    <h2 style="margin-top:0">Entra per segnare</h2>
+    <p class="aiuto">Servono la stessa email e la stessa password dell'area organizzatori.
+      Si fa una volta sola per dispositivo.</p>
+    <div class="campo"><label for="em">Email</label><input type="email" id="em" autocomplete="username" /></div>
+    <div class="campo"><label for="pw">Password</label><input type="password" id="pw" autocomplete="current-password" /></div>
+    <p class="errore" id="erroreEntra"></p>
+    <button class="btn btn-p btn-largo" id="btnEntra">Entra</button>
+  </div>
+
+  <div id="scelta" style="display:none;margin-bottom:14px"></div>
+  <div id="corpo"></div>
+  <div id="classifica" class="classifica-box" style="display:none"></div>
+</div>
+
+<div class="velo" id="velo">
+  <div class="finestra" id="finestra"></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =========================================================================
+   Stato: si legge il pezzo «torneo_<id>» dal database, lo stesso che usa
+   l'area organizzatori. La sessione è quella già salvata dal browser: chi
+   è entrato una volta nell'admin da questo telefono qui non deve rifare
+   niente.
+   ========================================================================= */
+var $ = CA.$, V = CA.V, testo = CA.testo, crea = CA.crea;
+var DATI = {}, SESS = null, TORNEI = [], APERTO = '', STATO = {}, ASSETTO = null;
+var SCRIVENDO = null;            /* id della partita che ho sotto le dita */
+var DAMANDARE = false, timerInvio = null, ULTIMO = '';
+
+function due(n){ return (n < 10 ? '0' : '') + n; }
+function toast(m, ms){ CA.toast(m, ms); }
+
+/* ------------------------------ sessione ------------------------------- */
+function sessLeggi(){
+  try{
+    var s = JSON.parse(CA.memLeggi('ca_fbsess') || 'null');
+    return (s && s.refreshToken) ? s : null;
+  }catch(e){ return null; }
+}
+function sessSalva(){ CA.memScrivi('ca_fbsess', JSON.stringify(SESS)); }
+
+/* il token dura un'ora: si rinnova da solo quando sta per scadere */
+function token(){
+  if(!SESS) return Promise.reject(new Error('non collegato'));
+  if(SESS.idToken && SESS.scadenza && Date.now() < SESS.scadenza - 60000){
+    return Promise.resolve(SESS.idToken);
+  }
+  return FB.refresh(SESS.refreshToken).then(function(s){
+    SESS.idToken = s.idToken;
+    SESS.refreshToken = s.refreshToken;
+    SESS.scadenza = s.scadenza;
+    sessSalva();
+    return SESS.idToken;
+  });
+}
+
+function chiSono(){
+  return CA.memLeggi('ca_operatore') || (SESS && SESS.email ? String(SESS.email).split('@')[0] : 'qualcuno');
+}
+
+/* --------------------------------- avvio ------------------------------- */
+CA.carica().then(function(d){
+  DATI = d;
+  $('linkTabellone').href = 'tabellone-carte.html';
+  SESS = sessLeggi();
+  if(!SESS){ $('entra').style.display = ''; return; }
+  avvia();
+}).catch(function(e){
+  testo('statoRete', 'contenuti non letti: ' + e.message);
+});
+
+$('btnEntra').addEventListener('click', function(){
+  var e = $('em').value.trim(), p = $('pw').value;
+  if(!e || !p){ testo('erroreEntra', 'Scrivi email e password.'); return; }
+  var b = $('btnEntra');
+  b.disabled = true; b.textContent = '⏳ Entro…';
+  FB.signIn(e, p).then(function(s){
+    SESS = { idToken:s.idToken, refreshToken:s.refreshToken, scadenza:s.scadenza, email:s.email };
+    sessSalva();
+    $('entra').style.display = 'none';
+    testo('erroreEntra', '');
+    avvia();
+  }).catch(function(err){
+    testo('erroreEntra', /INVALID|EMAIL/.test(err.message) ? 'Email o password sbagliate.' : err.message);
+  }).then(function(){ b.disabled = false; b.textContent = 'Entra'; });
+});
+
+function avvia(){
+  leggi(true).then(function(){
+    /* col link «?nuovo=1» si arriva qui già pronti a creare: è quello che
+       manda l'area organizzatori quando premi «Torneo veloce» */
+    if(/[?&]nuovo=1/.test(location.search)) apriNuovo();
+  });
+  /* ogni cinque secondi: è un torneo di carte, non una borsa valori, ma
+     cinque secondi bastano perché due tavoli si vedano a vicenda */
+  setInterval(function(){ if(!document.hidden) leggi(false); }, 5000);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) leggi(false); });
+}
+
+/* ------------------------------- lettura ------------------------------- */
+function leggi(prima){
+  return token().then(function(t){ return FB.leggiPezzi(t); }).then(function(pezzi){
+    ASSETTO = (pezzi.assetto_carte && pezzi.assetto_carte.dati) || null;
+    caricaRubrica(pezzi);
+    TORNEI = CA.componiTornei(V(DATI.tornei, []), ASSETTO);
+    var nuovi = {};
+    Object.keys(pezzi).forEach(function(nome){
+      var m = /^torneo_(.+)$/.exec(nome);
+      if(m) nuovi[m[1]] = pezzi[nome].dati;
+    });
+    /* quello che sto scrivendo io non si tocca: il resto entra */
+    Object.keys(nuovi).forEach(function(id){
+      if(id === APERTO && SCRIVENDO) { fondi(id, nuovi[id]); return; }
+      STATO[id] = nuovi[id];
+    });
+    if(!APERTO){
+      /* col link diretto si apre quello chiesto; se no l'ultimo cominciato e
+         non ancora finito, che è quello che si sta giocando adesso */
+      var chiesto = (/[?&]t=([^&]+)/.exec(location.search) || [])[1];
+      if(chiesto) chiesto = decodeURIComponent(chiesto);
+      var vivi = Object.keys(STATO).filter(function(id){
+        return V(STATO[id].incontri, []).length && !STATO[id].archiviato;
+      }).sort(function(a, b){
+        return String(V(STATO[b].inizio, '')).localeCompare(String(V(STATO[a].inizio, '')));
+      });
+      /* se non c'è più niente in corso si resta vuoti apposta: meglio una
+         sala pulita con l'invito a cominciare che l'ultimo torneo finito
+         riaperto da solo, che sembra non essersi mai chiuso */
+      APERTO = (chiesto && STATO[chiesto]) ? chiesto : (vivi[0] || '');
+    }
+    testo('statoRete', '🟢 aggiornato alle ' + oraOra());
+    disegna(prima);
+  }).catch(function(e){
+    testo('statoRete', '🔴 ' + (e.message === 'non collegato' ? 'non collegato' : 'rete assente'));
+  });
+}
+function oraOra(){ var d = new Date(); return due(d.getHours()) + ':' + due(d.getMinutes()); }
+
+/* Fonde quello che arriva dagli altri con quello che sto facendo io: la
+   partita che ho aperta resta mia, tutte le altre prendono la versione del
+   database. Senza questo, due tavoli che segnano insieme si cancellerebbero
+   i punti a vicenda. */
+function fondi(id, remoto){
+  var mio = STATO[id];
+  if(!mio || !Array.isArray(mio.incontri) || !Array.isArray(remoto.incontri)){ STATO[id] = remoto; return; }
+  var miei = {};
+  mio.incontri.forEach(function(m){ miei[m.id] = m; });
+  remoto.incontri.forEach(function(m){
+    if(m.id === SCRIVENDO && miei[m.id]){ return; }   /* la mia partita vince */
+    miei[m.id] = m;
+  });
+  remoto.incontri = remoto.incontri.map(function(m){ return miei[m.id] || m; });
+  STATO[id] = remoto;
+}
+
+/* ------------------------------ scrittura ------------------------------ */
+function salva(){
+  DAMANDARE = true;
+  if(timerInvio) clearTimeout(timerInvio);
+  timerInvio = setTimeout(manda, 700);
+}
+function manda(){
+  if(!DAMANDARE || !APERTO) return;
+  var dati = STATO[APERTO];
+  testo('statoRete', '⏳ mando…');
+  token().then(function(t){
+    return FB.scriviPezzo(t, 'torneo_' + APERTO, dati, chiSono());
+  }).then(function(){
+    DAMANDARE = false;
+    testo('statoRete', '🟢 salvato alle ' + oraOra());
+  }).catch(function(){
+    testo('statoRete', '🔴 non salvato: riprovo');
+    setTimeout(manda, 4000);
+  });
+}
+
+/* ------------------------------- disegno ------------------------------- */
+function torneoDati(id){
+  var st = STATO[id];
+  if(st && st.veloce) return st;          /* nato qui: si descrive da solo */
+  return TORNEI.filter(function(t){ return t.id === id; })[0] ||
+         V(DATI.tornei, []).filter(function(t){ return t.id === id; })[0] || {};
+}
+function coppieDi(id){ return V(V(STATO[id], {}).coppie, []); }
+function nomeCoppia(idc, coppie){
+  var c = coppie.filter(function(x){ return x.id === idc; })[0];
+  return c ? c.nome : (idc || '—');
+}
+function traguardoDi(m, id){
+  var td = torneoDati(id);
+  var pr = V(td.prove, []).filter(function(p){ return p.id === m.prova; })[0];
+  var n = Number(V(pr && pr.traguardo, td.traguardo));
+  return isFinite(n) && n > 0 ? n : 41;
+}
+function somma(m, lato){
+  var t = 0;
+  V(m.mani, []).forEach(function(x){ t += Number(V(x[lato], 0)) || 0; });
+  return t;
+}
+function finita(m, id){
+  var meta = traguardoDi(m, id);
+  return somma(m, 'a') >= meta || somma(m, 'b') >= meta;
+}
+
+/* La firma dice se è cambiato qualcosa che va ridisegnato. Se non cambia
+   niente non si tocca il DOM: è così che il campo sotto il dito resta dov'è. */
+/* La firma dice se è cambiata la STRUTTURA: quali partite ci sono, in che
+   ordine, chi le gioca. I punteggi non ci entrano — quelli si aggiornano
+   riga per riga senza ricostruire niente, e chi sta scrivendo non se ne
+   accorge nemmeno. */
+function firma(){
+  var st = STATO[APERTO] || {};
+  return JSON.stringify({
+    c: V(st.coppie, []).map(function(c){ return c.id + c.nome; }),
+    i: V(st.incontri, []).map(function(m){ return [m.id, m.a, m.b, m.turno, m.tavolo].join('|'); })
+  });
+}
+
+var RIGHE = {};          /* id partita -> come aggiornarla senza rifarla */
+
+function disegna(forza){
+  var f = firma();
+  if(!forza && f === ULTIMO){
+    /* stessa struttura: si aggiornano solo i numeri, riga per riga */
+    Object.keys(RIGHE).forEach(function(id){ RIGHE[id](); });
+    disegnaClassifica();
+    guardaSeFinito();
+    return;
+  }
+  ULTIMO = f;
+  RIGHE = {};
+
+  scegliTorneo();
+  var st = STATO[APERTO] || {};
+  var td = torneoDati(APERTO);
+  testo('titoloTorneo', APERTO ? V(td.nome, 'Le partite') : 'Le partite');
+  var coppie = coppieDi(APERTO);
+  var inc = V(st.incontri, []);
+
+  var el = $('corpo');
+  el.textContent = '';
+  if(!inc.length){
+    var vuoto = crea('div', 'turno-box');
+    if(!APERTO){
+      vuoto.appendChild(crea('h2', null, 'Non si sta giocando niente'));
+      vuoto.appendChild(crea('p', 'aiuto',
+        'Tocca ⚡ Nuovo qui in alto: si scelgono i giocatori, si formano le coppie e si comincia. ' +
+        'Quello che avete già giocato è nelle 📊 Statistiche.'));
+      var b = crea('button', 'btn btn-p btn-largo', '⚡ Comincia un torneo o una partita');
+      b.addEventListener('click', apriNuovo);
+      vuoto.appendChild(b);
+    } else {
+      vuoto.appendChild(crea('h2', null, 'Il tabellone non c’è ancora'));
+      vuoto.appendChild(crea('p', 'aiuto',
+        'Lo genera chi organizza, dall’area organizzatori: 🃏 Tornei → Genera il tabellone. ' +
+        'Appena è pronto compare qui da solo.'));
+    }
+    el.appendChild(vuoto);
+    $('classifica').style.display = 'none';
+    return;
+  }
+
+  var turni = [];
+  inc.forEach(function(m){
+    var k = V(m.turno, 'Incontri');
+    var t = turni.filter(function(x){ return x.nome === k; })[0];
+    if(!t){ t = { nome:k, partite:[] }; turni.push(t); }
+    t.partite.push(m);
+  });
+
+  turni.forEach(function(t){
+    var box = crea('div', 'turno-box');
+    var fatte = t.partite.filter(function(m){ return finita(m, APERTO); }).length;
+    box.appendChild(crea('h2', null, t.nome));
+    box.appendChild(crea('div', 'quando',
+      fatte + ' di ' + t.partite.length + (t.partite.length === 1 ? ' partita finita' : ' partite finite') +
+      ' · si gioca tutto insieme, un tavolo per partita'));
+    t.partite.forEach(function(m){ box.appendChild(rigaPartita(m, coppie)); });
+    el.appendChild(box);
+  });
+
+  disegnaClassifica();
+  guardaSeFinito();
+}
+
+function scegliTorneo(){
+  var ids = Object.keys(STATO).filter(function(id){
+    return V(STATO[id].coppie, []).length && !STATO[id].archiviato;
+  });
+  var el = $('scelta');
+  if(ids.length < 2){ el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.textContent = '';
+  var f = crea('div', 'filtri');
+  ids.forEach(function(id){
+    var b = crea('button', 'btn btn-piccolo ' + (id === APERTO ? 'btn-p' : 'btn-chiaro'),
+      V(torneoDati(id).nome, id));
+    b.addEventListener('click', function(){ APERTO = id; ULTIMO = ''; disegna(true); });
+    f.appendChild(b);
+  });
+  el.appendChild(f);
+}
+
+function rigaPartita(partenza, coppie){
+  var idP = partenza.id;
+  /* Si guarda sempre il dato di adesso, non la copia di quando la riga è
+     nata: fra un aggiornamento e l'altro l'oggetto viene sostituito. */
+  function m0(){
+    return V(V(STATO[APERTO], {}).incontri, []).filter(function(x){ return x.id === idP; })[0] || partenza;
+  }
+  var m = m0();
+  var meta = traguardoDi(m, APERTO);
+  var d = crea('div', 'partita' + (finita(m, APERTO) ? ' finita' : ''));
+  if(m.tavolo) d.appendChild(crea('div', 'tavolo', 'Tavolo ' + m.tavolo));
+
+  var sf = crea('div', 'sfidanti');
+  var na = crea('div', 'nome', nomeCoppia(m.a, coppie));
+  var tot = crea('div', 'tot');
+  var nb = crea('div', 'nome dx', nomeCoppia(m.b, coppie));
+  sf.appendChild(na); sf.appendChild(tot); sf.appendChild(nb);
+  d.appendChild(sf);
+
+  var manca = crea('p', 'quanto-manca');
+  var dentro = crea('div');
+  var azFine = crea('div', 'azioni');
+  azFine.style.cssText = 'justify-content:flex-start;margin-top:6px;display:none';
+  var sblocca = crea('button', 'btn btn-chiaro btn-piccolo', '✏️ Correggi il risultato');
+  azFine.appendChild(sblocca);
+  d.appendChild(dentro);
+  d.appendChild(manca);
+  d.appendChild(azFine);
+  var SBLOCCATA = false;
+  sblocca.addEventListener('click', function(){
+    SBLOCCATA = true;
+    disegnaMani();
+    aggiorna();
+    toast('Puoi correggere le mani. Si richiude da sé appena il punteggio torna buono.', 6000);
+  });
+
+  function aggiorna(){
+    m = m0();
+    var a = somma(m, 'a'), b = somma(m, 'b');
+    m.puntiA = V(m.mani, []).length ? a : m.puntiA;
+    m.puntiB = V(m.mani, []).length ? b : m.puntiB;
+    tot.textContent = a + ' – ' + b;
+    var vinta = a >= meta ? 'a' : (b >= meta ? 'b' : '');
+    na.className = 'nome' + (vinta === 'a' ? ' vince' : '');
+    nb.className = 'nome dx' + (vinta === 'b' ? ' vince' : '');
+    d.className = 'partita' + (vinta ? ' finita' : '');
+    manca.className = 'quanto-manca' + (vinta ? ' vinta' : '');
+    manca.textContent = !V(m.mani, []).length
+      ? ('Si arriva a ' + meta + ' punti. Segna la prima mano.')
+      : (vinta
+        ? ('🏆 ' + nomeCoppia(vinta === 'a' ? m.a : m.b, coppie) + ' ha vinto: ' +
+           (vinta === 'a' ? a : b) + ' punti.')
+        : ('Mancano ' + Math.max(0, meta - a) + ' a ' + nomeCoppia(m.a, coppie) +
+           ' e ' + Math.max(0, meta - b) + ' a ' + nomeCoppia(m.b, coppie) + '.'));
+    /* Partita chiusa: si blocca tutto. Un tavolo che ha finito non deve poter
+       aggiungere una mano per sbaglio mentre il telefono passa di mano — e
+       quando serve davvero c'è il pulsante per correggere. */
+    chiudiSeVinta(vinta);
+    return vinta;
+  }
+
+  function chiudiSeVinta(vinta){
+    var blocca = !!vinta && !SBLOCCATA;
+    dentro.querySelectorAll('input').forEach(function(i){
+      i.disabled = blocca;
+      i.style.opacity = blocca ? '.75' : '';
+    });
+    dentro.querySelectorAll('button').forEach(function(b){ b.style.display = blocca ? 'none' : ''; });
+    azFine.style.display = blocca ? 'flex' : 'none';
+    if(!vinta) SBLOCCATA = false;      /* corretto il punteggio, si riparte normali */
+  }
+
+  function disegnaMani(){
+    m = m0();
+    dentro.textContent = '';
+    m.mani = V(m.mani, []);
+    m.mani.forEach(function(mano, i){
+      var r = crea('div', 'mano-riga');
+      r.appendChild(crea('span', 'n', (i + 1) + 'ª'));
+      [['a', m.a], ['b', m.b]].forEach(function(lato){
+        var inp = document.createElement('input');
+        inp.type = 'number'; inp.inputMode = 'numeric';
+        inp.value = (mano[lato[0]] === undefined || mano[lato[0]] === '') ? '' : mano[lato[0]];
+        inp.setAttribute('aria-label', (i + 1) + 'ª mano, ' + nomeCoppia(lato[1], coppie));
+        inp.addEventListener('focus', function(){ SCRIVENDO = m.id; });
+        inp.addEventListener('blur', function(){ setTimeout(function(){ SCRIVENDO = null; }, 400); });
+        inp.addEventListener('input', function(){
+          mano[lato[0]] = inp.value === '' ? '' : Number(inp.value);
+          /* l'ora della prima cifra e quella dell'ultima: da lì esce quanto
+             è durata la partita, senza che nessuno debba guardare l'orologio */
+          if(!m.inizio) m.inizio = new Date().toISOString();
+          var vinta = aggiorna();
+          if(vinta && !m.fine) m.fine = new Date().toISOString();
+          if(!vinta && m.fine) m.fine = '';
+          salva();
+          disegnaClassifica();
+          if(vinta){
+            festeggia(m, vinta, coppie);
+            /* può essere l'ultima partita del torneo: si guarda subito, non
+               al giro dopo — chi ha appena vinto vuole vedere la coppa ora */
+            guardaSeFinito();
+          }
+        });
+        r.appendChild(inp);
+      });
+      var via = crea('button', 'btn btn-chiaro btn-piccolo', '🗑️');
+      via.title = 'Togli questa mano';
+      via.addEventListener('click', function(){
+        m.mani.splice(i, 1);
+        aggiorna(); disegnaMani(); salva(); disegnaClassifica();
+      });
+      r.appendChild(via);
+      dentro.appendChild(r);
+    });
+
+    if(!finita(m, APERTO) || SBLOCCATA){
+      var az = crea('div', 'azioni');
+      az.style.cssText = 'justify-content:flex-start;margin-top:4px';
+      var piu = crea('button', 'btn btn-p', '➕ Un’altra mano');
+      piu.addEventListener('click', function(){
+        m.mani.push({ a:'', b:'' });
+        aggiorna(); disegnaMani(); salva();
+        var campi = dentro.querySelectorAll('input');
+        if(campi.length) campi[campi.length - 2].focus();
+      });
+      az.appendChild(piu);
+      dentro.appendChild(az);
+    }
+  }
+
+  disegnaMani();
+  aggiorna();
+
+  /* Come si rinfresca quando arriva la mossa di un altro tavolo: se ho il
+     dito qui dentro non si tocca niente, se no si rifanno le mani solo
+     quando ne è cambiato il numero. */
+  var quanteMani = V(m.mani, []).length;
+  RIGHE[idP] = function(){
+    if(d.contains(document.activeElement)) return;
+    var ora = V(m0().mani, []).length;
+    if(ora !== quanteMani){ quanteMani = ora; disegnaMani(); }
+    aggiorna();
+  };
+  return d;
+}
+
+/* la partita è finita: si festeggia una volta sola, non a ogni cifra */
+var FESTEGGIATE = {};
+function festeggia(m, vinta, coppie){
+  if(FESTEGGIATE[m.id]) return;
+  FESTEGGIATE[m.id] = true;
+  toast('🏆 ' + nomeCoppia(vinta === 'a' ? m.a : m.b, coppie) + ' ha vinto la partita.', 6000);
+}
+
+/* ----------------------------- classifica ------------------------------ */
+function classifica(id){
+  var st = STATO[id] || {};
+  var coppie = V(st.coppie, []);
+  var pun = V(V(V(DATI.aree, {}).adulti, {}).punteggio, {});
+  var vv = V(pun.vittoria, 3), pp = V(pun.pareggio, 1);
+  var tab = {};
+  coppie.forEach(function(c){
+    tab[c.id] = { coppia:c.nome, id:c.id, g:0, v:0, n:0, p:0, punti:0, fatti:0, subiti:0 };
+  });
+  V(st.incontri, []).forEach(function(m){
+    var a = tab[m.a], b = tab[m.b];
+    if(!a || !b) return;
+    var pa = somma(m, 'a'), pb = somma(m, 'b');
+    if(!V(m.mani, []).length){
+      if(m.puntiA === '' || m.puntiA === undefined) return;
+      pa = Number(m.puntiA); pb = Number(m.puntiB);
+    } else if(!finita(m, id)) return;          /* partita ancora in corso */
+    a.g++; b.g++;
+    a.fatti += pa; a.subiti += pb;
+    b.fatti += pb; b.subiti += pa;
+    if(pa > pb){ a.v++; b.p++; a.punti += vv; }
+    else if(pb > pa){ b.v++; a.p++; b.punti += vv; }
+    else { a.n++; b.n++; a.punti += pp; b.punti += pp; }
+  });
+  return Object.keys(tab).map(function(k){ return tab[k]; })
+    .sort(function(x, y){
+      if(y.punti !== x.punti) return y.punti - x.punti;
+      return (y.fatti - y.subiti) - (x.fatti - x.subiti);
+    });
+}
+
+function disegnaClassifica(){
+  var el = $('classifica');
+  var righe = classifica(APERTO);
+  if(!righe.length){ el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.textContent = '';
+  el.appendChild(crea('h2', null, '📊 Classifica'));
+  var scroll = crea('div', 'tabella-scroll');
+  var t = document.createElement('table');
+  t.className = 'tab';
+  var th = document.createElement('thead');
+  var tr = document.createElement('tr');
+  ['#', 'Coppia', 'G', 'V', 'P', 'Punti'].forEach(function(x, i){
+    var c = document.createElement('th');
+    c.textContent = x;
+    if(i >= 2) c.className = 'n';
+    tr.appendChild(c);
+  });
+  th.appendChild(tr); t.appendChild(th);
+  var tb = document.createElement('tbody');
+  righe.forEach(function(r, i){
+    var x = document.createElement('tr');
+    [String(i + 1), r.coppia, r.g, r.v, r.p, r.punti].forEach(function(v, k){
+      var c = document.createElement('td');
+      c.textContent = String(v);
+      if(k >= 2) c.className = 'n';
+      if(k === 5) c.style.fontWeight = 'bold';
+      x.appendChild(c);
+    });
+    tb.appendChild(x);
+  });
+  t.appendChild(tb);
+  scroll.appendChild(t);
+  el.appendChild(scroll);
+}
+
+/* ------------------- la fine del torneo, e lo spareggio ----------------
+   Quando tutte le partite sono giocate si guarda la classifica: se in cima
+   c'è una coppia sola si incorona, se ce ne sono due appaiate si propone lo
+   spareggio — una partita sola, decisa lì per lì. Con tre appaiate in cerchio
+   la differenza punti quasi sempre decide; se non decide nemmeno quella,
+   lo spareggio si fa fra le prime due. */
+var CHIUSO = false;
+function guardaSeFinito(){
+  var st = STATO[APERTO] || {};
+  var inc = V(st.incontri, []);
+  if(!inc.length) return;
+  /* Attenzione: appena si segna una mano il totale finisce anche in puntiA,
+     quindi «ha un punteggio» non vuol dire «è finita». Con le mani comanda
+     il traguardo; il punteggio scritto a mano vale solo se mani non ce ne
+     sono — è il caso dei tornei preparati nell'area organizzatori. */
+  var tutte = inc.every(function(m){
+    if(V(m.mani, []).length) return finita(m, APERTO);
+    return m.puntiA !== '' && m.puntiA !== undefined && m.puntiA !== null;
+  });
+  if(!tutte){ CHIUSO = false; if(st.fine){ st.fine = ''; salva(); } return; }
+  if(!st.fine){ st.fine = new Date().toISOString(); salva(); }
+  if(CHIUSO) return;
+  CHIUSO = true;
+  mostraFine();
+}
+
+function mostraFine(){
+  var righe = classifica(APERTO);
+  if(righe.length < 2) return;
+  var primo = righe[0];
+  var pari = righe.filter(function(r){
+    return r.punti === primo.punti && (r.fatti - r.subiti) === (primo.fatti - primo.subiti);
+  });
+  var f = $('finestra');
+  f.textContent = '';
+
+  var st0 = STATO[APERTO] || {};
+  if(pari.length < 2){
+    f.appendChild(crea('div', 'coppa', '🏆'));
+    f.appendChild(crea('h2', null, primo.coppia));
+    if(st0.tipo === 'partita'){
+      /* una sfida fra due coppie non ha una classifica: ha un risultato */
+      var vinte = righe.map(function(r){ return r.v; });
+      f.appendChild(crea('p', null, vinte[0] > 1
+        ? ('ha vinto la sfida, ' + vinte[0] + ' partite a ' + V(vinte[1], 0) + '.')
+        : 'ha vinto la partita.'));
+    } else {
+      f.appendChild(crea('p', null, 'vince ' + V(torneoDati(APERTO).nome, 'il torneo') +
+        ' con ' + primo.punti + ' punti in classifica.'));
+      var seconda = righe[1];
+      if(seconda) f.appendChild(crea('p', 'aiuto', 'Seconda: ' + seconda.coppia + ' con ' + seconda.punti + '.'));
+    }
+  } else {
+    f.appendChild(crea('div', 'coppa', '⚖️'));
+    f.appendChild(crea('h2', null, 'Parità in testa'));
+    f.appendChild(crea('p', null, pari.map(function(r){ return r.coppia; }).join(' e ') +
+      ' hanno ' + primo.punti + ' punti e la stessa differenza. Serve uno spareggio.'));
+    var b = crea('button', 'btn btn-p btn-largo', '🎲 Genera lo spareggio');
+    b.addEventListener('click', function(){ generaSpareggio(pari); });
+    f.appendChild(b);
+  }
+  var durata = durataDi(STATO[APERTO]);
+  if(durata) f.appendChild(crea('p', 'aiuto', '⏱️ È durato ' + durata + '.'));
+
+  var nuovo = crea('button', 'btn btn-p btn-largo', '🆕 Archivia e comincia il prossimo');
+  nuovo.style.marginTop = '10px';
+  nuovo.addEventListener('click', function(){ archivia(); apriNuovo(); });
+  f.appendChild(nuovo);
+
+  var chiudi = crea('button', 'btn btn-chiaro btn-largo', 'Chiudi');
+  chiudi.style.marginTop = '8px';
+  chiudi.addEventListener('click', function(){ $('velo').classList.remove('aperto'); });
+  f.appendChild(chiudi);
+  $('velo').classList.add('aperto');
+}
+
+function generaSpareggio(pari){
+  var st = STATO[APERTO];
+  var due = pari.slice(0, 2);
+  var esiste = V(st.incontri, []).some(function(m){ return m.spareggio; });
+  if(esiste){ toast('Lo spareggio c’è già, in fondo alla pagina.', 6000); }
+  else {
+    st.incontri.push({
+      id: 'sp' + Date.now(),
+      turno: '⚔️ Spareggio per il primo posto',
+      a: due[0].id, b: due[1].id,
+      tavolo: 1, puntiA: '', puntiB: '', mani: [],
+      prova: V(torneoDati(APERTO).provaFinale, ''),
+      spareggio: true
+    });
+    salva();
+    toast('⚔️ Spareggio creato: lo trovi in fondo.', 7000);
+  }
+  CHIUSO = false;
+  $('velo').classList.remove('aperto');
+  ULTIMO = '';
+  disegna(true);
+  var giu = document.querySelectorAll('.turno-box');
+  if(giu.length) giu[giu.length - 1].scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+$('velo').addEventListener('click', function(e){
+  if(e.target === $('velo')) $('velo').classList.remove('aperto');
+});
+
+/* =======================================================================
+   LA SALA DA GIOCO: si crea un torneo o una partita in tre passi.
+   Chi gioca (dalla rubrica, o nomi nuovi) → che cosa si gioca → le coppie.
+   Tutto vive nel database come gli altri tornei, così le pagine del
+   tabellone e delle statistiche non hanno bisogno di sapere che è nato
+   qui e non nell'area organizzatori.
+   ======================================================================= */
+var RUBRICA = { giocatori: [] };
+var NUOVO = null;      /* quello che si sta componendo */
+
+function caricaRubrica(pezzi){
+  var r = pezzi && pezzi.rubrica && pezzi.rubrica.dati;
+  if(r && Array.isArray(r.giocatori)) RUBRICA = r;
+}
+function salvaRubrica(){
+  return token().then(function(t){ return FB.scriviPezzo(t, 'rubrica', RUBRICA, chiSono()); });
+}
+/* Chi ha giocato una volta resta in rubrica, col suo compagno abituale: la
+   volta dopo i nomi si scelgono da un elenco invece di riscriverli. */
+function ricordaGente(giocatori){
+  var per = {};
+  RUBRICA.giocatori.forEach(function(g){ per[normale(g.nome)] = g; });
+  giocatori.forEach(function(g){
+    var k = normale(g.nome);
+    if(!k) return;
+    if(per[k]){ if(g.compagno) per[k].compagno = g.compagno; per[k].volte = (per[k].volte || 0) + 1; }
+    else { per[k] = { nome:g.nome, compagno:V(g.compagno, ''), volte:1 }; RUBRICA.giocatori.push(per[k]); }
+  });
+  RUBRICA.giocatori.sort(function(a, b){ return (b.volte || 0) - (a.volte || 0); });
+  return salvaRubrica();
+}
+function normale(s){
+  return String(s == null ? '' : s).trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+$('btnNuovo').addEventListener('click', apriNuovo);
+
+function apriNuovo(){
+  NUOVO = { scelti: {}, nuovi: [], tipo:'torneo', formato:'italiana', formula:'secca',
+            gioco:'scopone', traguardo:41, ritorno:false, coppie:[] };
+  passoGente();
+  $('velo').classList.add('aperto');
+}
+
+/* ------------------------------ passo 1 -------------------------------- */
+function passoGente(){
+  var f = $('finestra');
+  f.textContent = '';
+  var box = crea('div', 'passo');
+  box.appendChild(crea('h3', null, '1 · Chi gioca'));
+  box.appendChild(crea('p', 'aiuto',
+    'Tocca i nomi di chi c\'è. Quelli che hanno già giocato sono qui: i nuovi si aggiungono sotto.'));
+
+  var gente = crea('div', 'gente');
+  RUBRICA.giocatori.concat(NUOVO.nuovi).forEach(function(g){
+    var k = normale(g.nome);
+    var l = crea('label', 'tipo-g' + (NUOVO.scelti[k] ? ' preso' : ''));
+    var c = document.createElement('input');
+    c.type = 'checkbox'; c.checked = !!NUOVO.scelti[k];
+    /* si accende solo la riga toccata: rifare tutto l'elenco a ogni tocco
+       farebbe ballare la pagina proprio mentre si sceglie, e sul telefono
+       si perderebbe il punto in cui si era arrivati a scorrere */
+    c.addEventListener('change', function(){
+      if(c.checked) NUOVO.scelti[k] = { nome:g.nome, compagno:V(g.compagno, '') };
+      else delete NUOVO.scelti[k];
+      l.className = 'tipo-g' + (c.checked ? ' preso' : '');
+      contaScelti();
+    });
+    l.appendChild(c);
+    l.appendChild(crea('span', 'chi', g.nome));
+    if(g.compagno) l.appendChild(crea('small', null, 'con ' + g.compagno));
+    gente.appendChild(l);
+  });
+  box.appendChild(gente);
+  if(!RUBRICA.giocatori.length && !NUOVO.nuovi.length){
+    box.appendChild(crea('p', 'aiuto', 'La rubrica è vuota: scrivi qui sotto il primo nome.'));
+  }
+
+  var campo = crea('div', 'campo');
+  var inp = document.createElement('input');
+  inp.type = 'text'; inp.placeholder = 'Nome e cognome';
+  campo.appendChild(inp);
+  box.appendChild(campo);
+  var agg = crea('button', 'btn btn-chiaro btn-largo', '➕ Aggiungi questo giocatore');
+  agg.addEventListener('click', function(){
+    var n = inp.value.trim();
+    if(!n) return;
+    if(RUBRICA.giocatori.concat(NUOVO.nuovi).some(function(g){ return normale(g.nome) === normale(n); })){
+      toast('C\'è già.', 3500); return;
+    }
+    NUOVO.nuovi.push({ nome:n, compagno:'' });
+    NUOVO.scelti[normale(n)] = { nome:n, compagno:'' };
+    passoGente();
+  });
+  inp.addEventListener('keydown', function(e){ if(e.key === 'Enter') agg.click(); });
+  box.appendChild(agg);
+
+  var conto = crea('p', 'aiuto');
+  box.appendChild(conto);
+  function contaScelti(){
+    var q = Object.keys(NUOVO.scelti).length;
+    conto.textContent = q
+      ? (q + (q === 1 ? ' giocatore scelto' : ' giocatori scelti') +
+         (q % 2 ? ' — sono dispari: uno resterebbe fuori' : ''))
+      : 'Nessuno scelto per ora.';
+  }
+  contaScelti();
+
+  f.appendChild(box);
+  f.appendChild(bottoniera([
+    { t:'Avanti →', p:true, f:function(){
+        if(Object.keys(NUOVO.scelti).length < 4){
+          toast('Servono almeno quattro giocatori: due coppie.', 5000); return;
+        }
+        passoCosa();
+      } },
+    { t:'Annulla', f:chiudiFinestra }
+  ]));
+}
+
+function bottoniera(voci){
+  var az = crea('div', 'azioni');
+  az.style.cssText = 'margin-top:14px;justify-content:center;flex-wrap:wrap';
+  voci.forEach(function(v){
+    var b = crea('button', 'btn ' + (v.p ? 'btn-p' : 'btn-chiaro'), v.t);
+    b.addEventListener('click', v.f);
+    az.appendChild(b);
+  });
+  return az;
+}
+function chiudiFinestra(){ $('velo').classList.remove('aperto'); }
+
+/* ------------------------------ passo 2 -------------------------------- */
+function passoCosa(){
+  var f = $('finestra');
+  f.textContent = '';
+  var quanti = Object.keys(NUOVO.scelti).length;
+  var coppieQuante = Math.floor(quanti / 2);
+  var box = crea('div', 'passo');
+  box.appendChild(crea('h3', null, '2 · Che cosa si gioca'));
+
+  var scelte = crea('div', 'scelte-r');
+  [
+    { id:'partita', tit:'🃏 Partita singola', sotto:'Due coppie e via, senza classifica.' },
+    { id:'torneo', tit:'🏆 Torneo', sotto:'Girone o tabellone, con la classifica.' }
+  ].forEach(function(s){
+    if(s.id === 'partita' && coppieQuante !== 2) return;
+    var b = crea('button', 'scelta-r' + (NUOVO.tipo === s.id ? ' presa' : ''));
+    b.appendChild(crea('b', null, s.tit));
+    b.appendChild(crea('small', null, s.sotto));
+    b.addEventListener('click', function(){ NUOVO.tipo = s.id; passoCosa(); });
+    scelte.appendChild(b);
+  });
+  box.appendChild(scelte);
+
+  if(NUOVO.tipo === 'partita'){
+    box.appendChild(crea('h3', null, 'Quante partite'));
+    var q = crea('div', 'scelte-r');
+    [{ id:'secca', tit:'Una secca', sotto:'Chi vince, vince.' },
+     { id:'tre', tit:'Al meglio delle tre', sotto:'Si gioca fino a due vittorie.' }].forEach(function(s){
+      var b = crea('button', 'scelta-r' + (NUOVO.formula === s.id ? ' presa' : ''));
+      b.appendChild(crea('b', null, s.tit));
+      b.appendChild(crea('small', null, s.sotto));
+      b.addEventListener('click', function(){ NUOVO.formula = s.id; passoCosa(); });
+      q.appendChild(b);
+    });
+    box.appendChild(q);
+  } else {
+    box.appendChild(crea('h3', null, 'La formula'));
+    var fm = crea('div', 'scelte-r');
+    [{ id:'italiana', tit:'Girone all\'italiana', sotto:'Tutti contro tutti: la più giusta.' },
+     { id:'gironi', tit:'Due gironi e finale', sotto:'Da sette coppie in su.' },
+     { id:'eliminazione', tit:'Eliminazione diretta', sotto:'Chi perde esce.' }].forEach(function(s){
+      var b = crea('button', 'scelta-r' + (NUOVO.formato === s.id ? ' presa' : ''));
+      b.appendChild(crea('b', null, s.tit));
+      b.appendChild(crea('small', null, s.sotto));
+      b.addEventListener('click', function(){ NUOVO.formato = s.id; passoCosa(); });
+      fm.appendChild(b);
+    });
+    box.appendChild(fm);
+    if(NUOVO.formato === 'italiana'){
+      var lr = crea('label', 'tipo-g' + (NUOVO.ritorno ? ' preso' : ''));
+      var cr = document.createElement('input');
+      cr.type = 'checkbox'; cr.checked = NUOVO.ritorno;
+      cr.addEventListener('change', function(){ NUOVO.ritorno = cr.checked; passoCosa(); });
+      lr.appendChild(cr);
+      lr.appendChild(crea('span', 'chi', 'Andata e ritorno'));
+      box.appendChild(lr);
+    }
+  }
+
+  box.appendChild(crea('h3', null, 'A che gioco'));
+  var g = crea('div', 'campo');
+  var sel = document.createElement('select');
+  [['scopone','Scopone scientifico'],['tresette','Tresette'],['briscola','Briscola'],
+   ['burraco','Burraco'],['altro','Un altro gioco']].forEach(function(x){
+    var o = document.createElement('option');
+    o.value = x[0]; o.textContent = x[1];
+    if(NUOVO.gioco === x[0]) o.selected = true;
+    sel.appendChild(o);
+  });
+  sel.addEventListener('change', function(){ NUOVO.gioco = sel.value; });
+  g.appendChild(sel);
+  box.appendChild(g);
+
+  var tg = crea('div', 'campo');
+  tg.appendChild(crea('label', null, 'La partita finisce a quanti punti'));
+  var it = document.createElement('input');
+  it.type = 'number'; it.inputMode = 'numeric'; it.value = NUOVO.traguardo;
+  it.addEventListener('change', function(){ NUOVO.traguardo = Math.max(1, Number(it.value) || 41); });
+  tg.appendChild(it);
+  box.appendChild(tg);
+
+  f.appendChild(box);
+  f.appendChild(bottoniera([
+    { t:'Avanti →', p:true, f:function(){ formaCoppie(); passoCoppie(); } },
+    { t:'← Indietro', f:passoGente },
+    { t:'Annulla', f:chiudiFinestra }
+  ]));
+}
+
+/* ------------------------------ passo 3 -------------------------------- */
+/* Prima chi si è dichiarato compagno, poi i rimasti a due a due. */
+function formaCoppie(){
+  var gente = Object.keys(NUOVO.scelti).map(function(k){ return NUOVO.scelti[k]; });
+  var usati = {}, coppie = [];
+  gente.forEach(function(p){
+    if(usati[normale(p.nome)] || !p.compagno) return;
+    var altro = gente.filter(function(x){ return normale(x.nome) === normale(p.compagno); })[0];
+    if(!altro || usati[normale(altro.nome)]) return;
+    usati[normale(p.nome)] = usati[normale(altro.nome)] = true;
+    coppie.push({ id:'c' + (coppie.length + 1), a:p.nome, b:altro.nome, nome:p.nome + ' – ' + altro.nome });
+  });
+  var rimasti = gente.filter(function(p){ return !usati[normale(p.nome)]; });
+  while(rimasti.length >= 2){
+    var x = rimasti.shift(), y = rimasti.pop();
+    coppie.push({ id:'c' + (coppie.length + 1), a:x.nome, b:y.nome, nome:x.nome + ' – ' + y.nome });
+  }
+  if(rimasti.length === 1){
+    coppie.push({ id:'c' + (coppie.length + 1), a:rimasti[0].nome, b:'', nome:rimasti[0].nome + ' – (da abbinare)' });
+  }
+  NUOVO.coppie = coppie;
+}
+
+function passoCoppie(){
+  var f = $('finestra');
+  f.textContent = '';
+  var box = crea('div', 'passo');
+  box.appendChild(crea('h3', null, '3 · Le coppie'));
+  box.appendChild(crea('p', 'aiuto',
+    'Chi si era dichiarato un compagno è già insieme. Per cambiare, tocca due nomi: si scambiano.'));
+
+  var presa = null;
+  function ridisegna(){
+    elenco.textContent = '';
+    NUOVO.coppie.forEach(function(c, i){
+      var r = crea('div', 'coppia-r');
+      r.appendChild(crea('span', 'n', (i + 1) + '.'));
+      ['a', 'b'].forEach(function(lato){
+        var b = crea('button', 'btn btn-chiaro btn-piccolo', c[lato] || '— libero —');
+        b.style.flex = '1';
+        if(presa && presa.i === i && presa.lato === lato) b.className = 'btn btn-p btn-piccolo';
+        b.addEventListener('click', function(){
+          if(!presa){ presa = { i:i, lato:lato }; ridisegna(); return; }
+          var altro = NUOVO.coppie[presa.i];
+          var tmp = altro[presa.lato];
+          altro[presa.lato] = c[lato];
+          c[lato] = tmp;
+          [altro, c].forEach(function(x){
+            x.nome = (x.a || '(vuoto)') + ' – ' + (x.b || '(da abbinare)');
+          });
+          presa = null;
+          ridisegna();
+        });
+        r.appendChild(b);
+      });
+      elenco.appendChild(r);
+    });
+  }
+  var elenco = crea('div');
+  box.appendChild(elenco);
+  ridisegna();
+
+  f.appendChild(box);
+  f.appendChild(bottoniera([
+    { t:'▶️ Si comincia', p:true, f:creaTorneo },
+    { t:'← Indietro', f:passoCosa },
+    { t:'Annulla', f:chiudiFinestra }
+  ]));
+}
+
+/* --------------------------- si comincia ------------------------------- */
+var NOMI_GIOCO = { scopone:'Scopone scientifico', tresette:'Tresette', briscola:'Briscola',
+                   burraco:'Burraco', altro:'Partita' };
+
+function creaTorneo(){
+  var id = 'v' + Date.now();
+  var coppie = NUOVO.coppie.filter(function(c){ return c.a; });
+  var incontri = [];
+  var quando = new Date();
+
+  if(NUOVO.tipo === 'partita'){
+    var quante = NUOVO.formula === 'tre' ? 3 : 1;
+    for(var i = 1; i <= quante; i++){
+      incontri.push({ id:'m' + i, turno: quante === 1 ? 'La partita' : ('Partita ' + i),
+        a:coppie[0].id, b:coppie[1].id, tavolo:1, puntiA:'', puntiB:'', mani:[] });
+    }
+  } else if(NUOVO.formato === 'italiana'){
+    incontri = giroItaliana(coppie);
+    if(NUOVO.ritorno){
+      incontri = incontri.concat(incontri.map(function(m){
+        return { id:'r' + m.id, turno:'Ritorno · ' + m.turno, a:m.b, b:m.a,
+                 tavolo:m.tavolo, puntiA:'', puntiB:'', mani:[] };
+      }));
+    }
+  } else if(NUOVO.formato === 'eliminazione'){
+    incontri = giroEliminazione(coppie);
+  } else {
+    incontri = giroItaliana(coppie);      /* due gironi: per ora un girone solo */
+  }
+
+  var dati = {
+    veloce: true,
+    nome: (NUOVO.tipo === 'partita'
+      ? (NUOVO.formula === 'tre' ? 'Sfida al meglio delle tre' : 'Partita secca')
+      : 'Torneo di ' + (NOMI_GIOCO[NUOVO.gioco] || 'carte').toLowerCase()),
+    gioco: NUOVO.gioco,
+    nomeGioco: NOMI_GIOCO[NUOVO.gioco] || 'Carte',
+    tipo: NUOVO.tipo,
+    formato: NUOVO.tipo === 'partita' ? 'sfida' : NUOVO.formato,
+    traguardo: NUOVO.traguardo,
+    ritorno: !!NUOVO.ritorno,
+    inizio: quando.toISOString(),
+    fine: '',
+    coppie: coppie,
+    incontri: incontri
+  };
+
+  STATO[id] = dati;
+  APERTO = id;
+  ULTIMO = '';
+  CHIUSO = false;
+  chiudiFinestra();
+  disegna(true);
+  salva();
+  ricordaGente(Object.keys(NUOVO.scelti).map(function(k){
+    var g = NUOVO.scelti[k];
+    var suo = coppie.filter(function(c){ return normale(c.a) === k || normale(c.b) === k; })[0];
+    return { nome:g.nome, compagno: suo ? (normale(suo.a) === k ? suo.b : suo.a) : '' };
+  })).catch(function(){ });
+  toast('✅ ' + dati.nome + ': si gioca. Il link da mandare è nel pulsante «Manda il link».', 8000);
+}
+
+/* girone all'italiana col metodo del cerchio */
+function giroItaliana(coppie){
+  var ids = coppie.map(function(c){ return c.id; });
+  if(ids.length % 2) ids.push(null);
+  var n = ids.length, out = [], k = 0;
+  for(var t = 0; t < n - 1; t++){
+    var tav = 1;
+    for(var i = 0; i < n / 2; i++){
+      var a = ids[i], b = ids[n - 1 - i];
+      if(a === null || b === null) continue;
+      k++;
+      out.push({ id:'m' + k, turno:'Turno ' + (t + 1), a:a, b:b, tavolo:tav++,
+                 puntiA:'', puntiB:'', mani:[] });
+    }
+    ids.splice(1, 0, ids.pop());
+  }
+  return out;
+}
+function giroEliminazione(coppie){
+  var out = [], k = 0;
+  for(var i = 0; i + 1 < coppie.length; i += 2){
+    k++;
+    out.push({ id:'m' + k, turno:'Primo turno', a:coppie[i].id, b:coppie[i + 1].id,
+               tavolo:k, puntiA:'', puntiB:'', mani:[] });
+  }
+  return out;
+}
+
+/* --------------------------- archiviare -------------------------------
+   Un torneo finito non si cancella: si mette da parte. Sparisce dalla sala
+   da gioco ma resta nel database, e da lì lo leggono le statistiche. */
+function archivia(){
+  var st = STATO[APERTO];
+  if(!st) return;
+  st.archiviato = true;
+  if(!st.fine) st.fine = new Date().toISOString();
+  salva();
+  manda();                      /* subito, senza aspettare il debounce */
+  APERTO = '';
+  ULTIMO = '';
+  CHIUSO = false;
+  toast('📦 Messo in archivio: lo ritrovi nelle statistiche.', 6000);
+}
+
+function durataDi(st){
+  if(!st || !st.inizio || !st.fine) return '';
+  var ms = new Date(st.fine).getTime() - new Date(st.inizio).getTime();
+  if(!isFinite(ms) || ms <= 0) return '';
+  return inParole(ms);
+}
+function inParole(ms){
+  var min = Math.round(ms / 60000);
+  if(min < 1) return 'meno di un minuto';
+  if(min < 60) return min + (min === 1 ? ' minuto' : ' minuti');
+  var o = Math.floor(min / 60), r = min % 60;
+  return o + (o === 1 ? ' ora' : ' ore') + (r ? ' e ' + r + ' minuti' : '');
+}
+
+/* ------------------- il link da mandare ai giocatori ------------------- */
+$('btnManda').addEventListener('click', function(){
+  var url = CA.urlSito() + 'partite.html' + (APERTO ? ('?t=' + encodeURIComponent(APERTO)) : '');
+  var td = torneoDati(APERTO);
+  var testoM = '🃏 ' + V(td.nome, 'Partite') + ' — si segna qui, mano per mano:\n' + url;
+  if(navigator.share){
+    navigator.share({ text:testoM }).catch(function(){ copiaLink(url, testoM); });
+  } else copiaLink(url, testoM);
+});
+function copiaLink(url, testoM){
+  var wa = 'https://wa.me/?text=' + encodeURIComponent(testoM);
+  window.open(wa, '_blank', 'noopener');
+  try{ navigator.clipboard.writeText(url); }catch(e){ }
+}
+</script>
+</body>
+</html>

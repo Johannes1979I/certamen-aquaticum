@@ -28,6 +28,9 @@ Dopo ogni pubblicazione premi **⌘⇧R** per vedere davvero le modifiche.
 | `admin.html` | Area organizzatori |
 | `locandina.html` | Locandina A4 con QR, da stampare |
 | `tabellone.html` | Tabellone a schermo pieno per un tablet a bordo vasca |
+| `partite.html` | **La sala da gioco delle carte**: si creano tornei e partite e si segnano le mani |
+| `tabellone-carte.html` | Il tabellone del torneo di carte, da guardare e basta |
+| `statistiche.html` | L'albo d'oro: tornei, coppie, giocatori, tempi |
 
 ## Dove stanno i dati
 
@@ -596,6 +599,50 @@ tratta come un'app e il token resta molto più a lungo.
 
 Il token **non lascia mai il browser**: non finisce nel sito, non va nel
 database, non lo vede nessun altro.
+
+## Le carte tutto l'anno: la sala da gioco
+
+`partite.html` — ci si arriva dall'area organizzatori (`🃏 Tornei`) o col link
+diretto. È la pagina che si tiene aperta **sul telefono, al tavolo**.
+
+**⚡ Nuovo** apre la creazione in tre passi:
+1. **Chi gioca** — i nomi di chi ha già giocato sono in elenco, con accanto il
+   compagno abituale: si toccano e via. Chi è nuovo si aggiunge scrivendolo una
+   volta sola, poi resta in rubrica.
+2. **Che cosa si gioca** — con due sole coppie compare anche **partita singola**,
+   secca o al meglio delle tre; se no la formula del torneo, con l'andata e
+   ritorno. Si sceglie il gioco e a quanti punti finisce una partita (41).
+3. **Le coppie** — già formate secondo i compagni dichiarati. Per cambiarle si
+   toccano due nomi e si scambiano.
+
+Poi si gioca: sotto ogni partita si segnano **le mani, una per una**. Il totale
+corre da solo e appena una coppia arriva al traguardo **la partita si chiude e
+si blocca** — niente più mani per sbaglio. Se hai sbagliato una cifra c'è
+`✏️ Correggi il risultato`.
+
+**Più telefoni insieme.** La pagina si aggiorna da sé ogni cinque secondi e
+*non tocca mai il campo in cui stai scrivendo*: due tavoli possono segnare
+insieme senza pestarsi i piedi. Con **💬 Manda il link** mandi su WhatsApp
+l'indirizzo che apre direttamente quel torneo.
+
+**Alla fine** compare la coppa col vincitore. In caso di parità in testa il
+sito propone lo **spareggio** e lo aggiunge al calendario con un tocco. Poi
+`🆕 Archivia e comincia il prossimo` mette via il torneo — resta nelle
+statistiche — e riapre subito la creazione.
+
+## L'albo d'oro delle carte
+
+`statistiche.html`, dal menù della sala da gioco. Tutti i tornei e tutte le
+partite giocate, con:
+
+- **le coppie** per partite vinte, con la percentuale;
+- **i giocatori** presi uno per uno, anche quando cambiano compagno — è l'unico
+  modo per capire se uno è forte lui o è forte la coppia. Accanto c'è con
+  quanti compagni diversi ha giocato: una percentuale alta con un compagno solo
+  dice molto meno della stessa percentuale con tre;
+- **quanto è durato** ogni torneo e la durata media di una partita, presa da
+  sola: l'orologio parte alla prima mano segnata e si ferma quando la partita
+  si chiude.
 
 ## L'album della giornata: foto e video
 
