@@ -336,7 +336,8 @@ function leggi(prima){
     testo('statoRete', '🟢 aggiornato alle ' + oraOra());
     disegna(prima);
   }).catch(function(e){
-    testo('statoRete', '🔴 ' + (e.message === 'non collegato' ? 'non collegato' : 'rete assente'));
+    testo('statoRete', '🔴 ' + (!SESS ? 'da rifare l’accesso'
+      : e.message === 'non collegato' ? 'non collegato' : 'rete assente'));
   });
 }
 function oraOra(){ var d = new Date(); return due(d.getHours()) + ':' + due(d.getMinutes()); }
