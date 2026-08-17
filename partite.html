@@ -1248,6 +1248,7 @@ function creaTorneo(){
     gioco: NUOVO.gioco,
     nomeGioco: NOMI_GIOCO[NUOVO.gioco] || 'Carte',
     tipo: NUOVO.tipo,
+    formula: NUOVO.formula,          /* «secca» o «tre»: serve per chiudere a 2-0 */
     formato: NUOVO.tipo === 'partita' ? 'sfida' : NUOVO.formato,
     traguardo: NUOVO.traguardo,
     ritorno: !!NUOVO.ritorno,
