@@ -529,9 +529,9 @@ function rigaPartita(partenza, coppie){
   }
   var m = m0();
   var meta = traguardoDi(m, APERTO);
-  var d = crea('div', 'partita' + (finita(m, APERTO) ? ' finita' : '') + (m.saltata ? ' saltata' : ''));
-  if(m.saltata) d.appendChild(crea('div', 'tavolo', 'non serve · sfida già decisa'));
-  else if(m.tavolo) d.appendChild(crea('div', 'tavolo', 'Tavolo ' + m.tavolo));
+  var d = crea('div', 'partita');
+  var intestazione = crea('div', 'tavolo');
+  d.appendChild(intestazione);
 
   var sf = crea('div', 'sfidanti');
   var na = crea('div', 'nome', nomeCoppia(m.a, coppie));
@@ -559,6 +559,15 @@ function rigaPartita(partenza, coppie){
 
   function aggiorna(){
     m = m0();
+    /* Lo stato della partita può cambiare mentre la riga è già a video —
+       per esempio quando la sfida si decide 2-0 e questa non serve più:
+       intestazione, colore e campi devono seguirlo senza rifare la riga. */
+    intestazione.textContent = m.saltata ? 'non serve · sfida già decisa'
+      : (m.tavolo ? 'Tavolo ' + m.tavolo : '');
+    if(m.saltata !== d.classList.contains('saltata')){
+      d.classList.toggle('saltata', !!m.saltata);
+      dentro.style.display = m.saltata ? 'none' : '';
+    }
     var a = somma(m, 'a'), b = somma(m, 'b');
     m.puntiA = V(m.mani, []).length ? a : m.puntiA;
     m.puntiB = V(m.mani, []).length ? b : m.puntiB;
@@ -566,9 +575,11 @@ function rigaPartita(partenza, coppie){
     var vinta = a >= meta ? 'a' : (b >= meta ? 'b' : '');
     na.className = 'nome' + (vinta === 'a' ? ' vince' : '');
     nb.className = 'nome dx' + (vinta === 'b' ? ' vince' : '');
-    d.className = 'partita' + (vinta ? ' finita' : '');
+    d.className = 'partita' + (vinta ? ' finita' : '') + (m.saltata ? ' saltata' : '');
     manca.className = 'quanto-manca' + (vinta ? ' vinta' : '');
-    manca.textContent = !V(m.mani, []).length
+    manca.textContent = m.saltata
+      ? 'Non si gioca: la sfida è già decisa.'
+      : !V(m.mani, []).length
       ? ('Si arriva a ' + meta + ' punti. Segna la prima mano.')
       : (vinta
         ? ('🏆 ' + nomeCoppia(vinta === 'a' ? m.a : m.b, coppie) + ' ha vinto: ' +
