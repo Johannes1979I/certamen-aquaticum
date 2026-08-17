@@ -140,8 +140,26 @@ $('btnEntra').addEventListener('click', function(){
   }).catch(function(err){ testo('erroreEntra', 'Email o password sbagliate.'); });
 });
 
+/* I tornei preparati nell'area organizzatori salvano le coppie per codice
+   («i3», «i7»): i nomi stanno nelle iscrizioni. Si leggono anche quelle e si
+   traduce, se no in tabella comparirebbero i codici del database. */
+var PERSONE = {};
+
 function carica(){
-  token().then(function(t){ return FB.leggiPezzi(t); }).then(function(pezzi){
+  token().then(function(t){
+    return Promise.all([FB.leggiPezzi(t), FB.elenco(t).catch(function(){ return []; })]);
+  }).then(function(r){
+    var pezzi = r[0];
+    PERSONE = {};
+    (r[1] || []).forEach(function(doc){
+      var nome = doc.nome;
+      if(!nome){
+        try{ nome = (JSON.parse(doc.json || '{}') || {}).nome; }catch(e){ }
+      }
+      if(doc._id && nome) PERSONE[doc._id] = nome;
+    });
+    return pezzi;
+  }).then(function(pezzi){
     TORNEI = [];
     Object.keys(pezzi).forEach(function(nome){
       var m = /^torneo_(.+)$/.exec(nome);
@@ -183,7 +201,10 @@ function conti(){
 
   TORNEI.forEach(function(t){
     var perId = {};
-    V(t.coppie, []).forEach(function(c){ perId[c.id] = c; });
+    V(t.coppie, []).forEach(function(c){
+      if(!c.nome || /^[a-zA-Z0-9_-]{12,}\s*[–-]/.test(c.nome)) c.nome = membri(c).join(' – ');
+      perId[c.id] = c;
+    });
     V(t.incontri, []).forEach(function(m){
       var a = perId[m.a], b = perId[m.b];
       if(!a || !b) return;
@@ -221,11 +242,17 @@ function valori(o){
       return (y.punti - y.subiti) - (x.punti - x.subiti);
     });
 }
-/* i due nomi di una coppia: se l'admin li ha scritti come «Tizio – Caio» si
-   ricavano dal nome, se la coppia è nata qui ci sono già separati */
+/* I due nomi di una coppia. Nei tornei nati nella sala da gioco «a» e «b»
+   sono già i nomi; in quelli dell'area organizzatori sono i codici delle
+   iscrizioni, e allora si traducono. Se manca tutto si spacca il nome della
+   coppia, che è comunque leggibile. */
 function membri(c){
-  if(c.a && c.b) return [c.a, c.b];
-  if(c.a) return [c.a];
+  var fuori = [c.a, c.b].map(function(x){
+    if(!x) return '';
+    if(PERSONE[x]) return PERSONE[x];          /* era un codice: ecco il nome */
+    return /^[a-zA-Z0-9_-]{12,}$/.test(String(x)) ? '' : String(x);
+  }).filter(Boolean);
+  if(fuori.length) return fuori;
   return String(V(c.nome, '')).split(/\s+–\s+|\s+-\s+/).map(function(s){ return s.trim(); })
     .filter(function(s){ return s && !/da abbinare|vuoto/i.test(s); });
 }
@@ -288,6 +315,29 @@ function disegna(){
     if(d) r.appendChild(crea('span', 'medaglia', '⏱️ ' + d));
     var vinc = vincitore(t);
     if(vinc) r.appendChild(crea('span', 'vinto', '🏆 ' + vinc));
+    /* Un torneo vecchio rimasto aperto si mette via da qui, senza tornare
+       nella sala da gioco a cercarlo. */
+    if(!t.archiviato){
+      var b = crea('button', 'btn btn-chiaro btn-piccolo', '📦 Archivia');
+      b.addEventListener('click', function(){
+        b.disabled = true; b.textContent = '⏳';
+        t.archiviato = true;
+        if(!t.fine) t.fine = new Date().toISOString();
+        var copia = {};
+        Object.keys(t).forEach(function(k){ if(k.charAt(0) !== '_') copia[k] = t[k]; });
+        token().then(function(tok){
+          return FB.scriviPezzo(tok, 'torneo_' + t._id, copia, 'statistiche');
+        }).then(function(){
+          CA.toast('📦 Messo in archivio.', 4000);
+          disegna();
+        }).catch(function(){
+          t.archiviato = false;
+          b.disabled = false; b.textContent = '📦 Archivia';
+          CA.toast('⚠️ Non sono riuscito a salvare: riprova.', 6000);
+        });
+      });
+      r.appendChild(b);
+    }
     el.appendChild(r);
   });
 }

@@ -163,6 +163,7 @@ body{ background:#f2f7fb; }
   <div id="scelta" style="display:none;margin-bottom:14px"></div>
   <div id="corpo"></div>
   <div id="classifica" class="classifica-box" style="display:none"></div>
+  <div id="chiusura" style="display:none;margin-top:14px"></div>
 </div>
 
 <div class="velo" id="velo">
@@ -413,6 +414,7 @@ function disegna(forza){
     }
     el.appendChild(vuoto);
     $('classifica').style.display = 'none';
+    $('chiusura').style.display = 'none';
     return;
   }
 
@@ -436,7 +438,55 @@ function disegna(forza){
   });
 
   disegnaClassifica();
+  disegnaChiusura();
   guardaSeFinito();
+}
+
+/* Il pulsante per mettere via il torneo non può stare solo nella finestra
+   che compare alla fine: quella si chiude, e poi non si trova più niente.
+   Sta qui sotto, sempre, con scritto a che punto è. */
+function disegnaChiusura(){
+  var el = $('chiusura');
+  el.textContent = '';
+  var st = STATO[APERTO];
+  if(!st || !V(st.incontri, []).length){ el.style.display = 'none'; return; }
+  el.style.display = '';
+
+  var inc = V(st.incontri, []);
+  var fatte = inc.filter(function(m){
+    return V(m.mani, []).length ? finita(m, APERTO)
+      : (m.puntiA !== '' && m.puntiA !== undefined && m.puntiA !== null);
+  }).length;
+  var tutte = fatte === inc.length;
+
+  var box = crea('div', 'classifica-box');
+  box.appendChild(crea('b', null, tutte ? '🏁 Finito'
+    : ('▶️ ' + fatte + (fatte === 1 ? ' partita' : ' partite') + ' su ' + inc.length)));
+  box.appendChild(crea('p', 'aiuto', tutte
+    ? 'Puoi metterlo in archivio: sparisce da qui e resta nelle statistiche.'
+    : 'Puoi archiviarlo lo stesso, se avete deciso di chiuderla qui: quello che è stato giocato resta.'));
+  var az = crea('div', 'azioni');
+  az.style.cssText = 'justify-content:flex-start;flex-wrap:wrap';
+  var b1 = crea('button', 'btn ' + (tutte ? 'btn-p' : 'btn-chiaro'), '📦 Archivia');
+  b1.addEventListener('click', function(){
+    if(!tutte && !confirm('Il torneo non è finito: ' + fatte + ' partite su ' + inc.length +
+      '. Lo archivio lo stesso?')) return;
+    archivia();
+  });
+  az.appendChild(b1);
+  var b2 = crea('button', 'btn btn-chiaro', '📦 Archivia e comincia il prossimo');
+  b2.addEventListener('click', function(){
+    if(!tutte && !confirm('Il torneo non è finito. Lo archivio lo stesso e ne comincio un altro?')) return;
+    archivia(); apriNuovo();
+  });
+  az.appendChild(b2);
+  if(tutte){
+    var b3 = crea('button', 'btn btn-chiaro', '🏆 Rivedi il vincitore');
+    b3.addEventListener('click', function(){ CHIUSO = true; mostraFine(); });
+    az.appendChild(b3);
+  }
+  box.appendChild(az);
+  el.appendChild(box);
 }
 
 function scegliTorneo(){

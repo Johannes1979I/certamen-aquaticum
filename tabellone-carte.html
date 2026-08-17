@@ -53,6 +53,21 @@ body{ background:#0a2540; color:#fff; margin:0; }
 .turno-t{ font-size:clamp(.78rem,1.4vw,1rem); opacity:.65; margin:12px 0 2px; text-transform:uppercase; letter-spacing:.05em; }
 .vuoto{ opacity:.6; text-align:center; padding:30px 10px; font-size:clamp(.95rem,2vw,1.3rem); }
 .piede-t{ text-align:center; opacity:.45; font-size:clamp(.7rem,1.3vw,.9rem); margin-top:16px; }
+
+/* Quando il torneo finisce, il tabellone lo annuncia: chi sta ai tavoli
+   alza gli occhi e vede la coppa. Si toglie con un tocco, e se qualcuno
+   riapre una partita torna da solo il tabellone normale. */
+.velo-t{
+  position:fixed; inset:0; background:rgba(10,37,64,.86); display:none;
+  align-items:center; justify-content:center; padding:20px; z-index:60; cursor:pointer;
+}
+.velo-t.aperto{ display:flex; }
+.coppa-t{ text-align:center; max-width:760px; }
+.coppa-t .simbolo{ font-size:clamp(3.4rem,12vw,7rem); line-height:1; }
+.coppa-t .chi{ font-size:clamp(1.5rem,6vw,3.4rem); font-weight:800; color:#ffd75e; margin:10px 0 6px;
+  overflow-wrap:break-word; }
+.coppa-t .che{ font-size:clamp(.95rem,2.4vw,1.5rem); opacity:.9; }
+.coppa-t .via{ margin-top:22px; font-size:clamp(.8rem,1.6vw,1rem); opacity:.6; }
 </style>
 </head>
 <body>
@@ -68,6 +83,15 @@ body{ background:#0a2540; color:#fff; margin:0; }
     <div class="riquadro"><h2>🗓️ Le partite</h2><div id="partiteT"></div></div>
   </div>
   <p class="piede-t" id="piedeT"></p>
+</div>
+
+<div class="velo-t" id="veloT">
+  <div class="coppa-t">
+    <div class="simbolo" id="simboloT">🏆</div>
+    <div class="chi" id="chiT"></div>
+    <div class="che" id="cheT"></div>
+    <div class="via">tocca lo schermo per togliere</div>
+  </div>
 </div>
 
 <script>
@@ -104,6 +128,7 @@ function leggi(){
        che è quello che la gente sta guardando adesso */
     var t = tornei.filter(function(x){ return x.stato === 'in corso'; })[0] || tornei[0];
     disegna(t, c && c.aggiornato);
+    guardaLaFine(t);
   }).catch(function(){ testo('statoT', 'bacheca non raggiungibile'); });
 }
 
@@ -155,6 +180,34 @@ function disegna(t, quando){
     });
   });
 }
+
+/* Il torneo è finito: si annuncia una volta sola. Se poi qualcuno riapre una
+   partita per correggere, l'annuncio si toglie da sé e si rifà quando si
+   richiude — così il tabellone non racconta mai una cosa non vera. */
+var ANNUNCIATO = '';
+function guardaLaFine(t){
+  var velo = $('veloT');
+  if(!t || t.stato !== 'concluso' || !V(t.classifica, []).length){
+    if(ANNUNCIATO){ ANNUNCIATO = ''; velo.classList.remove('aperto'); }
+    return;
+  }
+  var primo = t.classifica[0], secondo = t.classifica[1];
+  var pari = secondo && secondo.punti === primo.punti;
+  var chiave = t.id + '|' + primo.coppia + '|' + primo.punti + '|' + (pari ? 'pari' : 'solo');
+  if(ANNUNCIATO === chiave) return;
+  ANNUNCIATO = chiave;
+
+  testo('simboloT', pari ? '⚖️' : '🏆');
+  testo('chiT', pari ? 'Parità in testa' : primo.coppia);
+  testo('cheT', pari
+    ? (primo.coppia + ' e ' + secondo.coppia + ' a ' + primo.punti +
+       ' punti: serve uno spareggio.')
+    : ('vince ' + V(t.nome, 'il torneo') + ' con ' + primo.punti +
+       (primo.punti === 1 ? ' punto' : ' punti') +
+       (secondo ? '. Seconda: ' + secondo.coppia + ' con ' + secondo.punti + '.' : '.')));
+  velo.classList.add('aperto');
+}
+$('veloT').addEventListener('click', function(){ $('veloT').classList.remove('aperto'); });
 
 function oraDi(iso){
   var d = new Date(iso);

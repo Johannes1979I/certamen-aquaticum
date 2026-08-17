@@ -28,7 +28,7 @@ Dopo ogni pubblicazione premi **⌘⇧R** per vedere davvero le modifiche.
 | `admin.html` | Area organizzatori |
 | `locandina.html` | Locandina A4 con QR, da stampare |
 | `tabellone.html` | Tabellone a schermo pieno per un tablet a bordo vasca |
-| `partite.html` | **La sala da gioco delle carte**: si creano tornei e partite e si segnano le mani |
+| `partite.html` | **La sala da gioco delle carte**: si creano tornei e partite e si segnano le mani. Nel menù di tutte le pagine, come `🂱 Partite di carte` |
 | `tabellone-carte.html` | Il tabellone del torneo di carte, da guardare e basta |
 | `statistiche.html` | L'albo d'oro: tornei, coppie, giocatori, tempi |
 
@@ -630,7 +630,15 @@ si blocca** — niente più mani per sbaglio. Se hai sbagliato una cifra c'è
 insieme senza pestarsi i piedi. Con **💬 Manda il link** mandi su WhatsApp
 l'indirizzo che apre direttamente quel torneo.
 
-**Alla fine** compare la coppa col vincitore. In caso di parità in testa il
+**Per metterlo via** c'è il riquadro in fondo alla pagina, sempre visibile:
+`📦 Archivia` oppure `📦 Archivia e comincia il prossimo`. Dice anche a che punto
+sei — «3 partite su 6» — e se archivi a metà chiede conferma. Lo stesso pulsante
+sta accanto a ogni torneo nelle statistiche, per quelli vecchi rimasti aperti.
+
+**Alla fine** compare la coppa col vincitore, **sia nella pagina delle partite
+sia sul tabellone**: chi sta ai tavoli alza gli occhi e la vede. Sul tabellone
+si toglie con un tocco e non torna più da sola; se qualcuno riapre una partita
+per correggere, sparisce e si rifà quando si richiude. In caso di parità in testa il
 sito propone lo **spareggio** e lo aggiunge al calendario con un tocco. Poi
 `🆕 Archivia e comincia il prossimo` mette via il torneo — resta nelle
 statistiche — e riapre subito la creazione.
