@@ -85,6 +85,7 @@ body{ background:#f2f7fb; }
   background:#fbfdff;
 }
 .partita.finita{ border-color:#2f9e5b; background:#f2fbf6; }
+.partita.saltata{ opacity:.5; border-style:dashed; }
 .partita .tavolo{ font-size:.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
 .sfidanti{ display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:center; margin:8px 0 4px; }
 .sfidanti .nome{ font-weight:bold; font-size:.98rem; }
@@ -459,15 +460,21 @@ function disegnaChiusura(){
   el.style.display = '';
 
   var inc = V(st.incontri, []);
+  decisaLaSfida();
+  var saltate = inc.filter(function(m){ return m.saltata; }).length;
   var fatte = inc.filter(function(m){
+    if(m.saltata) return false;
     return V(m.mani, []).length ? finita(m, APERTO)
       : (m.puntiA !== '' && m.puntiA !== undefined && m.puntiA !== null);
   }).length;
-  var tutte = fatte === inc.length;
+  var tutte = (fatte + saltate) === inc.length;
 
   var box = crea('div', 'classifica-box');
   box.appendChild(crea('b', null, tutte ? '🏁 Finito'
-    : ('▶️ ' + fatte + (fatte === 1 ? ' partita' : ' partite') + ' su ' + inc.length)));
+    : ('▶️ ' + fatte + (fatte === 1 ? ' partita' : ' partite') + ' su ' + (inc.length - saltate))));
+  if(saltate) box.appendChild(crea('p', 'aiuto',
+    saltate === 1 ? 'La terza non serve: la sfida è già decisa.'
+      : saltate + ' partite non servono più: la sfida è già decisa.'));
   box.appendChild(crea('p', 'aiuto', tutte
     ? 'Puoi metterlo in archivio: sparisce da qui e resta nelle statistiche.'
     : 'Puoi archiviarlo lo stesso, se avete deciso di chiuderla qui: quello che è stato giocato resta.'));
@@ -522,8 +529,9 @@ function rigaPartita(partenza, coppie){
   }
   var m = m0();
   var meta = traguardoDi(m, APERTO);
-  var d = crea('div', 'partita' + (finita(m, APERTO) ? ' finita' : ''));
-  if(m.tavolo) d.appendChild(crea('div', 'tavolo', 'Tavolo ' + m.tavolo));
+  var d = crea('div', 'partita' + (finita(m, APERTO) ? ' finita' : '') + (m.saltata ? ' saltata' : ''));
+  if(m.saltata) d.appendChild(crea('div', 'tavolo', 'non serve · sfida già decisa'));
+  else if(m.tavolo) d.appendChild(crea('div', 'tavolo', 'Tavolo ' + m.tavolo));
 
   var sf = crea('div', 'sfidanti');
   var na = crea('div', 'nome', nomeCoppia(m.a, coppie));
@@ -629,6 +637,7 @@ function rigaPartita(partenza, coppie){
       dentro.appendChild(r);
     });
 
+    if(m.saltata){ return; }        /* niente da segnare: la sfida è decisa */
     if(!finita(m, APERTO) || SBLOCCATA){
       var az = crea('div', 'azioni');
       az.style.cssText = 'justify-content:flex-start;margin-top:4px';
@@ -743,15 +752,41 @@ function disegnaClassifica(){
    la differenza punti quasi sempre decide; se non decide nemmeno quella,
    lo spareggio si fa fra le prime due. */
 var CHIUSO = false;
+/* Al meglio delle tre, chi arriva a due vittorie ha vinto: la terza non si
+   gioca. Si segna come «non serve» invece di lasciarla lì aperta, che a
+   guardare il tabellone sembrerebbe un torneo mai finito. */
+function decisaLaSfida(){
+  var st = STATO[APERTO] || {};
+  if(st.tipo !== 'partita' || st.formula !== 'tre') return false;
+  var inc = V(st.incontri, []);
+  var vinte = {};
+  inc.forEach(function(m){
+    if(!finita(m, APERTO)) return;
+    var chi = somma(m, 'a') > somma(m, 'b') ? m.a : m.b;
+    vinte[chi] = (vinte[chi] || 0) + 1;
+  });
+  var basta = Object.keys(vinte).some(function(k){ return vinte[k] >= 2; });
+  if(!basta) return false;
+  var cambiato = false;
+  inc.forEach(function(m){
+    if(finita(m, APERTO) || m.saltata) return;
+    m.saltata = true; cambiato = true;
+  });
+  if(cambiato) salva();
+  return true;
+}
+
 function guardaSeFinito(){
   var st = STATO[APERTO] || {};
   var inc = V(st.incontri, []);
   if(!inc.length) return;
+  decisaLaSfida();
   /* Attenzione: appena si segna una mano il totale finisce anche in puntiA,
      quindi «ha un punteggio» non vuol dire «è finita». Con le mani comanda
      il traguardo; il punteggio scritto a mano vale solo se mani non ce ne
      sono — è il caso dei tornei preparati nell'area organizzatori. */
   var tutte = inc.every(function(m){
+    if(m.saltata) return true;
     if(V(m.mani, []).length) return finita(m, APERTO);
     return m.puntiA !== '' && m.puntiA !== undefined && m.puntiA !== null;
   });
