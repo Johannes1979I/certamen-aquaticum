@@ -92,7 +92,7 @@
         $('v-' + v).classList.add('attiva');
         window.scrollTo(0, 0);
         if (v === 'squadre') disegnaSquadre();
-        if (v === 'tornei') disegnaTornei();
+        if (v === 'tornei') { disegnaTornei(); proponiTorneoVeloce(); }
         if (v === 'punteggi') { disegnaPunteggi(); scaldaAudio(); }
         if (v === 'giochi') disegnaEditGiochi();
         if (v === 'stampe') disegnaRuoli();
@@ -244,6 +244,9 @@
         ? '📳 Vibrazione mandata: sul telefono si sente, sul computer no.'
         : '📳 Questo dispositivo non vibra — normale su computer e iPhone.');
     });
+
+    $('btnChiudiEdizione').addEventListener('click', chiudiEdizione);
+    $('btnRiprendiIscritti').addEventListener('click', riprendiIscritti);
 
     $('btnAggiungiSeparati').addEventListener('click', function () {
       DATI.separati = V(DATI.separati, []);
@@ -714,6 +717,7 @@
     if (nome === 'risultati') return 'i punteggi dei giochi';
     if (nome === 'titoli') return 'i premi';
     if (nome === 'rubrica') return 'la rubrica dei giocatori';
+    if (nome === 'edizioni') return 'le edizioni archiviate';
     if (nome.indexOf('torneo_') === 0) {
       var t = torneoDati(nome.slice(7));
       return t.nome ? ('il torneo ' + t.nome) : 'un torneo';
@@ -836,6 +840,7 @@
       },
       titoli: { titoli: STATO.titoli },
       rubrica: STATO.rubrica || { giocatori: [] },
+      edizioni: { edizioni: STATO.edizioni || [] },
       cronometro: { cronometro: STATO.cronometro },
       presenze: { presenze: STATO.presenze },
       assetto_carte: { assettoCarte: STATO.assettoCarte }
@@ -856,6 +861,8 @@
       STATO.risultati = V(dati.risultati, {});
       STATO.torneoRagazzi = V(dati.torneoRagazzi, { attivo: false, turni: [] });
       STATO.menzioni = V(dati.menzioni, {});
+    } else if (nome === 'edizioni') {
+      STATO.edizioni = V(dati.edizioni, []);
     } else if (nome === 'rubrica') {
       STATO.rubrica = dati && Array.isArray(dati.giocatori) ? dati : { giocatori: [] };
     } else if (nome === 'titoli') {
@@ -995,6 +1002,7 @@
   /* ============================== DISEGNO ============================== */
   function disegnaTutto() {
     disegnaCruscotto();
+    disegnaEdizione();
     disegnaSportello();
     disegnaSeparati();
     disegnaIscritti();
@@ -3123,6 +3131,122 @@
     return STATO.assettoCarte;
   }
 
+  /* ============== CHIUDERE L'EDIZIONE E PREPARARE L'ANNO DOPO ==========
+     A festa finita si mette via tutto: squadre, punteggi, premi, tornei e
+     l'elenco dei ragazzi finiscono in un documento suo, «edizione_<anno>»,
+     che resta nel database. Poi la giornata si azzera, ma le persone no:
+     restano nell'edizione archiviata e si ripescano con un tocco l'anno
+     dopo, senza richiedere a nessuno nome, età e telefono. */
+  function annoEdizione() {
+    var d = V(V(DATI.evento, {}).data, '');
+    var m = /^(\d{4})/.exec(d);
+    return m ? m[1] : String(new Date().getFullYear());
+  }
+
+  function disegnaEdizione() {
+    var el = $('statoEdizione');
+    if (!el) return;
+    el.textContent = '';
+    var anno = annoEdizione();
+    var rag = attive('ragazzi').length, adu = attive('adulti').length;
+    var gare = Object.keys(STATO.risultati || {}).length;
+    var box = crea('div', 'nota-box info');
+    box.appendChild(crea('b', null, 'Edizione ' + anno));
+    box.appendChild(crea('p', 'aiuto',
+      STATO.squadre.length + ' squadre · ' + gare + ' gare segnate · ' +
+      rag + ' ragazzi e ' + adu + ' adulti iscritti · ' +
+      Object.keys(STATO.tornei || {}).length + ' tornei di carte'));
+    var vecchie = V(STATO.edizioni, []);
+    if (vecchie.length) {
+      box.appendChild(crea('p', 'aiuto', '📦 In archivio: ' +
+        vecchie.map(function (e) {
+          return e.anno + ' (' + V(e.iscritti, []).length + ' iscritti)';
+        }).join(', ') + '.'));
+    }
+    el.appendChild(box);
+  }
+
+  function chiudiEdizione() {
+    if (!SESS) { CA.toast('Prima entra nel database.', 6000); return; }
+    var anno = annoEdizione();
+    var iscritti = ISCR.filter(function (p) { return p.stato !== 'cestino'; });
+    if (!confirm('Metto via tutta l\'edizione ' + anno + ':\n\n' +
+      '· ' + STATO.squadre.length + ' squadre e i loro punteggi\n' +
+      '· ' + Object.keys(STATO.risultati || {}).length + ' gare segnate, premi e menzioni\n' +
+      '· ' + Object.keys(STATO.tornei || {}).length + ' tornei di carte\n' +
+      '· l\'elenco di ' + iscritti.length + ' iscritti, con nomi e recapiti\n\n' +
+      'Resta tutto nel database, in un documento a parte. Dopo, la giornata si azzera ' +
+      'e si riparte puliti per l\'anno prossimo. Procedo?')) return;
+
+    var edizione = {
+      anno: anno,
+      chiusa: new Date().toISOString(),
+      evento: JSON.parse(JSON.stringify(V(DATI.evento, {}))),
+      squadre: JSON.parse(JSON.stringify(STATO.squadre || [])),
+      risultati: JSON.parse(JSON.stringify(STATO.risultati || {})),
+      titoli: JSON.parse(JSON.stringify(STATO.titoli || [])),
+      menzioni: JSON.parse(JSON.stringify(STATO.menzioni || {})),
+      presenze: JSON.parse(JSON.stringify(STATO.presenze || {})),
+      tornei: JSON.parse(JSON.stringify(STATO.tornei || {})),
+      iscritti: iscritti.map(function (p) {
+        return {
+          nome: p.nome, area: p.area, gruppo: p.gruppo, eta: p.eta, nuoto: p.nuoto,
+          categoria: p.categoria, amico: p.amico, compagno: p.compagno, livello: p.livello,
+          genitore: p.genitore, telefono: p.telefono, appartamento: p.appartamento,
+          note: p.note, codice: p.codice, creatoIl: p.creatoIl
+        };
+      })
+    };
+    STATO.edizioni = V(STATO.edizioni, []).filter(function (e) { return e.anno !== anno; });
+    STATO.edizioni.push(edizione);
+    salvaStato(true);
+
+    /* la copia di sicurezza sul computer, prima di azzerare */
+    scaricaFile('certamen-' + anno + '.json', JSON.stringify(edizione, null, 2), 'application/json');
+
+    CA.toast('📦 Edizione ' + anno + ' messa via, e scaricata sul computer. ' +
+      'Adesso puoi azzerare la giornata qui sotto: i nomi restano nell\'archivio.', 12000);
+    disegnaEdizione();
+  }
+
+  /* L'anno dopo: si ripescano i ragazzi dell'ultima edizione e si rimettono
+     fra gli iscritti, con un anno in più. Chi non viene si cancella in due
+     tocchi; chi viene non deve riscrivere niente. */
+  function riprendiIscritti() {
+    if (!SESS) { CA.toast('Prima entra nel database.', 6000); return; }
+    var vecchie = V(STATO.edizioni, []);
+    if (!vecchie.length) { CA.toast('Non c\'è ancora nessuna edizione in archivio.', 6000); return; }
+    var ultima = vecchie[vecchie.length - 1];
+    var gente = V(ultima.iscritti, []).filter(function (p) { return p.area === 'ragazzi'; });
+    if (!gente.length) { CA.toast('Nell\'edizione ' + ultima.anno + ' non ci sono ragazzi.', 6000); return; }
+    var gia = {};
+    ISCR.forEach(function (p) { gia[normalizza(p.nome)] = true; });
+    var nuovi = gente.filter(function (p) { return !gia[normalizza(p.nome)]; });
+    if (!nuovi.length) { CA.toast('Ci sono già tutti.', 5000); return; }
+    if (!confirm('Rimetto fra gli iscritti ' + nuovi.length + ' ragazzi dell\'edizione ' +
+      ultima.anno + ', con un anno in più.\n\nPoi controlli l\'elenco e togli chi non viene. Procedo?')) return;
+
+    var fatti = 0;
+    nuovi.reduce(function (c, p) {
+      return c.then(function () {
+        return token().then(function (t) {
+          return FB.creaIscrizione({
+            nome: p.nome, area: 'ragazzi', gruppo: 'ragazzi',
+            eta: (Number(p.eta) || 0) + 1, nuoto: p.nuoto, categoria: p.categoria,
+            genitore: p.genitore, telefono: p.telefono, appartamento: p.appartamento,
+            note: '', creatoIl: new Date().toISOString(),
+            ripreso: 'edizione ' + ultima.anno
+          });
+        }).then(function () { fatti++; });
+      });
+    }, Promise.resolve()).then(function () {
+      CA.toast('📥 Rimessi ' + fatti + ' ragazzi. Controlla l\'elenco: l\'età l\'ho aumentata di uno.', 10000);
+      ricarica(true);
+    }).catch(function (e) {
+      CA.toast('⚠️ Ne ho rimessi ' + fatti + ', poi si è fermato: ' + e.message, 9000);
+    });
+  }
+
   /* ------------------- il torneo veloce, dall'admin ---------------------
      La stessa procedura guidata della sala da gioco (torneo-veloce.js): si
      scelgono i giocatori — dagli iscritti o dalla rubrica, o scrivendoli —
@@ -3161,6 +3285,22 @@
       return { nome: p.nome, compagno: V(p.compagno, '') };
     });
   }
+  /* Entrando nella scheda dei tornei: se non c'è niente cominciato — nessuna
+     coppia, nessun tabellone — si propone la procedura guidata invece di
+     lasciare una pagina di pulsanti a chi voleva solo giocare. Una volta
+     sola per apertura: se dici di no, non insiste. */
+  var PROPOSTO = false;
+  function proponiTorneoVeloce() {
+    if (PROPOSTO || !SESS) return;
+    var qualcosa = Object.keys(STATO.tornei || {}).some(function (id) {
+      var st = STATO.tornei[id] || {};
+      return !st.archiviato && (V(st.coppie, []).length || V(st.incontri, []).length);
+    });
+    if (qualcosa) return;
+    PROPOSTO = true;
+    apriTorneoVeloce();
+  }
+
   function apriTorneoVeloce() {
     if (!SESS) { CA.toast('Prima entra nel database: il torneo va salvato.', 6000); return; }
     if (!window.TV) { CA.toast('Manca torneo-veloce.js: ricarica la pagina con ⌘⇧R.', 8000); return; }

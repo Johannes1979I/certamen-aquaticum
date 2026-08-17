@@ -46,7 +46,12 @@ body{ background:#f2f7fb; }
 .btn-barra:hover{ background:rgba(255,255,255,.3); }
 .btn-barra{ white-space:nowrap; flex:0 0 auto; display:inline-flex; align-items:center; }
 
-/* ---- la finestra che crea un torneo o una partita ---- */
+/* ---- la finestra che crea un torneo o una partita ----
+   Attenzione: nel foglio comune «.passo» nasce nascosto, perché lì serve al
+   modulo d'iscrizione che mostra un passo per volta. Qui dentro invece il
+   passo è tutto quello che si vede, e senza questa riga la finestra si apre
+   vuota, coi soli pulsanti. */
+.finestra .passo{ display:block; text-align:left; }
 .passo{ text-align:left; }
 .passo h3{ font-size:1.05rem; margin:0 0 4px; }
 .passo .aiuto{ margin-bottom:10px; }
@@ -183,6 +188,7 @@ body{ background:#f2f7fb; }
    ========================================================================= */
 var $ = CA.$, V = CA.V, testo = CA.testo, crea = CA.crea;
 var DATI = {}, SESS = null, TORNEI = [], APERTO = '', STATO = {}, ASSETTO = null;
+var TESTATE = [];       /* le righe «2 di 3 partite finite», da rinfrescare */
 var ISCRITTI = [];               /* chi si è iscritto: si propone nella procedura guidata */
 var SCRIVENDO = null;            /* id della partita che ho sotto le dita */
 var DAMANDARE = false, timerInvio = null, ULTIMO = '';
@@ -253,15 +259,22 @@ $('btnEntra').addEventListener('click', function(){
 
 function avvia(){
   leggi(true).then(function(){
-    /* col link «?nuovo=1» si arriva qui già pronti a creare: è quello che
-       manda l'area organizzatori quando premi «Torneo veloce» */
-    if(/[?&]nuovo=1/.test(location.search)) apriNuovo();
+    /* Col link «?nuovo=1» si arriva già pronti a creare. E se non si sta
+       giocando niente, la procedura parte da sola: aprire questa pagina
+       vuol dire voler giocare, e un riquadro vuoto con un pulsante è un
+       passaggio in più che nessuno vuole fare in piedi al tavolo. */
+    if(/[?&]nuovo=1/.test(location.search)){ PROPONI = false; apriNuovo(); }
+    else proponiSeVuota();
   });
   /* ogni cinque secondi: è un torneo di carte, non una borsa valori, ma
-     cinque secondi bastano perché due tavoli si vedano a vicenda */
-  setInterval(function(){ if(!document.hidden) leggi(false); }, 5000);
+     cinque secondi bastano perché due tavoli si vedano a vicenda.
+     Una volta sola: qui si passa anche dopo l'ingresso col nome e la
+     password, e due orologi vorrebbero dire il doppio delle letture. */
+  if(OROLOGIO) return;
+  OROLOGIO = setInterval(function(){ if(!document.hidden) leggi(false); }, 5000);
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) leggi(false); });
 }
+var OROLOGIO = 0;
 
 /* ------------------------------- lettura ------------------------------- */
 function leggi(prima){
@@ -406,12 +419,16 @@ function disegna(forza){
   if(!forza && f === ULTIMO){
     /* stessa struttura: si aggiornano solo i numeri, riga per riga */
     Object.keys(RIGHE).forEach(function(id){ RIGHE[id](); });
+    TESTATE.forEach(function(f){ f(); });
     disegnaClassifica();
+    disegnaChiusura();
     guardaSeFinito();
+    aggiornaFine();
     return;
   }
   ULTIMO = f;
   RIGHE = {};
+  TESTATE = [];
 
   scegliTorneo();
   var st = STATO[APERTO] || {};
@@ -441,6 +458,7 @@ function disegna(forza){
     el.appendChild(vuoto);
     $('classifica').style.display = 'none';
     $('chiusura').style.display = 'none';
+    proponiSeVuota();     /* la sala è vuota: la procedura parte da sola */
     return;
   }
 
@@ -452,13 +470,22 @@ function disegna(forza){
     t.partite.push(m);
   });
 
+  TESTATE = [];
   turni.forEach(function(t){
     var box = crea('div', 'turno-box');
-    var fatte = t.partite.filter(function(m){ return finita(m, APERTO); }).length;
     box.appendChild(crea('h2', null, t.nome));
-    box.appendChild(crea('div', 'quando',
-      fatte + ' di ' + t.partite.length + (t.partite.length === 1 ? ' partita finita' : ' partite finite') +
-      ' · si gioca tutto insieme, un tavolo per partita'));
+    var sotto = crea('div', 'quando');
+    box.appendChild(sotto);
+    /* «2 di 3 partite finite» deve dire il vero anche quando la pagina non si
+       ridisegna tutta — cioè quasi sempre, mentre si segnano le mani */
+    var conta = function(){
+      var fatte = t.partite.filter(function(m){ return finita(m, APERTO); }).length;
+      sotto.textContent = fatte + ' di ' + t.partite.length +
+        (t.partite.length === 1 ? ' partita finita' : ' partite finite') +
+        ' · si gioca tutto insieme, un tavolo per partita';
+    };
+    conta();
+    TESTATE.push(conta);
     t.partite.forEach(function(m){ box.appendChild(rigaPartita(m, coppie)); });
     el.appendChild(box);
   });
@@ -466,6 +493,7 @@ function disegna(forza){
   disegnaClassifica();
   disegnaChiusura();
   guardaSeFinito();
+  proponiSeVuota();       /* sala vuota: si riparte dalla procedura guidata */
 }
 
 /* Il pulsante per mettere via il torneo non può stare solo nella finestra
@@ -651,6 +679,8 @@ function rigaPartita(partenza, coppie){
           salva();
           disegnaClassifica();
           disegnaChiusura();          /* «3 su 6» deve dire il vero adesso */
+          TESTATE.forEach(function(f){ f(); });   /* e anche «1 di 3 finite» */
+          aggiornaFine();             /* e la coppa, se la finestra è aperta */
           if(vinta){
             festeggia(m, vinta, coppie);
             /* può essere l'ultima partita del torneo: si guarda subito, non
@@ -862,7 +892,7 @@ function mostraFine(){
     f.appendChild(crea('p', null, pari.map(function(r){ return r.coppia; }).join(' e ') +
       ' hanno ' + primo.punti + ' punti e la stessa differenza. Serve uno spareggio.'));
     var b = crea('button', 'btn btn-p btn-largo', '🎲 Genera lo spareggio');
-    b.addEventListener('click', function(){ generaSpareggio(pari); });
+    b.addEventListener('click', function(){ FINEAPERTA = false; generaSpareggio(pari); });
     f.appendChild(b);
   }
   var durata = durataDi(STATO[APERTO]);
@@ -870,32 +900,55 @@ function mostraFine(){
 
   var nuovo = crea('button', 'btn btn-p btn-largo', '🆕 Archivia e comincia il prossimo');
   nuovo.style.marginTop = '10px';
-  nuovo.addEventListener('click', function(){ archivia(); apriNuovo(); });
+  nuovo.addEventListener('click', function(){ FINEAPERTA = false; archivia(); apriNuovo(); });
   f.appendChild(nuovo);
 
   var chiudi = crea('button', 'btn btn-chiaro btn-largo', 'Chiudi');
   chiudi.style.marginTop = '8px';
-  chiudi.addEventListener('click', function(){ $('velo').classList.remove('aperto'); });
+  chiudi.addEventListener('click', function(){ FINEAPERTA = false; $('velo').classList.remove('aperto'); });
   f.appendChild(chiudi);
   $('velo').classList.add('aperto');
+  FINEAPERTA = true;
+}
+
+/* La finestra della fine compare nell'istante in cui una coppia passa il
+   traguardo — e in quell'istante il punteggio degli avversari spesso non è
+   ancora stato scritto: si segna prima il proprio. Un secondo dopo la
+   classifica cambia, e la coppa può cambiare padrone. Perciò finché la
+   finestra è aperta si riscrive da sola a ogni cifra. */
+var FINEAPERTA = false;
+function aggiornaFine(){
+  if(!FINEAPERTA) return;
+  if(!$('velo').classList.contains('aperto')){ FINEAPERTA = false; return; }
+  mostraFine();
 }
 
 function generaSpareggio(pari){
   var st = STATO[APERTO];
-  var due = pari.slice(0, 2);
   var esiste = V(st.incontri, []).some(function(m){ return m.spareggio; });
   if(esiste){ toast('Lo spareggio c’è già, in fondo alla pagina.', 6000); }
   else {
-    st.incontri.push({
-      id: 'sp' + Date.now(),
-      turno: '⚔️ Spareggio per il primo posto',
-      a: due[0].id, b: due[1].id,
-      tavolo: 1, puntiA: '', puntiB: '', mani: [],
-      prova: V(torneoDati(APERTO).provaFinale, ''),
-      spareggio: true
+    /* A pari punti possono essere anche in tre: si rifà un girone fra loro,
+       tutte contro tutte, e chi ne esce meglio prende il primo posto. Con
+       due sole coppie è una partita sola, che è il caso normale. */
+    var quante = 0;
+    pari.forEach(function(x, i){
+      pari.slice(i + 1).forEach(function(y, k){
+        st.incontri.push({
+          id: 'sp' + Date.now() + '_' + i + k,
+          turno: '⚔️ Spareggio per il primo posto',
+          a: x.id, b: y.id,
+          tavolo: quante + 1, puntiA: '', puntiB: '', mani: [],
+          prova: V(torneoDati(APERTO).provaFinale, ''),
+          spareggio: true
+        });
+        quante++;
+      });
     });
     salva();
-    toast('⚔️ Spareggio creato: lo trovi in fondo.', 7000);
+    toast(quante > 1
+      ? ('⚔️ Spareggio fra ' + pari.length + ' coppie: ' + quante + ' partite, in fondo alla pagina.')
+      : '⚔️ Spareggio creato: lo trovi in fondo.', 7000);
   }
   CHIUSO = false;
   $('velo').classList.remove('aperto');
@@ -955,6 +1008,18 @@ var RUBRICA = { giocatori: [] };
 function caricaRubrica(pezzi){
   var r = pezzi && pezzi.rubrica && pezzi.rubrica.dati;
   if(r && Array.isArray(r.giocatori)) RUBRICA = r;
+}
+
+/* Se la sala è vuota la procedura parte da sola: chi apre questa pagina
+   vuole giocare, non guardare un riquadro con un pulsante. Se però la
+   chiude senza creare niente, non si insiste più — fino al prossimo
+   torneo archiviato, che rimette tutto a nuovo. */
+var PROPONI = true;
+function proponiSeVuota(){
+  if(APERTO || !PROPONI || !SESS) return;
+  if(document.querySelector('#velo.aperto')) return;
+  PROPONI = false;
+  apriNuovo();
 }
 
 function apriNuovo(){
@@ -1153,6 +1218,7 @@ function archivia(){
   ULTIMO = '';
   CHIUSO = false;
   FESTEGGIATE = {};
+  PROPONI = true;               /* sala vuota = si ricomincia dalla procedura */
   toast('📦 In archivio: partite e mani restano lì dentro, i giocatori in rubrica. ' +
     'Qui è tutto pulito per il prossimo.', 8000);
 }

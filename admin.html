@@ -142,6 +142,9 @@ body{ background:#eef4fa; }
 }
 .finestra-tv *{ max-width:100%; box-sizing:border-box; }
 .finestra-tv .btn{ white-space:normal; }
+/* «.passo» nel foglio comune nasce nascosto (serve al modulo d'iscrizione,
+   che mostra un passo per volta): dentro la finestra guidata va sempre visto */
+.finestra .passo{ display:block; }
 .passo h3{ font-size:1.05rem; margin:14px 0 4px; }
 .passo .aiuto{ margin-bottom:10px; }
 .gente{ display:grid; grid-template-columns:1fr; gap:8px; max-height:40vh; overflow:auto; margin-bottom:10px; }
@@ -1063,6 +1066,19 @@ input.mini, select.mini{ min-height:42px; padding:9px 11px; }
       riassunto — chi fa cosa in una riga — e a ognuno la sua scheda, col pulsante che sta
       sotto il suo nome.</p>
     <p class="aiuto" id="statoGuida" style="margin-top:10px"></p>
+  </div>
+
+  <div class="card" id="sec-edizione">
+    <h2>📦 Chiudere l'edizione e preparare l'anno prossimo</h2>
+    <p class="aiuto">Quando la festa è finita e non serve più tenerla sotto mano: si mette
+      via <b>tutta l'edizione</b> — squadre, punteggi, premi, tornei e l'elenco dei ragazzi —
+      in un documento del database che resta lì per sempre. Poi si riparte puliti, ma
+      <b>i nomi non si perdono</b>: l'anno prossimo li ritrovi con un tocco.</p>
+    <div id="statoEdizione"></div>
+    <div class="azioni" style="justify-content:flex-start;flex-wrap:wrap">
+      <button class="btn btn-p" id="btnChiudiEdizione">📦 Chiudi l'edizione</button>
+      <button class="btn btn-chiaro" id="btnRiprendiIscritti">📥 Riprendi i ragazzi dell'anno scorso</button>
+    </div>
   </div>
 
   <div class="card" id="sec-azzera">

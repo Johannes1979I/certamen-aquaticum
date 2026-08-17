@@ -94,7 +94,7 @@
   function passoGente() {
     var f = C.finestra;
     f.textContent = '';
-    var box = crea('div', 'passo');
+    var box = crea('div', 'passo visibile');
     box.appendChild(crea('h3', null, '1 · Chi gioca'));
     box.appendChild(crea('p', 'aiuto',
       'Tocca i nomi di chi c\'è. Ci sono gli iscritti e chi ha già giocato altre volte; ' +
@@ -145,7 +145,7 @@
     var campo = crea('div', 'campo');
     var inp = document.createElement('textarea');
     inp.rows = 3;
-    inp.placeholder = 'Gianpaolo Zarletti\nVeronica Sarti\nLaura Bini, Serena Rossi';
+    inp.placeholder = 'Gianpaolo Zarletti\nLorenzo Bini\nLaura Neri, Serena Rossi';
     campo.appendChild(inp);
     box.appendChild(campo);
     var agg = crea('button', 'btn btn-chiaro btn-largo', '➕ Aggiungi questi giocatori');
@@ -198,7 +198,7 @@
     var f = C.finestra;
     f.textContent = '';
     var coppieQuante = Math.floor(Object.keys(N.scelti).length / 2);
-    var box = crea('div', 'passo');
+    var box = crea('div', 'passo visibile');
     box.appendChild(crea('h3', null, '2 · Che cosa si gioca'));
 
     var scelte = crea('div', 'scelte-r');
@@ -319,7 +319,7 @@
   function passoCoppie() {
     var f = C.finestra;
     f.textContent = '';
-    var box = crea('div', 'passo');
+    var box = crea('div', 'passo visibile');
     box.appendChild(crea('h3', null, '3 · Le coppie'));
     box.appendChild(crea('p', 'aiuto',
       'Chi si era dichiarato un compagno è già insieme. Per cambiare, tocca due nomi: si scambiano.'));

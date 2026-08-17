@@ -605,6 +605,12 @@ database, non lo vede nessun altro.
 `partite.html` — ci si arriva dall'area organizzatori (`🃏 Tornei`) o col link
 diretto. È la pagina che si tiene aperta **sul telefono, al tavolo**.
 
+**La procedura parte da sola**: se non si sta giocando niente — appena aperta la
+pagina, oppure subito dopo aver archiviato un torneo — la creazione si apre
+senza che tu tocchi niente. Se la chiudi non insiste più, e per riaprirla c'è
+**⚡ Nuovo**. Lo stesso succede nell'area organizzatori entrando in `🃏 Tornei`
+quando non c'è nessun torneo cominciato.
+
 **⚡ Nuovo** apre la creazione in tre passi:
 1. **Chi gioca** — i nomi di chi ha già giocato sono in elenco, con accanto il
    compagno abituale: si toccano e via. Chi è nuovo si aggiunge scrivendolo una
@@ -639,7 +645,11 @@ sta accanto a ogni torneo nelle statistiche, per quelli vecchi rimasti aperti.
 sia sul tabellone**: chi sta ai tavoli alza gli occhi e la vede. Sul tabellone
 si toglie con un tocco e non torna più da sola; se qualcuno riapre una partita
 per correggere, sparisce e si rifà quando si richiude. In caso di parità in testa il
-sito propone lo **spareggio** e lo aggiunge al calendario con un tocco. Poi
+sito propone lo **spareggio** e lo aggiunge al calendario con un tocco — se in
+testa sono in tre, lo spareggio è un girone fra loro. La finestra della fine
+**si riscrive mentre segni**: compare appena una coppia passa il traguardo, e se
+un secondo dopo scrivi il punteggio degli avversari e la classifica cambia,
+cambia anche lei. Poi
 `🆕 Archivia e comincia il prossimo` mette via il torneo — resta nelle
 statistiche — e riapre subito la creazione.
 
@@ -695,6 +705,24 @@ fascia in cima a **tutte** le pagine. Serve per le cose dell'ultimo minuto —
 *«Rinviato di un'ora per il temporale»*, *«Iscrizioni chiuse»*. Tre colori:
 informazione (azzurro), attenzione (giallo), allarme (rosso). Va pubblicato
 come tutti gli altri contenuti.
+
+## Chiudere l'edizione e preparare l'anno prossimo
+
+Scheda **`🖨️ Stampe`**, in fondo, riquadro **📦 Chiudere l'edizione** (sta sopra
+la prova generale, che è quella che azzera). A festa finita
+si mette via **tutta l'edizione** — squadre, punteggi, premi e menzioni, i tornei
+di carte e l'elenco dei ragazzi con nomi, età e recapiti — in un documento del
+database che resta lì per sempre (`edizioni`), e nello stesso momento se ne
+scarica una copia sul computer (`certamen-2026.json`).
+
+Dopo puoi azzerare la giornata col riquadro qui sotto: **i nomi non si perdono**,
+restano nell'edizione archiviata. L'anno dopo, con
+**📥 Riprendi i ragazzi dell'anno scorso**, tornano tutti fra gli iscritti **con un
+anno in più**, col genitore e il telefono già scritti: controlli l'elenco, togli
+chi non viene, e le iscrizioni sono già mezze fatte.
+
+Il riquadro dice sempre che cosa c'è in archivio e quanti iscritti aveva ogni
+edizione.
 
 ## La copia di sicurezza
 
