@@ -1356,6 +1356,26 @@ function proponiSeVuota(){
   apriNuovo();
 }
 
+/* Chi ha giocato, letto dai tornei salvati nel database: nome e compagno di
+   quella volta. È la rete di sicurezza della rubrica — e la rubrica, se si
+   svuota, si ricostruisce da qui senza che nessuno debba riscrivere niente. */
+function giocatoriDaiTornei(){
+  var per = {};
+  Object.keys(STATO).forEach(function(id){
+    V(STATO[id].coppie, []).forEach(function(c){
+      [[c.a, c.b], [c.b, c.a]].forEach(function(due){
+        var nome = String(V(due[0], '')).trim();
+        if(!nome || nome === '(da abbinare)') return;
+        var k = normale(nome);
+        if(!per[k]) per[k] = { nome: nome, compagno: V(due[1], ''), area: 'adulti', volte: 0 };
+        per[k].volte++;
+        if(due[1]) per[k].compagno = due[1];
+      });
+    });
+  });
+  return Object.keys(per).map(function(k){ return per[k]; });
+}
+
 function apriNuovo(){
   if(!SESS){
     $('entra').style.display = '';
@@ -1367,7 +1387,12 @@ function apriNuovo(){
     velo: $('velo'),
     finestra: $('finestra'),
     rubrica: RUBRICA,
-    iscritti: ISCRITTI.filter(function(p){ return p.area !== 'ragazzi'; }),
+    /* Tre sorgenti, non una: gli iscritti, la rubrica e — soprattutto — i
+       nomi dei tornei che stanno nel database. Così, anche se la rubrica è
+       vuota o si è persa, i giocatori delle altre volte tornano fuori da
+       soli: sono scritti dentro le partite già giocate. */
+    iscritti: ISCRITTI.filter(function(p){ return p.area !== 'ragazzi'; })
+      .concat(giocatoriDaiTornei()),
     salvaRubrica: function(r){
       RUBRICA = r;
       token().then(function(t){ return FB.scriviPezzo(t, 'rubrica', r, chiSono()); }).catch(function(){ });

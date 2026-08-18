@@ -100,21 +100,23 @@
      compagno dichiarato all'iscrizione, che è più fresco. */
   function elencoIniziale(rubrica, iscritti) {
     var per = {}, fuori = [];
-    /* i codici del database non sono persone: non entrano nell'elenco */
+    /* Si mostra tutto quello che c'è. Se al posto del nome c'è un codice del
+       database lo si segnala, ma non si nasconde nessuno: una persona che
+       non compare è peggio di un nome scritto male. */
     var codice = (window.CA && CA.sembraCodice) ? CA.sembraCodice : function () { return false; };
     V(rubrica.giocatori, []).forEach(function (g) {
-      if (!g || !g.nome || codice(g.nome)) return;
+      if (!g || !g.nome) return;
       per[normale(g.nome)] = {
-        nome: g.nome, compagno: codice(V(g.compagno, '')) ? '' : V(g.compagno, ''),
-        volte: V(g.volte, 0), da: 'rubrica'
+        nome: g.nome, compagno: V(g.compagno, ''),
+        volte: V(g.volte, 0), da: 'rubrica', illeggibile: codice(g.nome)
       };
     });
     iscritti.forEach(function (p) {
-      if (!p || !p.nome || codice(p.nome)) return;
+      if (!p || !p.nome) return;
       var k = normale(p.nome);
-      var comp = codice(V(p.compagno, '')) ? '' : V(p.compagno, '');
+      var comp = V(p.compagno, '');
       if (per[k]) { if (comp) per[k].compagno = comp; per[k].da = 'iscritto'; }
-      else per[k] = { nome: p.nome, compagno: comp, volte: 0, da: 'iscritto' };
+      else per[k] = { nome: p.nome, compagno: comp, volte: 0, da: 'iscritto', illeggibile: codice(p.nome) };
     });
     Object.keys(per).forEach(function (k) { fuori.push(per[k]); });
     fuori.sort(function (a, b) {
@@ -146,6 +148,15 @@
     box.appendChild(crea('p', 'aiuto',
       'Tocca i nomi di chi c\'è. Ci sono gli iscritti e chi ha già giocato altre volte; ' +
       'i nuovi si scrivono qui sotto, anche tutti insieme.'));
+    /* Da dove arrivano i nomi: serve quando l'elenco sembra vuoto e non si
+       capisce se il database non ha risposto o se davvero non c'è nessuno. */
+    var quanti = crea('p', 'aiuto');
+    quanti.style.cssText = 'font-size:.8rem;opacity:.75;margin-top:-6px';
+    var daR = N.elenco.filter(function (g) { return g.da === 'rubrica'; }).length;
+    var daI = N.elenco.length - daR;
+    quanti.textContent = 'Letti dal database: ' + daI + (daI === 1 ? ' iscritto o giocatore' : ' fra iscritti e giocatori') +
+      ' e ' + daR + (daR === 1 ? ' nome in rubrica' : ' nomi in rubrica') + '.';
+    box.appendChild(quanti);
 
     if (N.elenco.length) {
       var rapide = crea('div', 'azioni');
