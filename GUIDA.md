@@ -656,6 +656,18 @@ torneo finisce, sul tabellone compare la coppa col vincitore.
 insieme senza pestarsi i piedi. Con **💬 Manda il link** mandi su WhatsApp
 l'indirizzo che apre direttamente quel torneo.
 
+**Per buttarlo via** — non metterlo via, proprio cancellarlo — c'è
+`🗑️ Cancella`, accanto ad Archivia: il torneo sparisce dal database, dal
+tabellone e dalle statistiche, e di quello che è stato giocato non resta
+niente. I nomi dei giocatori restano in rubrica. Nell'area organizzatori lo
+stesso pulsante è `🗑️ Cancella tutto il torneo`, nella scheda 🃏 Tornei: butta
+coppie, tabellone e punteggi, senza toccare le iscrizioni. Serve quando si è
+sbagliato tutto, o quando si stava solo provando.
+
+**Nomi strani.** Se una coppia resta col codice del database al posto del nome
+— succede quando l'iscrizione viene cancellata dopo che le coppie erano già
+fatte — il sito la toglie da solo, con le sue partite, e lo dice.
+
 **Per metterlo via** c'è il riquadro in fondo alla pagina, sempre visibile:
 `📦 Archivia` oppure `📦 Archivia e comincia il prossimo`. Dice anche a che punto
 sei — «3 partite su 6» — e se archivi a metà chiede conferma. Lo stesso pulsante

@@ -24,6 +24,43 @@
     if (el) el.textContent = (s == null ? '' : String(s));
     return el;
   }
+  /* Un codice del database non è il nome di nessuno: sono venti caratteri a
+     caso, maiuscole minuscole e cifre mescolate. Capita di trovarli al posto
+     dei nomi quando un'iscrizione è stata cancellata ma la coppia era già
+     stata formata. Non si mostrano: si buttano. */
+  function sembraCodice(s) {
+    var x = String(s == null ? '' : s).trim();
+    if (x.length < 16) return false;              /* i codici ne hanno venti */
+    if (!/^[A-Za-z0-9]+$/.test(x)) return false;  /* niente spazi, accenti, trattini */
+    var maiuscoleDentro = (x.slice(1).match(/[A-Z]/g) || []).length;
+    return /[0-9]/.test(x) || maiuscoleDentro >= 3;
+  }
+
+  /* Una coppia «senza nome»: o è vuota, o dentro c'è un codice invece di una
+     persona. «Luca Sonnino – (da abbinare)» invece va benissimo. */
+  function senzaNome(nome) {
+    var x = String(nome == null ? '' : nome).trim();
+    if (!x) return true;
+    return x.split(/\s*[–—-]\s*|,\s*/).some(function (pezzo) { return sembraCodice(pezzo); });
+  }
+
+  /* Toglie da un torneo le coppie che non sono persone — quelle rimaste col
+     codice al posto del nome — e le partite che le riguardavano. Restituisce
+     quante ne ha tolte, così chi chiama sa se deve risalvare. */
+  function pulisciTorneo(st) {
+    if (!st || typeof st !== 'object') return 0;
+    var coppie = Array.isArray(st.coppie) ? st.coppie : [];
+    var buone = coppie.filter(function (c) { return !senzaNome(c && c.nome); });
+    if (buone.length === coppie.length) return 0;
+    var vive = {};
+    buone.forEach(function (c) { vive[c.id] = true; });
+    st.coppie = buone;
+    if (Array.isArray(st.incontri)) {
+      st.incontri = st.incontri.filter(function (m) { return vive[m.a] && vive[m.b]; });
+    }
+    return coppie.length - buone.length;
+  }
+
   function crea(tag, cls, txt) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -628,6 +665,7 @@
 
   window.CA = {
     $: $, V: V, esc: esc, testo: testo, crea: crea,
+    sembraCodice: sembraCodice, senzaNome: senzaNome, pulisciTorneo: pulisciTorneo,
     dataIt: dataIt, dataBreve: dataBreve, eur: eur, colore: colore,
     carica: carica, dati: dati, applicaColori: applicaColori,
     avviaConto: avviaConto,

@@ -46,6 +46,19 @@ body{ background:#f2f7fb; }
 .btn-barra:hover{ background:rgba(255,255,255,.3); }
 .btn-barra{ white-space:nowrap; flex:0 0 auto; display:inline-flex; align-items:center; }
 
+/* il punteggio di una sfida fra due coppie: niente tabella, solo il risultato */
+.sfida-punteggio{
+  display:flex; align-items:center; gap:12px; justify-content:space-between;
+  background:#f4f8fc; border:2px solid var(--linea); border-radius:14px; padding:12px 14px;
+}
+.sfida-punteggio .chi{ flex:1; font-weight:bold; font-size:.98rem; }
+.sfida-punteggio .chi.dx{ text-align:right; }
+.sfida-punteggio .punti{ font-size:1.5rem; white-space:nowrap; }
+
+/* il pulsante che butta via: si vede che è quello da non premere per sbaglio */
+.btn-pericolo{ border-color:#e57373; color:#b71c1c; }
+.btn-pericolo:hover{ background:#ffebee; }
+
 /* ---- la finestra che crea un torneo o una partita ----
    Attenzione: nel foglio comune «.passo» nasce nascosto, perché lì serve al
    modulo d'iscrizione che mostra un passo per volta. Qui dentro invece il
@@ -313,11 +326,16 @@ function leggi(prima){
       var m = /^torneo_(.+)$/.exec(nome);
       if(m) nuovi[m[1]] = pezzi[nome].dati;
     });
-    /* quello che sto scrivendo io non si tocca: il resto entra */
+    /* quello che sto scrivendo io non si tocca: il resto entra. Ma prima si
+       buttano le coppie rimaste col codice del database al posto del nome:
+       non sono giocatori, e in classifica non ci devono stare. */
+    var ripuliti = [];
     Object.keys(nuovi).forEach(function(id){
+      if(CA.pulisciTorneo(nuovi[id])) ripuliti.push(id);
       if(id === APERTO && SCRIVENDO) { fondi(id, nuovi[id]); return; }
       STATO[id] = nuovi[id];
     });
+    ripuliti.forEach(function(id){ if(STATO[id]) manda(id); });
     if(!APERTO){
       /* col link diretto si apre quello chiesto; se no l'ultimo cominciato e
          non ancora finito, che è quello che si sta giocando adesso */
@@ -409,9 +427,14 @@ function somma(m, lato){
   V(m.mani, []).forEach(function(x){ t += Number(V(x[lato], 0)) || 0; });
   return t;
 }
+/* Una partita è finita quando qualcuno ha passato il traguardo E i due
+   punteggi sono diversi: a 41 pari non ha vinto nessuno, si dà un'altra
+   mano — è così che si fa al tavolo, e prima invece la pagina dichiarava
+   vincitore quello scritto a sinistra. */
 function finita(m, id){
   var meta = traguardoDi(m, id);
-  return somma(m, 'a') >= meta || somma(m, 'b') >= meta;
+  var a = somma(m, 'a'), b = somma(m, 'b');
+  return (a >= meta || b >= meta) && a !== b;
 }
 
 /* La firma dice se è cambiato qualcosa che va ridisegnato. Se non cambia
@@ -564,8 +587,63 @@ function disegnaChiusura(){
     b3.addEventListener('click', function(){ CHIUSO = true; mostraFine(); });
     az.appendChild(b3);
   }
+  var bX = crea('button', 'btn btn-chiaro btn-pericolo', '🗑️ Cancella');
+  bX.title = 'Butta via tutto: non resta niente da nessuna parte';
+  bX.addEventListener('click', function(){ cancellaTutto(); });
+  az.appendChild(bX);
   box.appendChild(az);
   el.appendChild(box);
+}
+
+/* ------------------------- buttare via davvero -------------------------
+   «Archivia» mette da parte: il torneo sparisce dalla sala ma resta nelle
+   statistiche. Questo invece cancella: il documento se ne va dal database,
+   il tabellone se lo dimentica, e delle partite giocate non resta niente.
+   Si usa quando si è sbagliato tutto, o quando si stava solo provando. */
+function cancellaTutto(){
+  var id = APERTO;
+  var st = STATO[id];
+  if(!st) return;
+  var inc = V(st.incontri, []);
+  var giocate = inc.filter(function(m){
+    return V(m.mani, []).length || (m.puntiA !== '' && m.puntiA !== undefined && m.puntiA !== null);
+  }).length;
+  if(!confirm('Butto via ' + V(torneoDati(id).nome, 'questo torneo') + '.\n\n' +
+    (giocate ? ((giocate === 1 ? 'La partita già giocata non resterà' : 'Le ' + giocate + ' partite già giocate non resteranno') +
+      ' da nessuna parte: né qui, né sul tabellone, né nelle statistiche.\n\n')
+      : 'Non è stato giocato niente, quindi non si perde nulla.\n\n') +
+    'I nomi dei giocatori restano in rubrica. Procedo?')) return;
+
+  var nome = 'torneo_' + id;
+  FINEAPERTA = false;
+  $('velo').classList.remove('aperto');   /* se c'era la coppa, via anche quella */
+  delete STATO[id];
+  APERTO = '';
+  ULTIMO = '';
+  CHIUSO = false;
+  FESTEGGIATE = {};
+  DAMANDARE = false;
+  if(timerInvio) clearTimeout(timerInvio);
+
+  /* prima via dalla bacheca, poi via dal database */
+  FB.leggiClassifica().catch(function(){ return null; }).then(function(doc){
+    if(!doc || !doc.carte) return null;
+    var quanti = V(doc.carte.tornei, []).length;
+    doc.carte.tornei = V(doc.carte.tornei, []).filter(function(x){ return x.id !== id; });
+    if(doc.carte.tornei.length === quanti) return null;
+    doc.aggiornato = new Date().toISOString();
+    return token().then(function(tk){ return FB.scriviClassifica(tk, doc); });
+  }).catch(function(){ }).then(function(){
+    return token().then(function(tk){ return FB.cancellaPezzo(tk, nome); });
+  }).then(function(){
+    toast('🗑️ Buttato via: di questo torneo non resta niente.', 7000);
+  }).catch(function(e){
+    toast('⚠️ Tolto da qui, ma il database ha detto di no: ' + e.message, 9000);
+  });
+
+  disegna(true);
+  PROPONI = true;
+  proponiSeVuota();
 }
 
 function scegliTorneo(){
@@ -638,7 +716,8 @@ function rigaPartita(partenza, coppie){
     m.puntiA = V(m.mani, []).length ? a : m.puntiA;
     m.puntiB = V(m.mani, []).length ? b : m.puntiB;
     tot.textContent = a + ' – ' + b;
-    var vinta = a >= meta ? 'a' : (b >= meta ? 'b' : '');
+    var pari = (a >= meta || b >= meta) && a === b;
+    var vinta = pari ? '' : (a >= meta ? 'a' : (b >= meta ? 'b' : ''));
     na.className = 'nome' + (vinta === 'a' ? ' vince' : '');
     nb.className = 'nome dx' + (vinta === 'b' ? ' vince' : '');
     d.className = 'partita' + (vinta ? ' finita' : '') + (m.saltata ? ' saltata' : '');
@@ -650,6 +729,8 @@ function rigaPartita(partenza, coppie){
       : (vinta
         ? ('🏆 ' + nomeCoppia(vinta === 'a' ? m.a : m.b, coppie) + ' ha vinto: ' +
            (vinta === 'a' ? a : b) + ' punti.')
+        : pari
+        ? ('⚖️ ' + a + ' pari: non ha vinto nessuno, si dà un\'altra mano.')
         : ('Mancano ' + Math.max(0, meta - a) + ' a ' + nomeCoppia(m.a, coppie) +
            ' e ' + Math.max(0, meta - b) + ' a ' + nomeCoppia(m.b, coppie) + '.'));
     /* Partita chiusa: si blocca tutto. Un tavolo che ha finito non deve poter
@@ -710,7 +791,16 @@ function rigaPartita(partenza, coppie){
       via.title = 'Togli questa mano';
       via.addEventListener('click', function(){
         m.mani.splice(i, 1);
-        aggiorna(); disegnaMani(); salva(); disegnaClassifica(); disegnaChiusura();
+        /* Tolta l'ultima mano la partita torna da giocare: se restasse il
+           totale di prima in puntiA, la classifica continuerebbe a contarla
+           come vinta — e il torneo risulterebbe finito con la partita a 0. */
+        if(!m.mani.length){ m.puntiA = ''; m.puntiB = ''; m.inizio = ''; m.fine = ''; }
+        aggiorna(); disegnaMani(); salva();
+        decisaLaSfida();
+        disegnaClassifica(); disegnaChiusura();
+        TESTATE.forEach(function(f){ f(); });
+        guardaSeFinito();
+        aggiornaFine();
       });
       r.appendChild(via);
       dentro.appendChild(r);
@@ -802,6 +892,25 @@ function disegnaClassifica(){
   if(!righe.length){ el.style.display = 'none'; return; }
   el.style.display = '';
   el.textContent = '';
+
+  /* Due coppie che si sfidano non hanno una classifica: hanno un risultato.
+     Una tabella con G, V, P e Punti per due righe non dice niente a nessuno
+     — meglio il punteggio della sfida, grosso, come sul campo. */
+  var st0 = STATO[APERTO] || {};
+  if(st0.tipo === 'partita' && righe.length === 2){
+    el.appendChild(crea('h2', null, '⚔️ Come sta andando'));
+    var quante = st0.formula === 'tre' ? 3 : V(st0.incontri, []).length;
+    var sfida = crea('div', 'sfida-punteggio');
+    sfida.appendChild(crea('span', 'chi', righe[0].coppia));
+    sfida.appendChild(crea('b', 'punti', righe[0].v + ' – ' + righe[1].v));
+    sfida.appendChild(crea('span', 'chi dx', righe[1].coppia));
+    el.appendChild(sfida);
+    el.appendChild(crea('p', 'aiuto', quante > 1
+      ? ('Partite vinte, al meglio delle ' + quante + '. Chi arriva a ' + Math.ceil((quante + 1) / 2) + ' ha vinto la sfida.')
+      : 'Partita secca: chi la vince, vince la sfida.'));
+    return;
+  }
+
   el.appendChild(crea('h2', null, '📊 Classifica'));
   var scroll = crea('div', 'tabella-scroll');
   var t = document.createElement('table');
@@ -842,6 +951,10 @@ var CHIUSO = false;
 /* Al meglio delle tre, chi arriva a due vittorie ha vinto: la terza non si
    gioca. Si segna come «non serve» invece di lasciarla lì aperta, che a
    guardare il tabellone sembrerebbe un torneo mai finito. */
+/* Al meglio delle tre: chi arriva a due vittorie ha vinto, e la terza non
+   si gioca. Ma si può anche tornare indietro — basta correggere una cifra
+   della seconda e la sfida torna in parità: allora la terza deve tornare
+   in campo. Prima restava saltata per sempre, e la sfida finiva 1-1. */
 function decisaLaSfida(){
   var st = STATO[APERTO] || {};
   if(st.tipo !== 'partita' || st.formula !== 'tre') return false;
@@ -853,14 +966,21 @@ function decisaLaSfida(){
     vinte[chi] = (vinte[chi] || 0) + 1;
   });
   var basta = Object.keys(vinte).some(function(k){ return vinte[k] >= 2; });
-  if(!basta) return false;
   var cambiato = false;
   inc.forEach(function(m){
-    if(finita(m, APERTO) || m.saltata) return;
-    m.saltata = true; cambiato = true;
+    var deve = basta && !finita(m, APERTO);
+    if(!!m.saltata === deve) return;
+    m.saltata = deve; cambiato = true;
   });
-  if(cambiato) salva();
-  return true;
+  if(cambiato){ salva(); rinfrescaRighe(); }
+  return basta;
+}
+
+/* Le righe già a video seguono i dati senza rifare la pagina: serve quando
+   una partita viene saltata o rimessa in campo mentre la si guarda. */
+function rinfrescaRighe(){
+  Object.keys(RIGHE).forEach(function(id){ try{ RIGHE[id](); }catch(e){ } });
+  TESTATE.forEach(function(f){ try{ f(); }catch(e){ } });
 }
 
 function guardaSeFinito(){
@@ -872,11 +992,7 @@ function guardaSeFinito(){
      quindi «ha un punteggio» non vuol dire «è finita». Con le mani comanda
      il traguardo; il punteggio scritto a mano vale solo se mani non ce ne
      sono — è il caso dei tornei preparati nell'area organizzatori. */
-  var tutte = inc.every(function(m){
-    if(m.saltata) return true;
-    if(V(m.mani, []).length) return finita(m, APERTO);
-    return m.puntiA !== '' && m.puntiA !== undefined && m.puntiA !== null;
-  });
+  var tutte = tutteFinite(st);
   if(!tutte){ CHIUSO = false; if(st.fine){ st.fine = ''; salva(); } return; }
   if(creaFinale(st)) return;      /* due gironi: manca ancora la finale */
   if(creaTurnoElim(st)) return;   /* eliminazione: c'è un altro turno */
@@ -926,7 +1042,8 @@ function mostraFine(){
     f.appendChild(crea('div', 'coppa', '⚖️'));
     f.appendChild(crea('h2', null, 'Parità in testa'));
     f.appendChild(crea('p', null, pari.map(function(r){ return r.coppia; }).join(' e ') +
-      ' hanno ' + primo.punti + ' punti e la stessa differenza. Serve uno spareggio.'));
+      ' hanno ' + primo.punti + (primo.punti === 1 ? ' punto' : ' punti') +
+      ' e la stessa differenza. Serve uno spareggio.'));
     var b = crea('button', 'btn btn-p btn-largo', '🎲 Genera lo spareggio');
     b.addEventListener('click', function(){ FINEAPERTA = false; generaSpareggio(pari); });
     f.appendChild(b);
@@ -956,7 +1073,29 @@ var FINEAPERTA = false;
 function aggiornaFine(){
   if(!FINEAPERTA) return;
   if(!$('velo').classList.contains('aperto')){ FINEAPERTA = false; return; }
+  /* Può anche essere tornata indietro: si segna 41, la finestra compare, e
+     un attimo dopo si scrive 41 anche agli avversari — pari, quindi la
+     partita riapre e la coppa non ha più senso. */
+  if(!tutteFinite(STATO[APERTO])){
+    FINEAPERTA = false;
+    CHIUSO = false;
+    $('velo').classList.remove('aperto');
+    return;
+  }
   mostraFine();
+}
+
+/* Tutte le partite giocate fino in fondo? Con le mani comanda il traguardo;
+   il punteggio scritto a mano vale solo se mani non ce ne sono — è il caso
+   dei tornei preparati nell'area organizzatori. */
+function tutteFinite(st){
+  var inc = V(V(st, {}).incontri, []);
+  if(!inc.length) return false;
+  return inc.every(function(m){
+    if(m.saltata) return true;
+    if(V(m.mani, []).length) return finita(m, APERTO);
+    return m.puntiA !== '' && m.puntiA !== undefined && m.puntiA !== null;
+  });
 }
 
 /* ------------------------- il tabellone grande -------------------------

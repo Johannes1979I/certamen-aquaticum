@@ -421,6 +421,19 @@
     });
   }
 
+  /* ---- CANCELLA un pezzo dello stato (richiede login) ----
+     Serve per buttare via davvero un torneo: non «archiviato», proprio via
+     dal database, come se non fosse mai stato giocato. */
+  function cancellaPezzo(idToken, nome) {
+    if (!idToken || !nome) return Promise.resolve(false);
+    return fetch(BASE + '/stato_certamen/' + encodeURIComponent(nome) + '?key=' + API, {
+      method: 'DELETE', headers: { 'Authorization': 'Bearer ' + idToken }
+    }).then(function (r) {
+      if (r.ok) return true;
+      return jget(r).then(function (d) { throw new Error((d.error && d.error.message) || ('HTTP ' + r.status)); });
+    });
+  }
+
   window.FB = {
     cfg: cfg, attivo: attivo,
     signIn: signIn, refresh: refresh,
@@ -429,7 +442,7 @@
     scriviContatori: scriviContatori,
     leggiClassifica: leggiClassifica, scriviClassifica: scriviClassifica,
     leggiStato: leggiStato, scriviStato: scriviStato,
-    leggiPezzi: leggiPezzi, scriviPezzo: scriviPezzo,
+    leggiPezzi: leggiPezzi, scriviPezzo: scriviPezzo, cancellaPezzo: cancellaPezzo,
     leggiAlbum: leggiAlbum, scriviAlbum: scriviAlbum, provaAlbum: provaAlbum
   };
 })();

@@ -777,7 +777,9 @@
     o.gruppo = V(o.gruppo, doc.gruppo);
     o.codice = V(o.codice, doc.codice);
     o.creatoIl = V(o.creatoIl, doc.creatoIl);
-    if (!o.nome) return null;
+    /* Un'iscrizione senza nome, o con dentro un codice del database invece
+       del nome, non è una persona: non deve comparire da nessuna parte. */
+    if (!o.nome || CA.sembraCodice(o.nome)) return null;
     return o;
   }
 
@@ -888,7 +890,19 @@
       disegnaAppello();
     } else if (nome.indexOf('torneo_') === 0) {
       STATO.tornei = STATO.tornei || {};
+      /* Le coppie rimaste col codice del database al posto del nome — succede
+         quando l'iscrizione viene cancellata dopo che le coppie erano già
+         fatte — non sono persone: si tolgono, con le loro partite. */
+      var via = CA.pulisciTorneo(dati);
       STATO.tornei[nome.slice(7)] = dati;
+      if (via) {
+        SPORCHI[nome] = true;
+        /* e si risalva subito: devono sparire anche dal database, non solo
+           da quello che si vede adesso */
+        setTimeout(function () { salvaStato(false); }, 400);
+        CA.toast('🧹 Ho tolto ' + via + (via === 1 ? ' coppia senza nome' : ' coppie senza nome') +
+          ' dal tabellone: erano codici del database, non giocatori.', 9000);
+      }
     }
   }
 
@@ -3247,6 +3261,53 @@
     });
   }
 
+  /* Buttare via un torneo per davvero: non «azzerare il tabellone», che
+     lascia le coppie, ma cancellare tutto — coppie, partite, punteggi — e
+     togliere il documento dal database, così di quel torneo non resta
+     traccia da nessuna parte: né qui, né sul tabellone pubblico, né nelle
+     statistiche. Serve quando si è sbagliato tutto o si stava provando. */
+  function cancellaTorneo(id) {
+    var st = (STATO.tornei || {})[id];
+    var t = torneoDati(id);
+    if (!st) { CA.toast('Questo torneo non è ancora cominciato: non c\'è niente da cancellare.', 6000); return; }
+    var inc = V(st.incontri, []);
+    var giocate = inc.filter(function (m) {
+      return V(m.mani, []).length || (m.puntiA !== '' && m.puntiA !== undefined && m.puntiA !== null);
+    }).length;
+    if (!confirm('Butto via tutto quello che riguarda «' + V(t.nome, 'il torneo') + '»:\n\n' +
+      '· le ' + V(st.coppie, []).length + ' coppie\n' +
+      '· il tabellone, ' + inc.length + (inc.length === 1 ? ' partita' : ' partite') + '\n' +
+      (giocate ? ('· i punteggi ' + (giocate === 1 ? 'della partita già giocata' : 'delle ' + giocate + ' partite già giocate') + '\n')
+        : '· non è stato giocato niente\n') +
+      '\nNon resta niente: né qui, né sul tabellone, né nelle statistiche. ' +
+      'Le iscrizioni non si toccano. Procedo?')) return;
+
+    delete STATO.tornei[id];
+    delete SPORCHI['torneo_' + id];
+    salvaStato(true);                 /* così il resto dello stato è al sicuro */
+
+    token().then(function (tk) {
+      return FB.cancellaPezzo(tk, 'torneo_' + id);
+    }).then(function () {
+      /* e via anche dalla bacheca pubblica, se ci era finito */
+      return FB.leggiClassifica().catch(function () { return null; }).then(function (doc) {
+        if (!doc || !doc.carte) return null;
+        var quanti = V(doc.carte.tornei, []).length;
+        doc.carte.tornei = V(doc.carte.tornei, []).filter(function (x) { return x.id !== id; });
+        if (doc.carte.tornei.length === quanti) return null;
+        doc.aggiornato = new Date().toISOString();
+        return token().then(function (tk) { return FB.scriviClassifica(tk, doc); });
+      });
+    }).then(function () {
+      CA.toast('🗑️ ' + V(t.nome, 'Il torneo') + ': buttato via. Non ne resta niente.', 8000);
+    }).catch(function (e) {
+      CA.toast('⚠️ Tolto da qui, ma il database ha detto di no: ' + e.message, 9000);
+    });
+
+    disegnaPannelloTorneo();
+    disegnaTornei();
+  }
+
   /* ------------------- il torneo veloce, dall'admin ---------------------
      La stessa procedura guidata della sala da gioco (torneo-veloce.js): si
      scelgono i giocatori — dagli iscritti o dalla rubrica, o scrivendoli —
@@ -3634,6 +3695,10 @@
       disegnaPannelloTorneo();
     });
     az2.appendChild(bZ);
+    var bX = crea('button', 'btn btn-chiaro btn-piccolo', '🗑️ Cancella tutto il torneo');
+    bX.title = 'Coppie, tabellone e punteggi: via, e non resta niente nel database';
+    bX.addEventListener('click', function () { cancellaTorneo(TORNEO_APERTO); });
+    az2.appendChild(bX);
     g.appendChild(az2);
     el.appendChild(g);
 
