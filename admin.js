@@ -867,6 +867,11 @@
       STATO.edizioni = V(dati.edizioni, []);
     } else if (nome === 'rubrica') {
       STATO.rubrica = dati && Array.isArray(dati.giocatori) ? dati : { giocatori: [] };
+      /* via i codici del database finiti in rubrica: non sono giocatori */
+      if (CA.pulisciRubrica(STATO.rubrica)) {
+        SPORCHI['rubrica'] = true;
+        setTimeout(function () { salvaStato(false); }, 400);
+      }
     } else if (nome === 'titoli') {
       STATO.titoli = V(dati.titoli, []);
     } else if (nome === 'cronometro') {
@@ -4599,12 +4604,30 @@
     pieghevole.appendChild(dentro);
     d.appendChild(pieghevole);
 
-    function chiusa() {
-      return sommaMani(m, 'a') >= meta || sommaMani(m, 'b') >= meta;
+    /* Una mano si segna in due tempi: prima il proprio punteggio, poi quello
+       degli avversari. Finché manca il secondo la partita non è finita — se
+       no basta scrivere 41 da una parte per chiuderla e bloccare i campi
+       mentre gli altri stanno ancora scrivendo il loro 45. */
+    function manoAMetà() {
+      var mani = V(m.mani, []);
+      if (!mani.length) return false;
+      var u = mani[mani.length - 1];
+      var vuotoA = u.a === '' || u.a === undefined || u.a === null;
+      var vuotoB = u.b === '' || u.b === undefined || u.b === null;
+      return vuotoA !== vuotoB;
     }
+    function chiusa() {
+      return !!vincitriceMani();
+    }
+    /* Vince chi ha più punti, non chi ha passato per primo il traguardo:
+       a 42 contro 45 la partita è di chi ne ha 45. E a pari punti non ha
+       vinto nessuno: si dà un'altra mano. */
     function vincitriceMani() {
+      if (manoAMetà()) return '';
       var a = sommaMani(m, 'a'), b = sommaMani(m, 'b');
-      return a >= meta ? 'a' : (b >= meta ? 'b' : '');
+      if (a < meta && b < meta) return '';
+      if (a === b) return '';
+      return a > b ? 'a' : 'b';
     }
     var nota = crea('p', 'aiuto');       /* quanto manca: si riscrive a ogni tocco */
     function scriviTotali() {
@@ -4614,7 +4637,7 @@
         m.puntiA = a; m.puntiB = b;
         ia.value = a; ib.value = b;
       }
-      var vinta = a >= meta ? 'a' : (b >= meta ? 'b' : '');
+      var vinta = vincitriceMani();
       somm.textContent = m.mani.length
         ? ('🧮 ' + m.mani.length + (m.mani.length === 1 ? ' mano' : ' mani') +
            ' · ' + a + ' – ' + b + (vinta ? '  🏆 ' + nomeCoppia(vinta === 'a' ? m.a : m.b, coppie) : ''))
@@ -4624,6 +4647,10 @@
         : (vinta
           ? ('🏆 Partita finita: ' + nomeCoppia(vinta === 'a' ? m.a : m.b, coppie) +
              ' ha passato i ' + meta + ' con ' + (vinta === 'a' ? a : b) + ' punti.')
+          : manoAMetà()
+          ? '✍️ Manca il punteggio di una delle due coppie: la partita non si chiude finché non c\'è.'
+          : (a >= meta || b >= meta)
+          ? ('⚖️ ' + a + ' pari: non ha vinto nessuno, si dà un\'altra mano.')
           : ('Mancano ' + Math.max(0, meta - a) + ' punti a ' + nomeCoppia(m.a, coppie) +
              ' e ' + Math.max(0, meta - b) + ' a ' + nomeCoppia(m.b, coppie) + '.'));
       nota.className = 'aiuto' + (vinta ? ' vinta' : '');

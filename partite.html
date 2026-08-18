@@ -431,11 +431,25 @@ function somma(m, lato){
   V(m.mani, []).forEach(function(x){ t += Number(V(x[lato], 0)) || 0; });
   return t;
 }
-/* Una partita è finita quando qualcuno ha passato il traguardo E i due
-   punteggi sono diversi: a 41 pari non ha vinto nessuno, si dà un'altra
-   mano — è così che si fa al tavolo, e prima invece la pagina dichiarava
-   vincitore quello scritto a sinistra. */
+/* Una mano si segna in due tempi: prima il proprio punteggio, poi quello
+   degli avversari. Finché manca il secondo la mano è a metà, e la partita
+   NON può essere finita: se no basta scrivere 41 da una parte per chiudere
+   tutto — e gli avversari, che con la loro mano sarebbero arrivati a 45,
+   si ritrovano la partita chiusa e i campi bloccati. Sul telefono è anche
+   peggio: si chiude la tastiera mentre si sta ancora scrivendo. */
+function manoAMetà(m){
+  var mani = V(m.mani, []);
+  if(!mani.length) return false;
+  var u = mani[mani.length - 1];
+  return vuoto(u.a) !== vuoto(u.b);        /* uno sì e l'altro no */
+}
+function vuoto(x){ return x === '' || x === undefined || x === null; }
+
+/* Una partita è finita quando la mano è completa, qualcuno ha passato il
+   traguardo, e i due punteggi sono diversi: a 41 pari non ha vinto nessuno,
+   si dà un'altra mano — è così che si fa al tavolo. */
 function finita(m, id){
+  if(manoAMetà(m)) return false;
   var meta = traguardoDi(m, id);
   var a = somma(m, 'a'), b = somma(m, 'b');
   return (a >= meta || b >= meta) && a !== b;
@@ -720,8 +734,14 @@ function rigaPartita(partenza, coppie){
     m.puntiA = V(m.mani, []).length ? a : m.puntiA;
     m.puntiB = V(m.mani, []).length ? b : m.puntiB;
     tot.textContent = a + ' – ' + b;
-    var pari = (a >= meta || b >= meta) && a === b;
-    var vinta = pari ? '' : (a >= meta ? 'a' : (b >= meta ? 'b' : ''));
+    /* Vince chi ha PIÙ punti, non chi è scritto per primo: se A fa 42 e B
+       fa 45, ha vinto B. Prima bastava passare il traguardo per essere
+       dichiarati vincitori, e col punteggio degli avversari scritto un
+       attimo dopo la coppa restava dalla parte sbagliata. */
+    var mezza = manoAMetà(m);
+    var superato = a >= meta || b >= meta;
+    var pari = !mezza && superato && a === b;
+    var vinta = (mezza || !superato || pari) ? '' : (a > b ? 'a' : 'b');
     na.className = 'nome' + (vinta === 'a' ? ' vince' : '');
     nb.className = 'nome dx' + (vinta === 'b' ? ' vince' : '');
     d.className = 'partita' + (vinta ? ' finita' : '') + (m.saltata ? ' saltata' : '');
@@ -733,6 +753,10 @@ function rigaPartita(partenza, coppie){
       : (vinta
         ? ('🏆 ' + nomeCoppia(vinta === 'a' ? m.a : m.b, coppie) + ' ha vinto: ' +
            (vinta === 'a' ? a : b) + ' punti.')
+        : mezza
+        ? ('✍️ Manca il punteggio di ' +
+           nomeCoppia(vuoto(V(m.mani, [])[V(m.mani, []).length - 1].a) ? m.a : m.b, coppie) +
+           ': la partita non si chiude finché non c\'è.')
         : pari
         ? ('⚖️ ' + a + ' pari: non ha vinto nessuno, si dà un\'altra mano.')
         : ('Mancano ' + Math.max(0, meta - a) + ' a ' + nomeCoppia(m.a, coppie) +
@@ -1292,30 +1316,6 @@ $('velo').addEventListener('click', function(e){
    tabellone e delle statistiche non hanno bisogno di sapere che è nato
    qui e non nell'area organizzatori.
    ======================================================================= */
-var RUBRICA = { giocatori: [] };
-var NUOVO = null;      /* quello che si sta componendo */
-
-function caricaRubrica(pezzi){
-  var r = pezzi && pezzi.rubrica && pezzi.rubrica.dati;
-  if(r && Array.isArray(r.giocatori)) RUBRICA = r;
-}
-function salvaRubrica(){
-  return token().then(function(t){ return FB.scriviPezzo(t, 'rubrica', RUBRICA, chiSono()); });
-}
-/* Chi ha giocato una volta resta in rubrica, col suo compagno abituale: la
-   volta dopo i nomi si scelgono da un elenco invece di riscriverli. */
-function ricordaGente(giocatori){
-  var per = {};
-  RUBRICA.giocatori.forEach(function(g){ per[normale(g.nome)] = g; });
-  giocatori.forEach(function(g){
-    var k = normale(g.nome);
-    if(!k) return;
-    if(per[k]){ if(g.compagno) per[k].compagno = g.compagno; per[k].volte = (per[k].volte || 0) + 1; }
-    else { per[k] = { nome:g.nome, compagno:V(g.compagno, ''), volte:1 }; RUBRICA.giocatori.push(per[k]); }
-  });
-  RUBRICA.giocatori.sort(function(a, b){ return (b.volte || 0) - (a.volte || 0); });
-  return salvaRubrica();
-}
 function normale(s){
   return String(s == null ? '' : s).trim().toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -1330,7 +1330,17 @@ var RUBRICA = { giocatori: [] };
 
 function caricaRubrica(pezzi){
   var r = pezzi && pezzi.rubrica && pezzi.rubrica.dati;
-  if(r && Array.isArray(r.giocatori)) RUBRICA = r;
+  if(!r || !Array.isArray(r.giocatori)) return;
+  /* In rubrica finiscono anche i codici del database, quando una coppia era
+     stata fatta con un'iscrizione poi cancellata: non sono giocatori, e
+     nell'elenco di «chi gioca» non ci devono comparire. */
+  var via = CA.pulisciRubrica(r);
+  RUBRICA = r;
+  if(via){
+    token().then(function(t){ return FB.scriviPezzo(t, 'rubrica', RUBRICA, chiSono()); }).catch(function(){ });
+    toast('🧹 Tolti dalla rubrica ' + via + (via === 1 ? ' nome che era un codice' : ' nomi che erano codici') +
+      ' del database.', 8000);
+  }
 }
 
 /* Se la sala è vuota la procedura parte da sola: chi apre questa pagina
@@ -1582,7 +1592,8 @@ function archiviaGiocatori(st){
   V(st.coppie, []).forEach(function(c){
     [[c.a, c.b], [c.b, c.a]].forEach(function(due){
       var nome = due[0], compagno = due[1];
-      if(!nome) return;
+      if(!nome || CA.sembraCodice(nome)) return;      /* i codici non sono persone */
+      if(compagno && CA.sembraCodice(compagno)) compagno = '';
       var k = chiave(nome);
       if(per[k]){ per[k].volte = (per[k].volte || 0) + 1; if(compagno) per[k].compagno = compagno; }
       else { per[k] = { nome:nome, compagno:V(compagno, ''), volte:1 }; RUBRICA.giocatori.push(per[k]); }

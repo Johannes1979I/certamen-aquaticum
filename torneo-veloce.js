@@ -59,15 +59,21 @@
      compagno dichiarato all'iscrizione, che è più fresco. */
   function elencoIniziale(rubrica, iscritti) {
     var per = {}, fuori = [];
+    /* i codici del database non sono persone: non entrano nell'elenco */
+    var codice = (window.CA && CA.sembraCodice) ? CA.sembraCodice : function () { return false; };
     V(rubrica.giocatori, []).forEach(function (g) {
-      if (!g || !g.nome) return;
-      per[normale(g.nome)] = { nome: g.nome, compagno: V(g.compagno, ''), volte: V(g.volte, 0), da: 'rubrica' };
+      if (!g || !g.nome || codice(g.nome)) return;
+      per[normale(g.nome)] = {
+        nome: g.nome, compagno: codice(V(g.compagno, '')) ? '' : V(g.compagno, ''),
+        volte: V(g.volte, 0), da: 'rubrica'
+      };
     });
     iscritti.forEach(function (p) {
-      if (!p || !p.nome) return;
+      if (!p || !p.nome || codice(p.nome)) return;
       var k = normale(p.nome);
-      if (per[k]) { if (p.compagno) per[k].compagno = p.compagno; per[k].da = 'iscritto'; }
-      else per[k] = { nome: p.nome, compagno: V(p.compagno, ''), volte: 0, da: 'iscritto' };
+      var comp = codice(V(p.compagno, '')) ? '' : V(p.compagno, '');
+      if (per[k]) { if (comp) per[k].compagno = comp; per[k].da = 'iscritto'; }
+      else per[k] = { nome: p.nome, compagno: comp, volte: 0, da: 'iscritto' };
     });
     Object.keys(per).forEach(function (k) { fuori.push(per[k]); });
     fuori.sort(function (a, b) {

@@ -61,6 +61,21 @@
     return coppie.length - buone.length;
   }
 
+  /* La rubrica dei giocatori: via chi ha un codice al posto del nome, e via
+     il «compagno» quando il compagno era un codice. Restituisce quanti ne ha
+     tolti, così chi chiama sa se deve risalvare. */
+  function pulisciRubrica(r) {
+    if (!r || !Array.isArray(r.giocatori)) return 0;
+    var prima = r.giocatori.length;
+    r.giocatori = r.giocatori.filter(function (g) {
+      return g && g.nome && !sembraCodice(g.nome);
+    });
+    r.giocatori.forEach(function (g) {
+      if (g.compagno && sembraCodice(g.compagno)) g.compagno = '';
+    });
+    return prima - r.giocatori.length;
+  }
+
   function crea(tag, cls, txt) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -666,6 +681,7 @@
   window.CA = {
     $: $, V: V, esc: esc, testo: testo, crea: crea,
     sembraCodice: sembraCodice, senzaNome: senzaNome, pulisciTorneo: pulisciTorneo,
+    pulisciRubrica: pulisciRubrica,
     dataIt: dataIt, dataBreve: dataBreve, eur: eur, colore: colore,
     carica: carica, dati: dati, applicaColori: applicaColori,
     avviaConto: avviaConto,
