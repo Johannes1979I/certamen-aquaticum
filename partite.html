@@ -416,10 +416,14 @@ function nomeCoppia(idc, coppie){
   var c = coppie.filter(function(x){ return x.id === idc; })[0];
   return c ? c.nome : (idc || '—');
 }
+/* A quanti punti finisce questa partita. Comanda, in ordine: quello scritto
+   sulla partita, poi quello scelto per il torneo qui sul posto (⚙️ Gestisci),
+   poi quello della prova nel catalogo, poi quello del torneo. */
 function traguardoDi(m, id){
+  var st = STATO[id] || {};
   var td = torneoDati(id);
   var pr = V(td.prove, []).filter(function(p){ return p.id === m.prova; })[0];
-  var n = Number(V(pr && pr.traguardo, td.traguardo));
+  var n = Number(V(m.traguardo, V(st.traguardo, V(pr && pr.traguardo, td.traguardo))));
   return isFinite(n) && n > 0 ? n : 41;
 }
 function somma(m, lato){

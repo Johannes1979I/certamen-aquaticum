@@ -371,8 +371,18 @@
 
   /* ------------------------ il torneo bell'e pronto ---------------------- */
   function consegna() {
-    var coppie = N.coppie.filter(function (c) { return c.a; });
-    if (coppie.length < 2) { avvisa('Servono almeno due coppie.'); return; }
+    /* Una «coppia» con un solo nome non può giocare a carte: se i giocatori
+       sono dispari uno resta senza compagno, e mandarlo al tavolo da solo
+       vorrebbe dire falsare tutto il torneo. Si dice, e si lascia fuori. */
+    var soli = N.coppie.filter(function (c) { return c.a && !c.b; });
+    var coppie = N.coppie.filter(function (c) { return c.a && c.b; });
+    if (coppie.length < 2) { avvisa('Servono almeno due coppie complete.'); return; }
+    if (soli.length) {
+      if (!confirm(soli.map(function (c) { return c.a; }).join(' e ') +
+        (soli.length === 1 ? ' è rimasto senza compagno e resterebbe fuori dal torneo.'
+          : ' sono rimasti senza compagno e resterebbero fuori dal torneo.') +
+        '\n\nVai avanti lo stesso? (per farli giocare, torna indietro e togli o aggiungi un nome)')) return;
+    }
 
     var incontri = [];
     if (N.tipo === 'partita') {

@@ -4522,10 +4522,15 @@
   /* A quanti punti finisce una partita. Sta nella prova, così scopone e
      tresette possono avere traguardi diversi; se non c'è scritto niente si
      usa quello del torneo, e in mancanza di tutto i 41 classici. */
+  /* Stesso ordine della sala da gioco: quello scritto sulla partita, poi
+     quello scelto per il torneo, poi la prova, poi il catalogo. Così le due
+     pagine non dicono mai due numeri diversi sulla stessa partita. */
   function traguardoDi(m, idTorneo) {
-    var td = torneoDati(idTorneo || TORNEO_APERTO);
+    var id = idTorneo || TORNEO_APERTO;
+    var st = (STATO.tornei || {})[id] || {};
+    var td = torneoDati(id);
     var pr = V(td.prove, []).filter(function (p) { return p.id === m.prova; })[0];
-    var n = Number(V(pr && pr.traguardo, td.traguardo));
+    var n = Number(V(m.traguardo, V(st.traguardo, V(pr && pr.traguardo, td.traguardo))));
     return isFinite(n) && n > 0 ? n : 41;
   }
   function sommaMani(m, lato) {
