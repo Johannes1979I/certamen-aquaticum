@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Controllo del database — Certamen Aquaticum</title>
+<link rel="stylesheet" href="stile.css" />
+<style>
+/* Una pagina di servizio: deve essere leggibile, non bella. */
+body{ background:#eef3f8; }
+.wrap{ max-width:900px; margin:0 auto; padding:18px 14px 60px; }
+h1{ font-size:1.3rem; margin:12px 0 4px; }
+.card{ background:#fff; border-radius:16px; padding:16px; margin:14px 0; box-shadow:0 2px 10px rgba(0,0,0,.06); }
+.riga{ display:flex; gap:10px; align-items:baseline; padding:6px 0; border-bottom:1px solid #eef2f6; }
+.riga:last-child{ border-bottom:0; }
+.riga b{ min-width:190px; }
+.ok{ color:#1b5e20; font-weight:bold; }
+.ko{ color:#b71c1c; font-weight:bold; }
+pre{ background:#0f1b2a; color:#d6e6ff; padding:12px; border-radius:12px; overflow:auto; font-size:.8rem; }
+.campo{ margin:8px 0; }
+.campo input{ width:100%; padding:10px 12px; border:2px solid var(--linea); border-radius:12px; font-size:1rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🔎 Controllo del database</h1>
+  <p class="aiuto">Questa pagina <b>legge soltanto</b>: non scrive e non cancella niente.
+    Serve a capire che cosa risponde davvero il database, quando una pagina sembra vuota.</p>
+
+  <div class="card" id="entra" style="display:none">
+    <h2>Entra</h2>
+    <p class="aiuto">La stessa email e password dell'area organizzatori.</p>
+    <div class="campo"><input id="em" type="email" placeholder="email" autocomplete="username" /></div>
+    <div class="campo"><input id="pw" type="password" placeholder="password" autocomplete="current-password" /></div>
+    <button class="btn btn-p" id="btnEntra">Entra e controlla</button>
+    <p class="aiuto ko" id="erroreEntra"></p>
+  </div>
+
+  <div class="card">
+    <h2>Che cosa risponde</h2>
+    <div id="esiti"></div>
+  </div>
+
+  <div class="card">
+    <h2>I documenti dello stato</h2>
+    <div id="pezzi"></div>
+  </div>
+
+  <div class="card">
+    <h2>Le risposte per esteso</h2>
+    <p class="aiuto">Da copiare e incollare, se serve capire meglio.</p>
+    <pre id="grezzo">—</pre>
+  </div>
+</div>
+
+<script src="firebase.js"></script>
+<script src="comune.js"></script>
+<script>
+var $ = CA.$, V = CA.V, crea = CA.crea, testo = CA.testo;
+var SESS = null, LOG = [];
+
+function sessLeggi(){
+  try{ var s = JSON.parse(CA.memLeggi('ca_fbsess') || 'null'); return s && s.refreshToken ? s : null; }catch(e){ return null; }
+}
+function sessSalva(){ CA.memScrivi('ca_fbsess', JSON.stringify(SESS)); }
+
+function token(){
+  if(!SESS) return Promise.reject(new Error('non collegato'));
+  if(SESS.idToken && SESS.scadenza && Date.now() < SESS.scadenza - 60000) return Promise.resolve(SESS.idToken);
+  return FB.refresh(SESS.refreshToken).then(function(s){
+    SESS.idToken = s.idToken; SESS.refreshToken = s.refreshToken; SESS.scadenza = s.scadenza;
+    sessSalva();
+    return SESS.idToken;
+  });
+}
+
+function riga(dove, etichetta, valore, buono){
+  var r = crea('div', 'riga');
+  r.appendChild(crea('b', null, etichetta));
+  r.appendChild(crea('span', buono === undefined ? '' : (buono ? 'ok' : 'ko'), String(valore)));
+  $(dove).appendChild(r);
+}
+
+/* Le chiamate si fanno qui a mano, non con le funzioni del sito: quelle
+   nascondono gli errori per non spaventare nessuno, e qui invece l'errore è
+   proprio la cosa che vogliamo vedere. */
+function chiama(nome, url, idToken){
+  var t0 = Date.now();
+  var opz = { cache:'no-store' };
+  if(idToken) opz.headers = { 'Authorization': 'Bearer ' + idToken };
+  return fetch(url, opz).then(function(r){
+    return r.text().then(function(txt){
+      var d = null;
+      try{ d = JSON.parse(txt); }catch(e){ }
+      LOG.push({ chiamata:nome, stato:r.status, ms:Date.now()-t0,
+                 errore: d && d.error ? (d.error.status + ' — ' + d.error.message) : null,
+                 documenti: d && d.documents ? d.documents.length : undefined });
+      return { ok:r.ok, stato:r.status, dati:d, errore: d && d.error ? d.error : null };
+    });
+  }).catch(function(e){
+    LOG.push({ chiamata:nome, stato:'rete', errore:String(e && e.message || e) });
+    return { ok:false, stato:'rete', errore:{ message:String(e && e.message || e) } };
+  });
+}
+
+function avvia(){
+  $('esiti').textContent = '';
+  $('pezzi').textContent = '';
+  LOG = [];
+  CA.carica().then(function(d){
+    var cfg = V(d.cloud, {});
+    var API = cfg.firebaseApiKey, PROJ = cfg.firebaseProjectId;
+    var BASE = 'https://firestore.googleapis.com/v1/projects/' + PROJ + '/databases/(default)/documents';
+    riga('esiti', 'Progetto Firebase', PROJ || '(manca!)', !!PROJ);
+    riga('esiti', 'Chiave API', API ? (String(API).slice(0, 8) + '…') : '(manca!)', !!API);
+
+    SESS = sessLeggi();
+    riga('esiti', 'Collegamento salvato', SESS ? ('sì, ' + V(SESS.email, '?')) : 'no', !!SESS);
+    if(!SESS){ $('entra').style.display = ''; scriviGrezzo(); return; }
+
+    return token().then(function(tk){
+      riga('esiti', 'Password ancora buona', 'sì', true);
+      return Promise.all([
+        chiama('iscrizioni', BASE + '/iscrizioni?key=' + API + '&pageSize=300&_=' + Date.now(), tk),
+        chiama('stato_certamen', BASE + '/stato_certamen?key=' + API + '&pageSize=100&_=' + Date.now(), tk),
+        chiama('bacheca pubblica', BASE + '/pubblico_certamen/classifica?key=' + API + '&_=' + Date.now(), null)
+      ]);
+    }).then(function(r){
+      var isc = r[0], stato = r[1], pub = r[2];
+
+      riga('esiti', 'Iscrizioni lette',
+        isc.ok ? (V(isc.dati.documents, []).length + ' documenti')
+               : ('ERRORE ' + isc.stato + ': ' + V(isc.errore && isc.errore.message, '?')), isc.ok);
+      if(isc.ok){
+        var nomi = V(isc.dati.documents, []).map(function(doc){
+          var f = doc.fields || {};
+          return (f.nome && f.nome.stringValue) || '(senza campo nome)';
+        });
+        var vuoti = nomi.filter(function(n){ return n === '(senza campo nome)'; }).length;
+        riga('esiti', '· con il nome scritto', (nomi.length - vuoti), (nomi.length - vuoti) > 0);
+        if(vuoti) riga('esiti', '· senza campo nome', vuoti, false);
+      }
+
+      riga('esiti', 'Documenti dello stato',
+        stato.ok ? (V(stato.dati.documents, []).length + ' documenti')
+                 : ('ERRORE ' + stato.stato + ': ' + V(stato.errore && stato.errore.message, '?')), stato.ok);
+
+      riga('esiti', 'Bacheca pubblica',
+        pub.ok ? 'c’è' : ('ERRORE ' + pub.stato), pub.ok);
+
+      /* Il caso più insidioso: il database c'è, i dati ci sono, ma ha finito
+         le letture della giornata e risponde «quota esaurita» a tutti. Da
+         fuori sembra che sia stato svuotato. */
+      var quota = [isc, stato, pub].some(function (x) { return x.stato === 429; });
+      if (quota) {
+        var av = crea('div', 'nota-box');
+        av.style.cssText = 'margin-top:12px;background:#fff3e0;border:2px solid #ffb74d;border-radius:12px;padding:12px';
+        av.appendChild(crea('b', null, '⚠️ Il database ha finito le letture di oggi'));
+        av.appendChild(crea('p', 'aiuto',
+          'Firestore, nel piano gratuito, dà 50.000 letture al giorno. Sono finite: ' +
+          'per il resto della giornata risponde «Quota exceeded» a tutti, e ogni pagina sembra vuota. ' +
+          'I dati non sono stati cancellati — semplicemente non li lascia leggere. ' +
+          'Il conto si azzera a mezzanotte ora del Pacifico, cioè intorno alle 9 del mattino da noi.'));
+        $('esiti').appendChild(av);
+      }
+
+      if(stato.ok){
+        var docs = V(stato.dati.documents, []);
+        if(!docs.length) riga('pezzi', 'Nessun documento', 'la collezione stato_certamen è vuota', false);
+        docs.forEach(function(doc){
+          var nome = doc.name.split('/').pop();
+          var f = doc.fields || {};
+          var testoJson = (f.json && f.json.stringValue) || '';
+          var dentro = null;
+          try{ dentro = JSON.parse(testoJson); }catch(e){ }
+          var quanto = '';
+          if(dentro && Array.isArray(dentro.giocatori)) quanto = dentro.giocatori.length + ' nomi in rubrica';
+          else if(dentro && Array.isArray(dentro.coppie)) quanto = dentro.coppie.length + ' coppie, ' +
+            V(dentro.incontri, []).length + ' partite' + (dentro.archiviato ? ' · archiviato' : '');
+          else if(dentro) quanto = Object.keys(dentro).join(', ').slice(0, 90);
+          riga('pezzi', nome, (testoJson.length + ' caratteri') + (quanto ? ' · ' + quanto : ''),
+               testoJson.length > 2);
+        });
+      }
+      scriviGrezzo();
+    }).catch(function(e){
+      riga('esiti', 'Password ancora buona', 'NO — ' + e.message, false);
+      $('entra').style.display = '';
+      scriviGrezzo();
+    });
+  }).catch(function(e){
+    riga('esiti', 'contenuti.json', 'ERRORE: ' + e.message, false);
+    scriviGrezzo();
+  });
+}
+
+function scriviGrezzo(){ $('grezzo').textContent = JSON.stringify(LOG, null, 2); }
+
+$('btnEntra').addEventListener('click', function(){
+  var e = $('em').value.trim(), p = $('pw').value;
+  if(!e || !p){ testo('erroreEntra', 'Scrivi email e password.'); return; }
+  FB.signIn(e, p).then(function(s){
+    SESS = { idToken:s.idToken, refreshToken:s.refreshToken, scadenza:s.scadenza, email:s.email };
+    sessSalva();
+    $('entra').style.display = 'none';
+    testo('erroreEntra', '');
+    avvia();
+  }).catch(function(err){ testo('erroreEntra', err.message); });
+});
+
+avvia();
+</script>
+</body>
+</html>

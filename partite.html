@@ -212,6 +212,7 @@ body{ background:#f2f7fb; }
 var $ = CA.$, V = CA.V, testo = CA.testo, crea = CA.crea;
 var DATI = {}, SESS = null, TORNEI = [], APERTO = '', STATO = {}, ASSETTO = null;
 var TESTATE = [];       /* le righe «2 di 3 partite finite», da rinfrescare */
+var ISCRITTIGREZZI = [];   /* gli iscritti come sono arrivati, per non rileggerli */
 var ISCRITTI = [];               /* chi si è iscritto: si propone nella procedura guidata */
 var SCRIVENDO = null;            /* id della partita che ho sotto le dita */
 var DAMANDARE = false, timerInvio = null, ULTIMO = '';
@@ -314,12 +315,50 @@ function avvia(){
 var OROLOGIO = 0;
 
 /* ------------------------------- lettura ------------------------------- */
+/* ---------------------- quante volte si legge ---------------------------
+   Il database gratuito conta le letture: una per ogni documento che torna
+   indietro. Leggere tutta la collezione ogni cinque secondi, con dentro
+   venti tornei e cento iscritti, vuol dire bruciare la quota di un giorno
+   intero in mezz'ora — e poi il database smette di rispondere a tutti, e le
+   pagine sembrano vuote. Quindi:
+     · l'elenco completo dei pezzi: all'avvio e poi ogni cinque minuti;
+     · gli iscritti: all'avvio e poi ogni dieci minuti;
+     · nel mezzo, solo il documento del torneo aperto — una lettura sola,
+       che basta per vedere le mani segnate dagli altri tavoli. */
+var ULTIMOELENCO = 0, ULTIMIISCRITTI = 0;
+var OGNIELENCO = 5 * 60 * 1000, OGNIISCRITTI = 10 * 60 * 1000;
+
 function leggi(prima){
+  var ora = Date.now();
+  var tuttoIlMazzo = prima || !APERTO || (ora - ULTIMOELENCO) > OGNIELENCO;
+  var ancheGente = prima || (ora - ULTIMIISCRITTI) > OGNIISCRITTI;
+
+  if(!tuttoIlMazzo){
+    /* la via leggera: un documento solo, quello che si sta giocando */
+    return token().then(function(t){
+      return FB.leggiPezzo(t, 'torneo_' + APERTO);
+    }).then(function(pezzo){
+      if(pezzo && pezzo.dati){
+        if(SCRIVENDO) fondi(APERTO, pezzo.dati);
+        else STATO[APERTO] = pezzo.dati;
+        testo('statoRete', '🟢 aggiornato alle ' + oraOra());
+        disegna(false);
+      }
+    }).catch(function(e){
+      testo('statoRete', '🔴 ' + (!SESS ? 'da rifare l’accesso' : 'rete assente'));
+    });
+  }
+
   return token().then(function(t){
-    /* i pezzi del torneo e l'elenco degli iscritti: i secondi servono alla
-       procedura guidata, che se no propone una pagina vuota la prima volta */
-    return Promise.all([FB.leggiPezzi(t), FB.elenco(t).catch(function(){ return []; })]);
+    ULTIMOELENCO = ora;
+    if(ancheGente) ULTIMIISCRITTI = ora;
+    return Promise.all([
+      FB.leggiPezzi(t),
+      ancheGente ? FB.elenco(t).catch(function(){ return []; }) : Promise.resolve(null)
+    ]);
   }).then(function(r){
+    if(r[1] === null) r[1] = ISCRITTIGREZZI;      /* quelli di prima vanno bene */
+    ISCRITTIGREZZI = r[1];
     ISCRITTI = (r[1] || []).map(function(doc){
       var o = {};
       try{ o = JSON.parse(doc.json || '{}') || {}; }catch(e){ o = {}; }
@@ -1139,16 +1178,25 @@ function tutteFinite(st){
    ce li mette questa pagina, da sola: legge il documento com'è, sostituisce
    solo il pezzo di questo torneo e lo riscrive — così le classifiche dei
    ragazzi, il cronometro e tutto il resto restano dove sono. */
-var TIMERPUB = 0;
+var TIMERPUB = 0, ULTIMAPUB = '';
 function pubblica(id){
   if(!id || !STATO[id]) return;
   if(TIMERPUB) clearTimeout(TIMERPUB);
-  TIMERPUB = setTimeout(function(){ pubblicaOra(id); }, 1500);
+  /* venti secondi, non uno e mezzo: il tabellone si guarda da lontano, non
+     ha bisogno di seguire ogni cifra — e ogni pubblicazione costa al
+     database una lettura e una scrittura */
+  TIMERPUB = setTimeout(function(){ pubblicaOra(id); }, 20000);
 }
 
 function pubblicaOra(id){
   var st = STATO[id];
   if(!st) return;
+  /* se non è cambiato niente da com'è già in bacheca, non si tocca */
+  var impronta = JSON.stringify({ i: V(st.incontri, []).map(function(m){
+    return [m.id, somma(m, 'a'), somma(m, 'b'), m.puntiA, m.puntiB, m.saltata ? 1 : 0].join('|');
+  }), a: !!st.archiviato });
+  if(impronta === ULTIMAPUB) return;
+  ULTIMAPUB = impronta;
   var coppie = V(st.coppie, []);
   var righe = classifica(id);
   var quello = {

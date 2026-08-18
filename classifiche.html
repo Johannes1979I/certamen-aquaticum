@@ -149,7 +149,7 @@ CA.carica().then(function(d){
      continuazione, quindi si ricontrolla ogni 15 secondi. Solo con la pagina
      davanti agli occhi: in secondo piano si sta fermi e non si consuma. */
   carica();
-  setInterval(function(){ if(!document.hidden) carica(); }, 15000);
+  setInterval(function(){ if(!document.hidden) carica(); }, 30000);
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) carica(); });
   window.addEventListener('focus', carica);
 }).catch(function(e){ CA.toast('Non riesco a leggere i contenuti: ' + e.message, 9000); });

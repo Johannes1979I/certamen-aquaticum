@@ -515,12 +515,17 @@
       }, 60);
     });
 
-    /* il registro delle iscrizioni si rilegge ogni minuto; squadre, punteggi
-       e tabelloni ogni dieci secondi, per stare dietro agli altri operatori */
+    /* Attenzione alle letture: il database gratuito ne conta cinquantamila
+       al giorno, e ognuna è un documento. Rileggere ogni minuto le
+       iscrizioni (che sono un centinaio) più tutti i pezzi voleva dire
+       settemila letture all'ora per ogni scheda aperta: bastava lasciare
+       l'area organizzatori aperta un pomeriggio per far smettere di
+       rispondere il database a tutto il sito. Adesso il registro completo si
+       rilegge ogni dieci minuti — e subito quando torni sulla pagina. */
     setInterval(function () {
       if (document.hidden || STOSCRIVENDO || !SESS) return;
       ricarica(false);
-    }, 60000);
+    }, 10 * 60 * 1000);
     document.addEventListener('visibilitychange', function () {
       if (!document.hidden && SESS && !STOSCRIVENDO) ricarica(false);
     });
@@ -757,10 +762,13 @@
 
   function avviaSincronizzazione() {
     if (timerSincro) return;
+    /* Lo stato del lavoro (squadre, punteggi, tabelloni) si rilegge ogni
+       trenta secondi invece che ogni dieci: per lavorare in tre attorno alla
+       piscina bastano, e le letture diventano un terzo. */
     timerSincro = setInterval(function () {
       if (STOSCRIVENDO) return;      /* non mentre sto battendo un punteggio */
       sincronizza();
-    }, 10000);
+    }, 30000);
     document.addEventListener('visibilitychange', function () {
       if (!document.hidden && SESS) sincronizza();
     });

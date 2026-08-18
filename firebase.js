@@ -421,6 +421,28 @@
     });
   }
 
+  /* ---- LEGGE UN SOLO pezzo dello stato (richiede login) ----
+     Leggere tutta la collezione ogni cinque secondi costa una lettura per
+     ogni documento che c'è dentro: con venti documenti sono quattro letture
+     al secondo, e il piano gratuito ne dà cinquantamila al giorno. Quando
+     serve seguire una partita sola, si legge quella sola. */
+  function leggiPezzo(idToken, nome) {
+    if (!idToken || !nome) return Promise.resolve(null);
+    return fetch(BASE + '/stato_certamen/' + encodeURIComponent(nome) + '?key=' + API + '&_=' + Date.now(), {
+      headers: { 'Authorization': 'Bearer ' + idToken }, cache: 'no-store'
+    }).then(jget).then(function (d) {
+      if (d.error) return null;
+      var f = d.fields || {};
+      var testo = (f.json && f.json.stringValue) || '';
+      if (!testo) return null;
+      try {
+        return { dati: JSON.parse(testo),
+                 quando: (f.aggiornatoIl && f.aggiornatoIl.stringValue) || '',
+                 chi: (f.chi && f.chi.stringValue) || '' };
+      } catch (e) { return null; }
+    }).catch(function () { return null; });
+  }
+
   /* ---- CANCELLA un pezzo dello stato (richiede login) ----
      Serve per buttare via davvero un torneo: non «archiviato», proprio via
      dal database, come se non fosse mai stato giocato. */
@@ -442,7 +464,8 @@
     scriviContatori: scriviContatori,
     leggiClassifica: leggiClassifica, scriviClassifica: scriviClassifica,
     leggiStato: leggiStato, scriviStato: scriviStato,
-    leggiPezzi: leggiPezzi, scriviPezzo: scriviPezzo, cancellaPezzo: cancellaPezzo,
+    leggiPezzi: leggiPezzi, leggiPezzo: leggiPezzo,
+    scriviPezzo: scriviPezzo, cancellaPezzo: cancellaPezzo,
     leggiAlbum: leggiAlbum, scriviAlbum: scriviAlbum, provaAlbum: provaAlbum
   };
 })();

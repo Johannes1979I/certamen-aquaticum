@@ -115,7 +115,7 @@ CA.carica().then(function(d){
   testo('piedeT', 'Le classifiche complete su ' +
     CA.urlSito().replace(/^https?:\/\//, '') + 'classifiche.html');
   leggi();
-  setInterval(function(){ if(!document.hidden) leggi(); }, 15000);
+  setInterval(function(){ if(!document.hidden) leggi(); }, 30000);
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) leggi(); });
 });
 
