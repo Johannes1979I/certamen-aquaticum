@@ -336,16 +336,11 @@ function leggi(prima){
       var m = /^torneo_(.+)$/.exec(nome);
       if(m) nuovi[m[1]] = pezzi[nome].dati;
     });
-    /* quello che sto scrivendo io non si tocca: il resto entra. Ma prima si
-       buttano le coppie rimaste col codice del database al posto del nome:
-       non sono giocatori, e in classifica non ci devono stare. */
-    var ripuliti = [];
+    /* quello che sto scrivendo io non si tocca: il resto entra */
     Object.keys(nuovi).forEach(function(id){
-      if(CA.pulisciTorneo(nuovi[id])) ripuliti.push(id);
       if(id === APERTO && SCRIVENDO) { fondi(id, nuovi[id]); return; }
       STATO[id] = nuovi[id];
     });
-    ripuliti.forEach(function(id){ if(STATO[id]) manda(id); });
     if(!APERTO){
       /* col link diretto si apre quello chiesto; se no l'ultimo cominciato e
          non ancora finito, che è quello che si sta giocando adesso */
@@ -1341,16 +1336,12 @@ var RUBRICA = { giocatori: [] };
 function caricaRubrica(pezzi){
   var r = pezzi && pezzi.rubrica && pezzi.rubrica.dati;
   if(!r || !Array.isArray(r.giocatori)) return;
-  /* In rubrica finiscono anche i codici del database, quando una coppia era
-     stata fatta con un'iscrizione poi cancellata: non sono giocatori, e
-     nell'elenco di «chi gioca» non ci devono comparire. */
-  var via = CA.pulisciRubrica(r);
+  /* La rubrica si legge com'è e non si tocca: se dentro c'è un codice del
+     database al posto di un nome, è un nome che non è stato letto, non una
+     riga da buttare. Nell'elenco di «chi gioca» non compare (un nome che non
+     si legge non si può scegliere), ma dal database non lo cancella nessuno
+     senza che tu lo chieda. */
   RUBRICA = r;
-  if(via){
-    token().then(function(t){ return FB.scriviPezzo(t, 'rubrica', RUBRICA, chiSono()); }).catch(function(){ });
-    toast('🧹 Tolti dalla rubrica ' + via + (via === 1 ? ' nome che era un codice' : ' nomi che erano codici') +
-      ' del database.', 8000);
-  }
 }
 
 /* Se la sala è vuota la procedura parte da sola: chi apre questa pagina

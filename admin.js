@@ -777,9 +777,12 @@
     o.gruppo = V(o.gruppo, doc.gruppo);
     o.codice = V(o.codice, doc.codice);
     o.creatoIl = V(o.creatoIl, doc.creatoIl);
-    /* Un'iscrizione senza nome, o con dentro un codice del database invece
-       del nome, non è una persona: non deve comparire da nessuna parte. */
-    if (!o.nome || CA.sembraCodice(o.nome)) return null;
+    /* Un'iscrizione senza nome non si può mostrare. Se invece al posto del
+       nome c'è un codice del database, la persona c'è: è il nome che non è
+       stato letto. NON si nasconde e NON si cancella — si segna, così la
+       si vede e si decide a mano. */
+    if (!o.nome) return null;
+    o.nomeIllegibile = CA.sembraCodice(o.nome);
     return o;
   }
 
@@ -867,11 +870,6 @@
       STATO.edizioni = V(dati.edizioni, []);
     } else if (nome === 'rubrica') {
       STATO.rubrica = dati && Array.isArray(dati.giocatori) ? dati : { giocatori: [] };
-      /* via i codici del database finiti in rubrica: non sono giocatori */
-      if (CA.pulisciRubrica(STATO.rubrica)) {
-        SPORCHI['rubrica'] = true;
-        setTimeout(function () { salvaStato(false); }, 400);
-      }
     } else if (nome === 'titoli') {
       STATO.titoli = V(dati.titoli, []);
     } else if (nome === 'cronometro') {
@@ -895,19 +893,7 @@
       disegnaAppello();
     } else if (nome.indexOf('torneo_') === 0) {
       STATO.tornei = STATO.tornei || {};
-      /* Le coppie rimaste col codice del database al posto del nome — succede
-         quando l'iscrizione viene cancellata dopo che le coppie erano già
-         fatte — non sono persone: si tolgono, con le loro partite. */
-      var via = CA.pulisciTorneo(dati);
       STATO.tornei[nome.slice(7)] = dati;
-      if (via) {
-        SPORCHI[nome] = true;
-        /* e si risalva subito: devono sparire anche dal database, non solo
-           da quello che si vede adesso */
-        setTimeout(function () { salvaStato(false); }, 400);
-        CA.toast('🧹 Ho tolto ' + via + (via === 1 ? ' coppia senza nome' : ' coppie senza nome') +
-          ' dal tabellone: erano codici del database, non giocatori.', 9000);
-      }
     }
   }
 
@@ -1239,6 +1225,16 @@
       nb.style.display = 'inline';
       t.appendChild(nb);
       c.appendChild(t);
+
+      /* Se al posto del nome c'è un codice del database, la persona c'è: è il
+         nome che non è stato letto. Si dice, così la si corregge con
+         «✏️ Modifica» — cancellarla non è compito del sito. */
+      if (p.nomeIllegibile) {
+        var av = crea('small', 'nota-nome', '⚠️ Qui c\'è il codice del database al posto del nome: ' +
+          'l\'iscrizione c\'è, il nome no. Aprila con ✏️ Modifica e scrivilo.');
+        av.style.color = '#b71c1c';
+        c.appendChild(av);
+      }
 
       c.appendChild(crea('small', null, dettaglio(p)));
       c.appendChild(crea('small', null, '🎟️ ' + V(p.codice, '—') + ' · ☎️ ' + V(p.telefono, '—') +
