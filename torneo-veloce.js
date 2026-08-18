@@ -30,6 +30,47 @@
     return String(s == null ? '' : s).trim().toLowerCase()
       .normalize('NFD').replace(/[̀-ͯ]/g, '');
   }
+  /* ---------------------- trascinare i nomi ----------------------------
+     Col mouse fa tutto il browser (draggable + drop). Col dito no: sul
+     telefono il trascinamento del browser non esiste, quindi si tiene
+     premuto un istante e poi si trascina, con un «fantasma» del nome che
+     segue il dito. In tutti e due i casi il gesto fa la stessa cosa:
+     scambiare di posto due nomi. */
+  var DA = null;
+  var FINETRASC = 0;      /* quando è finito l'ultimo trascinamento */
+
+  function spegniBersagli() {
+    var b = document.querySelectorAll('.nome-trasc.bersaglio');
+    for (var i = 0; i < b.length; i++) b[i].classList.remove('bersaglio');
+  }
+
+  function bersaglioSotto(x, y) {
+    var e = document.elementFromPoint(x, y);
+    while (e && e !== document.body) {
+      if (e.classList && e.classList.contains('nome-trasc')) return e;
+      e = e.parentElement;
+    }
+    return null;
+  }
+
+  function fantasmaDi(b, x, y) {
+    var g = b.cloneNode(true);
+    var r = b.getBoundingClientRect();
+    g.className = 'nome-trasc fantasma btn btn-p btn-piccolo';
+    g.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;opacity:.9;' +
+      'width:' + Math.round(r.width) + 'px;left:0;top:0;transform:translate(' +
+      Math.round(x - r.width / 2) + 'px,' + Math.round(y - r.height / 2) + 'px) rotate(-2deg);';
+    document.body.appendChild(g);
+    g.__w = r.width; g.__h = r.height;
+    return g;
+  }
+  function muoviFantasma(g, x, y) {
+    if (!g) return;
+    g.style.transform = 'translate(' + Math.round(x - g.__w / 2) + 'px,' +
+      Math.round(y - g.__h / 2) + 'px) rotate(-2deg)';
+  }
+  function via(g) { if (g && g.parentNode) g.parentNode.removeChild(g); }
+
   function avvisa(m) {
     if (window.CA && CA.toast) CA.toast(m, 5000);
   }
@@ -328,11 +369,28 @@
     var box = crea('div', 'passo visibile');
     box.appendChild(crea('h3', null, '3 · Le coppie'));
     box.appendChild(crea('p', 'aiuto',
-      'Chi si era dichiarato un compagno è già insieme. Per cambiare, tocca due nomi: si scambiano.'));
+      'Chi si era dichiarato un compagno è già insieme. Per cambiare: ' +
+      'trascina un nome sopra un altro e si scambiano di posto. ' +
+      'Dal telefono tienilo premuto un istante e poi trascina — oppure, se è più comodo, ' +
+      'tocca prima un nome e poi l\'altro.'));
 
     var presa = null;
     var elenco = crea('div');
     box.appendChild(elenco);
+
+    /* Scambiare due nomi di posto: è l'unica cosa che si fa qui dentro, e
+       la fanno sia il trascinamento sia i due tocchi. */
+    function scambia(uno, due) {
+      if (!uno || !due) return;
+      if (uno.i === due.i && uno.lato === due.lato) return;
+      var ca = N.coppie[uno.i], cb = N.coppie[due.i];
+      var tmp = ca[uno.lato];
+      ca[uno.lato] = cb[due.lato];
+      cb[due.lato] = tmp;
+      [ca, cb].forEach(function (x) {
+        x.nome = (x.a || '(vuoto)') + ' – ' + (x.b || '(da abbinare)');
+      });
+    }
 
     function ridisegna() {
       elenco.textContent = '';
@@ -340,22 +398,111 @@
         var r = crea('div', 'coppia-r');
         r.appendChild(crea('span', 'n', (i + 1) + '.'));
         ['a', 'b'].forEach(function (lato) {
-          var b = crea('button', 'btn btn-piccolo ' +
+          var b = crea('button', 'btn btn-piccolo nome-trasc ' +
             (presa && presa.i === i && presa.lato === lato ? 'btn-p' : 'btn-chiaro'),
             c[lato] || '— libero —');
           b.style.flex = '1';
+          b.setAttribute('data-i', i);
+          b.setAttribute('data-lato', lato);
+          b.draggable = true;
+          b.title = 'Trascinami sopra un altro nome per scambiarci di posto';
+
           b.addEventListener('click', function () {
+            /* dopo un trascinamento il telefono può mandare anche un click:
+               se lo ascoltassimo, il nome appena posato risulterebbe «preso» */
+            if (Date.now() - FINETRASC < 500) return;
             if (!presa) { presa = { i: i, lato: lato }; ridisegna(); return; }
-            var altro = N.coppie[presa.i];
-            var tmp = altro[presa.lato];
-            altro[presa.lato] = c[lato];
-            c[lato] = tmp;
-            [altro, c].forEach(function (x) {
-              x.nome = (x.a || '(vuoto)') + ' – ' + (x.b || '(da abbinare)');
-            });
+            scambia(presa, { i: i, lato: lato });
             presa = null;
             ridisegna();
           });
+
+          /* ---- col mouse: il trascinamento del browser ---- */
+          b.addEventListener('dragstart', function (e) {
+            presa = null;
+            DA = { i: i, lato: lato };
+            b.classList.add('trascino');
+            try { e.dataTransfer.setData('text/plain', i + ':' + lato); e.dataTransfer.effectAllowed = 'move'; } catch (x) { }
+          });
+          b.addEventListener('dragend', function () {
+            b.classList.remove('trascino');
+            spegniBersagli();
+            DA = null;
+          });
+          b.addEventListener('dragover', function (e) {
+            if (!DA) return;
+            e.preventDefault();
+            try { e.dataTransfer.dropEffect = 'move'; } catch (x) { }
+            spegniBersagli();
+            if (!(DA.i === i && DA.lato === lato)) b.classList.add('bersaglio');
+          });
+          b.addEventListener('dragleave', function () { b.classList.remove('bersaglio'); });
+          b.addEventListener('drop', function (e) {
+            e.preventDefault();
+            spegniBersagli();
+            FINETRASC = Date.now();
+            if (!DA) return;
+            scambia(DA, { i: i, lato: lato });
+            DA = null;
+            ridisegna();
+          });
+
+          /* ---- col dito: si tiene premuto un istante e si trascina ---- */
+          b.addEventListener('pointerdown', function (e) {
+            if (e.pointerType === 'mouse') return;        /* al mouse ci pensa il browser */
+            var partito = false, fantasma = null;
+            var attesa = setTimeout(function () {
+              partito = true;
+              DA = { i: i, lato: lato };
+              b.classList.add('trascino');
+              b.style.touchAction = 'none';
+              fantasma = fantasmaDi(b, e.clientX, e.clientY);
+              if (navigator.vibrate) { try { navigator.vibrate(15); } catch (x) { } }
+            }, 260);
+
+            function muovi(ev) {
+              if (!partito) {
+                /* se si muove prima che scatti, sta scorrendo la pagina */
+                clearTimeout(attesa);
+                fine(ev, false);
+                return;
+              }
+              ev.preventDefault();
+              muoviFantasma(fantasma, ev.clientX, ev.clientY);
+              spegniBersagli();
+              var sotto = bersaglioSotto(ev.clientX, ev.clientY);
+              if (sotto && sotto !== b) sotto.classList.add('bersaglio');
+            }
+            function su(ev) {
+              clearTimeout(attesa);
+              if (!partito) { fine(ev, false); return; }
+              var sotto = bersaglioSotto(ev.clientX, ev.clientY);
+              fine(ev, true);
+              if (sotto && sotto !== b) {
+                FINETRASC = Date.now();
+                scambia(DA, { i: Number(sotto.getAttribute('data-i')), lato: sotto.getAttribute('data-lato') });
+                DA = null;
+                ridisegna();
+                return;
+              }
+              DA = null;
+            }
+            function fine(ev, eraPartito) {
+              b.classList.remove('trascino');
+              b.style.touchAction = '';
+              spegniBersagli();
+              via(fantasma); fantasma = null;
+              b.removeEventListener('pointermove', muovi);
+              b.removeEventListener('pointerup', su);
+              b.removeEventListener('pointercancel', su);
+              try { b.releasePointerCapture(e.pointerId); } catch (x) { }
+            }
+            try { b.setPointerCapture(e.pointerId); } catch (x) { }
+            b.addEventListener('pointermove', muovi);
+            b.addEventListener('pointerup', su);
+            b.addEventListener('pointercancel', su);
+          });
+
           r.appendChild(b);
         });
         elenco.appendChild(r);

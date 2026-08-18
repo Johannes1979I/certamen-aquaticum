@@ -142,6 +142,16 @@ body{ background:#eef4fa; }
 }
 .finestra-tv *{ max-width:100%; box-sizing:border-box; }
 .finestra-tv .btn{ white-space:normal; }
+/* i nomi che si trascinano da una coppia all'altra */
+.nome-trasc{ cursor:grab; touch-action:manipulation; }
+.nome-trasc:active{ cursor:grabbing; }
+.nome-trasc.trascino{ opacity:.35; }
+.nome-trasc.bersaglio{
+  border-color:var(--c2); background:rgba(22,160,133,.14);
+  box-shadow:0 0 0 3px rgba(22,160,133,.22);
+}
+.nome-trasc.fantasma{ box-shadow:0 10px 22px rgba(0,0,0,.28); }
+
 /* «.passo» nel foglio comune nasce nascosto (serve al modulo d'iscrizione,
    che mostra un passo per volta): dentro la finestra guidata va sempre visto */
 .finestra .passo{ display:block; }

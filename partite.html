@@ -46,6 +46,16 @@ body{ background:#f2f7fb; }
 .btn-barra:hover{ background:rgba(255,255,255,.3); }
 .btn-barra{ white-space:nowrap; flex:0 0 auto; display:inline-flex; align-items:center; }
 
+/* i nomi che si trascinano da una coppia all'altra */
+.nome-trasc{ cursor:grab; touch-action:manipulation; }
+.nome-trasc:active{ cursor:grabbing; }
+.nome-trasc.trascino{ opacity:.35; }
+.nome-trasc.bersaglio{
+  border-color:var(--c2); background:rgba(22,160,133,.14);
+  box-shadow:0 0 0 3px rgba(22,160,133,.22);
+}
+.nome-trasc.fantasma{ box-shadow:0 10px 22px rgba(0,0,0,.28); }
+
 /* il punteggio di una sfida fra due coppie: niente tabella, solo il risultato */
 .sfida-punteggio{
   display:flex; align-items:center; gap:12px; justify-content:space-between;

@@ -629,8 +629,12 @@ quando non c'è nessun torneo cominciato.
      turno, perché il secondo lo decide il primo: appena un turno finisce
      **compare quello dopo** (quarti, semifinali, finale) con chi ha vinto. Se
      le coppie sono dispari, chi resta in panchina passa il turno.
-3. **Le coppie** — già formate secondo i compagni dichiarati. Per cambiarle si
-   toccano due nomi e si scambiano.
+3. **Le coppie** — già formate secondo i compagni dichiarati. Per cambiarle,
+   **trascina un nome sopra un altro**: si scambiano di posto. Col mouse basta
+   prenderlo e portarlo; dal telefono si tiene premuto un istante — il nome si
+   stacca e segue il dito — e si lascia sopra quello con cui scambiarlo. Chi
+   preferisce può ancora toccare prima un nome e poi l'altro, che fa la stessa
+   cosa. `🔄 Rifalle da capo` rifà tutto in automatico.
 
 Le stesse mani si possono segnare anche dall'area organizzatori, nel tabellone
 del torneo: lì il pannello si rifà quando una partita si chiude — perché
