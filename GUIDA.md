@@ -655,6 +655,13 @@ tavolo — la pagina delle partite lo scrive sulla bacheca pubblica a ogni
 risultato, senza toccare le classifiche dei ragazzi né il cronometro. Quando il
 torneo finisce, sul tabellone compare la coppa col vincitore.
 
+**Quando è al sicuro.** Appena scrivi una cifra il totale si aggiorna
+subito, e la riga si segna di giallo con «✍️ da salvare» finché il database
+non ha confermato. Il giallo sparisce da solo: se resta, il numero non è
+ancora partito. Quello che hai scritto e non è ancora salvato **non viene mai
+sovrascritto** da quello che arriva dagli altri telefoni — prima succedeva, ed
+è il motivo per cui a volte una mano sembrava non venire presa.
+
 **Più telefoni insieme.** La pagina si aggiorna da sé ogni cinque secondi e
 *non tocca mai il campo in cui stai scrivendo*: due tavoli possono segnare
 insieme senza pestarsi i piedi. Con **💬 Manda il link** mandi su WhatsApp

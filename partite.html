@@ -46,6 +46,11 @@ body{ background:#f2f7fb; }
 .btn-barra:hover{ background:rgba(255,255,255,.3); }
 .btn-barra{ white-space:nowrap; flex:0 0 auto; display:inline-flex; align-items:center; }
 
+/* una riga con dentro qualcosa non ancora salvato: si vede, e sparisce da
+   sola appena il database conferma */
+.partita.da-salvare{ box-shadow:inset 3px 0 0 #f9a825; }
+.partita.da-salvare .quanto-manca::after{ content:' · ✍️ da salvare'; color:#f9a825; font-weight:bold; }
+
 /* i nomi che si trascinano da una coppia all'altra */
 .nome-trasc{ cursor:grab; touch-action:manipulation; }
 .nome-trasc:active{ cursor:grabbing; }
@@ -213,6 +218,15 @@ var $ = CA.$, V = CA.V, testo = CA.testo, crea = CA.crea;
 var DATI = {}, SESS = null, TORNEI = [], APERTO = '', STATO = {}, ASSETTO = null;
 var TESTATE = [];       /* le righe «2 di 3 partite finite», da rinfrescare */
 var ISCRITTIGREZZI = [];   /* gli iscritti come sono arrivati, per non rileggerli */
+
+/* Le partite che ho toccato io e che il database non ha ancora confermato.
+   Finché sono qui dentro, quello che arriva dagli altri telefoni NON le
+   sovrascrive: al tavolo si scrive un numero e un attimo dopo arriva la
+   lettura periodica col documento vecchio: senza questa protezione la cifra
+   appena battuta sparisce, e sembra che la pagina non l'abbia presa. */
+var SPORCHE = {};
+function sporca(idPartita){ if(idPartita) SPORCHE[idPartita] = true; }
+function pulite(elenco){ elenco.forEach(function(k){ delete SPORCHE[k]; }); }
 var ISCRITTI = [];               /* chi si è iscritto: si propone nella procedura guidata */
 var SCRIVENDO = null;            /* id della partita che ho sotto le dita */
 var DAMANDARE = false, timerInvio = null, ULTIMO = '';
@@ -310,7 +324,14 @@ function avvia(){
      password, e due orologi vorrebbero dire il doppio delle letture. */
   if(OROLOGIO) return;
   OROLOGIO = setInterval(function(){ if(!document.hidden) leggi(false); }, 5000);
-  document.addEventListener('visibilitychange', function(){ if(!document.hidden) leggi(false); });
+  document.addEventListener('visibilitychange', function(){
+    /* Uscendo dalla pagina — arriva una telefonata, si blocca lo schermo —
+       quello che non è ancora partito parte adesso: al ritorno non si deve
+       trovare un numero perso. */
+    if(document.hidden){ if(DAMANDARE) manda(); return; }
+    leggi(false);
+  });
+  window.addEventListener('pagehide', function(){ if(DAMANDARE) manda(); });
 }
 var OROLOGIO = 0;
 
@@ -339,9 +360,8 @@ function leggi(prima){
       return FB.leggiPezzo(t, 'torneo_' + APERTO);
     }).then(function(pezzo){
       if(pezzo && pezzo.dati){
-        if(SCRIVENDO) fondi(APERTO, pezzo.dati);
-        else STATO[APERTO] = pezzo.dati;
-        testo('statoRete', '🟢 aggiornato alle ' + oraOra());
+        fondi(APERTO, pezzo.dati);        /* il mio non salvato resta mio */
+        testo('statoRete', DAMANDARE ? '✍️ da salvare' : ('🟢 aggiornato alle ' + oraOra()));
         disegna(false);
       }
     }).catch(function(e){
@@ -377,7 +397,7 @@ function leggi(prima){
     });
     /* quello che sto scrivendo io non si tocca: il resto entra */
     Object.keys(nuovi).forEach(function(id){
-      if(id === APERTO && SCRIVENDO) { fondi(id, nuovi[id]); return; }
+      if(STATO[id]) { fondi(id, nuovi[id]); return; }
       STATO[id] = nuovi[id];
     });
     if(!APERTO){
@@ -408,16 +428,24 @@ function oraOra(){ var d = new Date(); return due(d.getHours()) + ':' + due(d.ge
    partita che ho aperta resta mia, tutte le altre prendono la versione del
    database. Senza questo, due tavoli che segnano insieme si cancellerebbero
    i punti a vicenda. */
+/* Mette insieme quello che è arrivato dal database con quello che ho in mano
+   io. Regola: vince il database, TRANNE per le partite che sto scrivendo o
+   che ho scritto e non sono ancora state confermate. Quelle sono mie. */
 function fondi(id, remoto){
   var mio = STATO[id];
   if(!mio || !Array.isArray(mio.incontri) || !Array.isArray(remoto.incontri)){ STATO[id] = remoto; return; }
   var miei = {};
   mio.incontri.forEach(function(m){ miei[m.id] = m; });
-  remoto.incontri.forEach(function(m){
-    if(m.id === SCRIVENDO && miei[m.id]){ return; }   /* la mia partita vince */
-    miei[m.id] = m;
+  remoto.incontri = remoto.incontri.map(function(m){
+    var mia = miei[m.id];
+    if(mia && (m.id === SCRIVENDO || SPORCHE[m.id])) return mia;
+    return m;
   });
-  remoto.incontri = remoto.incontri.map(function(m){ return miei[m.id] || m; });
+  /* e le partite che ho creato io e là ancora non ci sono (spareggio,
+     finale, turno nuovo) non devono sparire */
+  mio.incontri.forEach(function(m){
+    if(!remoto.incontri.some(function(x){ return x.id === m.id; })) remoto.incontri.push(m);
+  });
   STATO[id] = remoto;
 }
 
@@ -435,12 +463,15 @@ function manda(quale){
      «torneo_» — cioè da nessuna parte, e l'archiviazione si perdeva. */
   var nome = 'torneo_' + id;
   var dati = JSON.parse(JSON.stringify(STATO[id]));
+  var spedite = Object.keys(SPORCHE);     /* quello che sto mandando adesso */
   testo('statoRete', '⏳ mando…');
   token().then(function(t){
     return FB.scriviPezzo(t, nome, dati, chiSono());
   }).then(function(){
     if(!quale) DAMANDARE = false;
+    pulite(spedite);         /* confermate: adesso può comandare il database */
     testo('statoRete', '🟢 salvato alle ' + oraOra());
+    segnaSalvate();
     pubblica(id);            /* e sul tabellone, che lo guardano tutti */
   }).catch(function(){
     testo('statoRete', '🔴 non salvato: riprovo');
@@ -788,7 +819,8 @@ function rigaPartita(partenza, coppie){
     var vinta = (mezza || !superato || pari) ? '' : (a > b ? 'a' : 'b');
     na.className = 'nome' + (vinta === 'a' ? ' vince' : '');
     nb.className = 'nome dx' + (vinta === 'b' ? ' vince' : '');
-    d.className = 'partita' + (vinta ? ' finita' : '') + (m.saltata ? ' saltata' : '');
+    d.className = 'partita' + (vinta ? ' finita' : '') + (m.saltata ? ' saltata' : '') +
+      (SPORCHE[m.id] ? ' da-salvare' : '');
     manca.className = 'quanto-manca' + (vinta ? ' vinta' : '');
     manca.textContent = m.saltata
       ? 'Non si gioca: la sfida è già decisa.'
@@ -836,9 +868,18 @@ function rigaPartita(partenza, coppie){
         inp.value = (mano[lato[0]] === undefined || mano[lato[0]] === '') ? '' : mano[lato[0]];
         inp.setAttribute('aria-label', (i + 1) + 'ª mano, ' + nomeCoppia(lato[1], coppie));
         inp.addEventListener('focus', function(){ SCRIVENDO = m.id; });
-        inp.addEventListener('blur', function(){ setTimeout(function(){ SCRIVENDO = null; }, 400); });
+        inp.addEventListener('blur', function(){
+          /* appena il dito lascia il campo si manda subito, senza aspettare:
+             è il momento in cui uno alza gli occhi e vuole vederlo salvato */
+          if(DAMANDARE) manda();
+          setTimeout(function(){ SCRIVENDO = null; }, 400);
+        });
+        /* sul telefono il «fine» della tastiera non sempre fa perdere il
+           fuoco: «change» arriva comunque, e basta a mandare */
+        inp.addEventListener('change', function(){ if(DAMANDARE) manda(); });
         inp.addEventListener('input', function(){
           mano[lato[0]] = inp.value === '' ? '' : Number(inp.value);
+          sporca(m.id);            /* è mia finché il database non conferma */
           /* l'ora della prima cifra e quella dell'ultima: da lì esce quanto
              è durata la partita, senza che nessuno debba guardare l'orologio */
           if(!m.inizio) m.inizio = new Date().toISOString();
@@ -863,6 +904,7 @@ function rigaPartita(partenza, coppie){
       via.title = 'Togli questa mano';
       via.addEventListener('click', function(){
         m.mani.splice(i, 1);
+        sporca(m.id);
         /* Tolta l'ultima mano la partita torna da giocare: se restasse il
            totale di prima in puntiA, la classifica continuerebbe a contarla
            come vinta — e il torneo risulterebbe finito con la partita a 0. */
@@ -885,6 +927,7 @@ function rigaPartita(partenza, coppie){
       var piu = crea('button', 'btn btn-p', '➕ Un’altra mano');
       piu.addEventListener('click', function(){
         m.mani.push({ a:'', b:'' });
+        sporca(m.id);
         aggiorna(); disegnaMani(); salva();
         var campi = dentro.querySelectorAll('input');
         if(campi.length) campi[campi.length - 2].focus();
@@ -1233,6 +1276,14 @@ function pubblicaOra(id){
     doc.aggiornato = new Date().toISOString();
     return token().then(function(tk){ return FB.scriviClassifica(tk, doc); });
   }).catch(function(){ /* il tabellone non è vitale: se non va, pazienza */ });
+}
+
+/* Il segnalino della riga: finché quello che hai scritto non è confermato
+   dal database la riga lo dice, e appena arriva la conferma si spegne. Al
+   tavolo serve sapere se il numero è al sicuro o no. */
+function segnaSalvate(){
+  var righe = document.querySelectorAll('#corpo .partita.da-salvare');
+  for(var i = 0; i < righe.length; i++) righe[i].classList.remove('da-salvare');
 }
 
 /* Chi ha vinto una partita: con le mani comanda il totale, se no il
