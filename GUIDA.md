@@ -749,6 +749,22 @@ fascia in cima a **tutte** le pagine. Serve per le cose dell'ultimo minuto —
 informazione (azzurro), attenzione (giallo), allarme (rosso). Va pubblicato
 come tutti gli altri contenuti.
 
+## I nomi che sono codici del database
+
+Scheda **`🖨️ Stampe`**, riquadro **🧹 Nomi che sono codici**. Ogni tanto, al
+posto di un nome, resta scritto il codice del documento — venti caratteri a
+caso, senza spazi: succede quando un'iscrizione viene cancellata dopo che le
+coppie erano già state fatte, e il codice resta dentro la coppia.
+
+Il riquadro li cerca in tutti e tre i posti dove possono nascondersi — le
+iscrizioni, la rubrica dei giocatori, le coppie dei tornei — e **te li fa
+vedere per nome**. Poi, se premi `🧹 Togli questi dal database`, li toglie:
+prima però ne scarica una copia sul computer (`codici-tolti-2026-08-20.json`),
+così se ne era sfuggito uno vero si recupera.
+
+**Il sito non lo fa mai da solo.** Finché non premi quel pulsante non viene
+cancellato niente.
+
 ## Chiudere l'edizione e preparare l'anno prossimo
 
 Scheda **`🖨️ Stampe`**, in fondo, riquadro **📦 Chiudere l'edizione** (sta sopra

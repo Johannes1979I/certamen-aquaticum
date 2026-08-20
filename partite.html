@@ -709,7 +709,7 @@ function cancellaTutto(){
 
   var nome = 'torneo_' + id;
   FINEAPERTA = false;
-  $('velo').classList.remove('aperto');   /* se c'era la coppa, via anche quella */
+  chiudiFinestra();                       /* se c'era la coppa, via anche quella */
   delete STATO[id];
   APERTO = '';
   ULTIMO = '';
@@ -1173,7 +1173,7 @@ function mostraFine(){
 
   var chiudi = crea('button', 'btn btn-chiaro btn-largo', 'Chiudi');
   chiudi.style.marginTop = '8px';
-  chiudi.addEventListener('click', function(){ FINEAPERTA = false; $('velo').classList.remove('aperto'); });
+  chiudi.addEventListener('click', function(){ FINEAPERTA = false; chiudiFinestra(); });
   f.appendChild(chiudi);
   $('velo').classList.add('aperto');
   FINEAPERTA = true;
@@ -1194,7 +1194,7 @@ function aggiornaFine(){
   if(!tutteFinite(STATO[APERTO])){
     FINEAPERTA = false;
     CHIUSO = false;
-    $('velo').classList.remove('aperto');
+    chiudiFinestra();
     return;
   }
   mostraFine();
@@ -1276,6 +1276,33 @@ function pubblicaOra(id){
     doc.aggiornato = new Date().toISOString();
     return token().then(function(tk){ return FB.scriviClassifica(tk, doc); });
   }).catch(function(){ /* il tabellone non è vitale: se non va, pazienza */ });
+}
+
+/* ------------------------- il tocco fantasma ---------------------------
+   Sul telefono, quando si tocca un pulsante che subito dopo sparisce — per
+   esempio «Archivia» dentro la finestra della coppa — il browser manda un
+   secondo tocco, un attimo dopo, a quello che nel frattempo si è trovato
+   sotto il dito. Se lì c'era il pulsante ⚙️ Organizzatori, ci si ritrova
+   nell'area organizzatori senza aver chiesto niente. Per mezzo secondo,
+   dopo ogni chiusura, uno scudo invisibile si prende quei tocchi. */
+function chiudiFinestra(){
+  $('velo').classList.remove('aperto');
+  alzaScudo(500);
+}
+
+var SCUDO = null, SCUDOFINE = 0;
+function alzaScudo(ms){
+  SCUDOFINE = Date.now() + (ms || 500);
+  if(!SCUDO){
+    SCUDO = document.createElement('div');
+    SCUDO.style.cssText = 'position:fixed;inset:0;z-index:9998;background:transparent';
+    SCUDO.addEventListener('click', function(e){ e.stopPropagation(); e.preventDefault(); }, true);
+    SCUDO.addEventListener('touchend', function(e){ e.stopPropagation(); e.preventDefault(); }, true);
+  }
+  if(!SCUDO.parentNode) document.body.appendChild(SCUDO);
+  setTimeout(function(){
+    if(Date.now() >= SCUDOFINE - 20 && SCUDO && SCUDO.parentNode) SCUDO.parentNode.removeChild(SCUDO);
+  }, ms || 500);
 }
 
 /* Il segnalino della riga: finché quello che hai scritto non è confermato
@@ -1402,7 +1429,7 @@ function generaSpareggio(pari){
       : '⚔️ Spareggio creato: lo trovi in fondo.', 7000);
   }
   CHIUSO = false;
-  $('velo').classList.remove('aperto');
+  chiudiFinestra();
   ULTIMO = '';
   disegna(true);
   var giu = document.querySelectorAll('.turno-box');
@@ -1410,7 +1437,7 @@ function generaSpareggio(pari){
 }
 
 $('velo').addEventListener('click', function(e){
-  if(e.target === $('velo')) $('velo').classList.remove('aperto');
+  if(e.target === $('velo')) chiudiFinestra();
 });
 
 /* =======================================================================
@@ -1600,7 +1627,7 @@ function bottoniGestione(st){
       'tabellone si perdono. Procedo?')) return;
     st.incontri = rifaiTabellone(st);
     salva(); ULTIMO = ''; disegna(true);
-    $('velo').classList.remove('aperto');
+    chiudiFinestra();
     toast('🎲 Tabellone rifatto: ' + st.incontri.length + ' partite.', 6000);
   });
   b('🗑️ Butta via il torneo', false, function(){
@@ -1610,11 +1637,11 @@ function bottoniGestione(st){
     var quale = APERTO;
     manda(quale);
     APERTO = ''; ULTIMO = ''; CHIUSO = false;
-    $('velo').classList.remove('aperto');
+    chiudiFinestra();
     disegna(true);
     toast('🗑️ Buttato via.', 5000);
   });
-  b('Chiudi', false, function(){ $('velo').classList.remove('aperto'); });
+  b('Chiudi', false, function(){ chiudiFinestra(); });
   return az;
 }
 

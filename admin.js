@@ -245,6 +245,9 @@
         : '📳 Questo dispositivo non vibra — normale su computer e iPhone.');
     });
 
+    $('btnTogliCodici').addEventListener('click', togliCodici);
+    $('btnRicontaCodici').addEventListener('click', function () { disegnaCodici(); CA.toast('Ricontrollato.', 3000); });
+
     $('btnChiudiEdizione').addEventListener('click', chiudiEdizione);
     $('btnRiprendiIscritti').addEventListener('click', riprendiIscritti);
 
@@ -1016,6 +1019,7 @@
   function disegnaTutto() {
     disegnaCruscotto();
     disegnaEdizione();
+    disegnaCodici();
     disegnaSportello();
     disegnaSeparati();
     disegnaIscritti();
@@ -3152,6 +3156,116 @@
     if (!base) return { prove: [], forma: 'unico', provaFinale: '' };
     if (!STATO.assettoCarte) STATO.assettoCarte = CA.assettoPredefinito(base);
     return STATO.assettoCarte;
+  }
+
+  /* ================= I NOMI CHE SONO CODICI DEL DATABASE ===============
+     Venti caratteri a caso al posto di un nome: capita quando un'iscrizione
+     viene cancellata dopo che le coppie erano già state fatte, e il codice
+     resta scritto dentro la coppia. Questa roba si trova in tre posti — le
+     iscrizioni, la rubrica dei giocatori, le coppie dei tornei — e da qui si
+     toglie da tutti e tre. Ma solo premendo il pulsante: il sito, da solo,
+     non cancella niente. */
+  function cercaCodici() {
+    var fuori = { iscritti: [], rubrica: [], coppie: [] };
+    ISCR.forEach(function (p) {
+      if (p.stato !== 'cestino' && CA.sembraCodice(p.nome)) fuori.iscritti.push(p);
+    });
+    V(V(STATO.rubrica, {}).giocatori, []).forEach(function (g) {
+      if (g && CA.sembraCodice(g.nome)) fuori.rubrica.push(g);
+    });
+    Object.keys(STATO.tornei || {}).forEach(function (id) {
+      V(STATO.tornei[id].coppie, []).forEach(function (c) {
+        if (CA.senzaNome(c.nome)) fuori.coppie.push({ torneo: id, coppia: c });
+      });
+    });
+    return fuori;
+  }
+
+  function disegnaCodici() {
+    var el = $('elencoCodici');
+    if (!el) return;
+    el.textContent = '';
+    var c = cercaCodici();
+    var quanti = c.iscritti.length + c.rubrica.length + c.coppie.length;
+    if (!quanti) {
+      var ok = crea('div', 'nota-box info');
+      ok.appendChild(crea('b', null, '✅ Non ce n\'è nessuno'));
+      ok.appendChild(crea('p', 'aiuto', 'Tutti i nomi sono nomi.'));
+      el.appendChild(ok);
+      $('btnTogliCodici').disabled = true;
+      return;
+    }
+    $('btnTogliCodici').disabled = false;
+    var box = crea('div', 'nota-box');
+    box.style.cssText = 'background:#fff3e0;border:2px solid #ffb74d;border-radius:12px;padding:12px;margin-bottom:10px';
+    box.appendChild(crea('b', null, '⚠️ Trovati ' + quanti + (quanti === 1 ? ' nome' : ' nomi') + ' che sono codici'));
+    if (c.iscritti.length) {
+      box.appendChild(crea('p', 'aiuto', '· ' + c.iscritti.length + ' fra le iscrizioni: ' +
+        c.iscritti.map(function (p) { return p.nome; }).join(', ')));
+    }
+    if (c.rubrica.length) {
+      box.appendChild(crea('p', 'aiuto', '· ' + c.rubrica.length + ' in rubrica: ' +
+        c.rubrica.map(function (g) { return g.nome; }).join(', ')));
+    }
+    if (c.coppie.length) {
+      box.appendChild(crea('p', 'aiuto', '· ' + c.coppie.length + ' fra le coppie dei tornei: ' +
+        c.coppie.map(function (x) { return x.coppia.nome; }).join(' · ')));
+    }
+    el.appendChild(box);
+  }
+
+  function togliCodici() {
+    if (!SESS) { CA.toast('Prima entra nel database.', 6000); return; }
+    var c = cercaCodici();
+    var quanti = c.iscritti.length + c.rubrica.length + c.coppie.length;
+    if (!quanti) { CA.toast('Non c\'è niente da togliere.', 5000); return; }
+
+    if (!confirm('Tolgo dal database ' + quanti + (quanti === 1 ? ' nome' : ' nomi') + ' che sono codici:\n\n' +
+      (c.iscritti.length ? '· ' + c.iscritti.length + ' iscrizioni (cancellate per sempre)\n' : '') +
+      (c.rubrica.length ? '· ' + c.rubrica.length + ' righe della rubrica\n' : '') +
+      (c.coppie.length ? '· ' + c.coppie.length + (c.coppie.length === 1 ? ' coppia dei tornei, con le sue partite\n' : ' coppie dei tornei, con le loro partite\n') : '') +
+      '\nPrima ne scarico una copia sul computer, per sicurezza. Procedo?')) return;
+
+    /* la copia di sicurezza, prima di toccare qualsiasi cosa */
+    scaricaFile('codici-tolti-' + new Date().toISOString().slice(0, 10) + '.json',
+      JSON.stringify({
+        quando: new Date().toISOString(),
+        iscritti: c.iscritti,
+        rubrica: c.rubrica,
+        coppie: c.coppie
+      }, null, 2), 'application/json');
+
+    /* 1. la rubrica e i tornei: stanno nello stato, si sistemano qui */
+    if (c.rubrica.length) {
+      STATO.rubrica.giocatori = STATO.rubrica.giocatori.filter(function (g) {
+        return !(g && CA.sembraCodice(g.nome));
+      });
+      SPORCHI['rubrica'] = true;
+    }
+    var tornei = {};
+    c.coppie.forEach(function (x) { tornei[x.torneo] = true; });
+    Object.keys(tornei).forEach(function (id) {
+      CA.pulisciTorneo(STATO.tornei[id]);
+      SPORCHI['torneo_' + id] = true;
+    });
+    salvaStato(true);
+
+    /* 2. le iscrizioni: sono documenti loro, si cancellano uno per uno */
+    var fatte = 0;
+    c.iscritti.reduce(function (catena, p) {
+      return catena.then(function () {
+        return token().then(function (t) { return FB.elimina(t, p._id); })
+          .then(function () { ISCR = ISCR.filter(function (x) { return x._id !== p._id; }); fatte++; });
+      });
+    }, Promise.resolve()).then(function () {
+      CA.toast('🧹 Tolti: ' + fatte + ' iscrizioni, ' + c.rubrica.length + ' righe di rubrica, ' +
+        c.coppie.length + ' coppie. La copia è nei Download.', 10000);
+      sincronizzaContatori(true);
+      disegnaTutto();
+    }).catch(function (e) {
+      CA.toast('⚠️ Ne ho tolte ' + fatte + ', poi si è fermato: ' + e.message, 9000);
+      disegnaTutto();
+    });
   }
 
   /* ============== CHIUDERE L'EDIZIONE E PREPARARE L'ANNO DOPO ==========

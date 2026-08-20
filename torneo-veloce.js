@@ -126,7 +126,20 @@
     return fuori;
   }
 
-  function chiudi() { C.velo.classList.remove('aperto'); }
+  /* Chiudendo si alza per mezzo secondo uno scudo invisibile: sul telefono
+     il tocco che chiude la finestra, un attimo dopo, arriva a quello che si
+     è trovato sotto il dito — e se lì c'era il pulsante dell'area
+     organizzatori si cambiava pagina senza volerlo. */
+  function chiudi() {
+    C.velo.classList.remove('aperto');
+    var scudo = document.createElement('div');
+    scudo.style.cssText = 'position:fixed;inset:0;z-index:9998;background:transparent';
+    var mangia = function (e) { e.stopPropagation(); e.preventDefault(); };
+    scudo.addEventListener('click', mangia, true);
+    scudo.addEventListener('touchend', mangia, true);
+    document.body.appendChild(scudo);
+    setTimeout(function () { if (scudo.parentNode) scudo.parentNode.removeChild(scudo); }, 500);
+  }
 
   function bottoniera(voci) {
     var az = crea('div', 'azioni');
