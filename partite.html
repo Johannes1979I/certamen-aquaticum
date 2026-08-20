@@ -1489,13 +1489,26 @@ function giocatoriDaiTornei(){
   var per = {};
   Object.keys(STATO).forEach(function(id){
     V(STATO[id].coppie, []).forEach(function(c){
-      [[c.a, c.b], [c.b, c.a]].forEach(function(due){
-        var nome = String(V(due[0], '')).trim();
-        if(!nome || nome === '(da abbinare)') return;
+      /* Attenzione: nei tornei preparati nell'area organizzatori «a» e «b»
+         NON sono nomi, sono i codici delle iscrizioni — i nomi veri stanno
+         nel titolo della coppia, «Mario Rossi – Anna Bianchi». Prendere «a»
+         così com'è voleva dire riempire l'elenco di codici. */
+      var pezzi = String(V(c.nome, '')).split(/\s+[–—-]\s+/);
+      var due = ['a', 'b'].map(function(lato, i){
+        var x = String(V(c[lato], '')).trim();
+        if(!x || CA.sembraCodice(x)) x = String(V(pezzi[i], '')).trim();
+        return x;
+      });
+      [[due[0], due[1]], [due[1], due[0]]].forEach(function(coppia){
+        var nome = coppia[0];
+        if(!nome || CA.sembraCodice(nome)) return;
+        if(nome === '(da abbinare)' || nome === '(vuoto)' || nome === '— libero —') return;
+        var compagno = coppia[1];
+        if(compagno && (CA.sembraCodice(compagno) || compagno === '(da abbinare)')) compagno = '';
         var k = normale(nome);
-        if(!per[k]) per[k] = { nome: nome, compagno: V(due[1], ''), area: 'adulti', volte: 0 };
+        if(!per[k]) per[k] = { nome: nome, compagno: compagno, area: 'adulti', volte: 0 };
         per[k].volte++;
-        if(due[1]) per[k].compagno = due[1];
+        if(compagno) per[k].compagno = compagno;
       });
     });
   });
