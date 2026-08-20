@@ -178,8 +178,29 @@ function avvia(){
           else if(dentro && Array.isArray(dentro.coppie)) quanto = dentro.coppie.length + ' coppie, ' +
             V(dentro.incontri, []).length + ' partite' + (dentro.archiviato ? ' · archiviato' : '');
           else if(dentro) quanto = Object.keys(dentro).join(', ').slice(0, 90);
-          riga('pezzi', nome, (testoJson.length + ' caratteri') + (quanto ? ' · ' + quanto : ''),
+          /* e soprattutto: quanti nomi-codice ci sono qui dentro */
+          var codici = [];
+          if (dentro && Array.isArray(dentro.giocatori)) {
+            dentro.giocatori.forEach(function (g) {
+              if (g && CA.sembraCodice(g.nome)) codici.push(g.nome);
+            });
+          }
+          if (dentro && Array.isArray(dentro.coppie)) {
+            dentro.coppie.forEach(function (c) {
+              if (CA.senzaNome(c && c.nome)) codici.push(c.nome);
+            });
+          }
+          riga('pezzi', nome, (testoJson.length + ' caratteri') + (quanto ? ' · ' + quanto : '') +
+               (codici.length ? ' · ⚠️ ' + codici.length + ' nomi-codice' : ''),
                testoJson.length > 2);
+          if (codici.length) {
+            var d2 = crea('div', 'riga');
+            d2.appendChild(crea('b', null, ''));
+            var s = crea('span', 'ko', codici.slice(0, 8).join(' · ') + (codici.length > 8 ? ' …' : ''));
+            s.style.fontSize = '.82rem';
+            d2.appendChild(s);
+            $('pezzi').appendChild(d2);
+          }
         });
       }
       scriviGrezzo();

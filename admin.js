@@ -3185,12 +3185,47 @@
     var el = $('elencoCodici');
     if (!el) return;
     el.textContent = '';
-    var c = cercaCodici();
+
+    /* Se manca il pezzo comune aggiornato non si può cercare niente: meglio
+       dirlo che far credere che sia tutto a posto. */
+    if (!CA.sembraCodice) {
+      var vecchio = crea('div', 'nota-box');
+      vecchio.style.cssText = 'background:#fff3e0;border:2px solid #ffb74d;border-radius:12px;padding:12px';
+      vecchio.appendChild(crea('b', null, '⚠️ La pagina è vecchia'));
+      vecchio.appendChild(crea('p', 'aiuto', 'Ricarica tenendo premuto ⌘⇧R: il browser sta ancora usando una versione di prima.'));
+      el.appendChild(vecchio);
+      $('btnTogliCodici').disabled = true;
+      return;
+    }
+
+    var c, errore = null;
+    try { c = cercaCodici(); } catch (e) { errore = e; c = { iscritti: [], rubrica: [], coppie: [] }; }
+
+    /* Che cosa ho guardato: serve quando non trova niente e non si capisce
+       se è perché non c'è niente o perché non è arrivato niente. */
+    var quantiTornei = Object.keys(STATO.tornei || {}).length;
+    var quanteCoppie = 0;
+    Object.keys(STATO.tornei || {}).forEach(function (id) {
+      quanteCoppie += V(STATO.tornei[id].coppie, []).length;
+    });
+    var visto = crea('p', 'aiuto');
+    visto.style.cssText = 'font-size:.82rem;opacity:.8';
+    visto.textContent = 'Ho guardato: ' + ISCR.length + ' iscrizioni, ' +
+      V(V(STATO.rubrica, {}).giocatori, []).length + ' nomi in rubrica, ' +
+      quantiTornei + ' tornei con ' + quanteCoppie + ' coppie.';
+    el.appendChild(visto);
+    if (errore) {
+      var er = crea('p', 'aiuto');
+      er.style.color = '#b71c1c';
+      er.textContent = '⚠️ ' + errore.message;
+      el.appendChild(er);
+    }
+
     var quanti = c.iscritti.length + c.rubrica.length + c.coppie.length;
     if (!quanti) {
       var ok = crea('div', 'nota-box info');
       ok.appendChild(crea('b', null, '✅ Non ce n\'è nessuno'));
-      ok.appendChild(crea('p', 'aiuto', 'Tutti i nomi sono nomi.'));
+      ok.appendChild(crea('p', 'aiuto', 'Fra quello che ho guardato, tutti i nomi sono nomi.'));
       el.appendChild(ok);
       $('btnTogliCodici').disabled = true;
       return;

@@ -377,28 +377,37 @@
        stato_certamen/titoli           premi individuali
        stato_certamen/torneo_<id>      coppie, tabellone e punteggi di un torneo
   */
+  /* Attenzione: Firestore ne manda cento per volta. Senza chiedere anche le
+     pagine dopo, con più di cento documenti qualcuno resta fuori in
+     silenzio — e sparisce dalle pagine senza che nessuno capisca perché. */
   function leggiPezzi(idToken) {
     if (!idToken) return Promise.resolve({});
-    return fetch(BASE + '/stato_certamen?key=' + API + '&pageSize=100&_=' + Date.now(), {
-      headers: { 'Authorization': 'Bearer ' + idToken }, cache: 'no-store'
-    }).then(jget).then(function (d) {
-      var out = {};
-      if (d.error) return out;
-      (d.documents || []).forEach(function (doc) {
-        var nome = doc.name.split('/').pop();
-        var f = doc.fields || {};
-        var testo = (f.json && f.json.stringValue) || '';
-        if (!testo) return;
-        try {
-          out[nome] = {
-            dati: JSON.parse(testo),
-            quando: (f.aggiornatoIl && f.aggiornatoIl.stringValue) || '',
-            chi: (f.chi && f.chi.stringValue) || ''
-          };
-        } catch (e) { }
+    var out = {};
+    function pagina(tok, giri) {
+      var url = BASE + '/stato_certamen?key=' + API + '&pageSize=100' +
+        (tok ? '&pageToken=' + encodeURIComponent(tok) : '') + '&_=' + Date.now();
+      return fetch(url, {
+        headers: { 'Authorization': 'Bearer ' + idToken }, cache: 'no-store'
+      }).then(jget).then(function (d) {
+        if (d.error) return out;
+        (d.documents || []).forEach(function (doc) {
+          var nome = doc.name.split('/').pop();
+          var f = doc.fields || {};
+          var testo = (f.json && f.json.stringValue) || '';
+          if (!testo) return;
+          try {
+            out[nome] = {
+              dati: JSON.parse(testo),
+              quando: (f.aggiornatoIl && f.aggiornatoIl.stringValue) || '',
+              chi: (f.chi && f.chi.stringValue) || ''
+            };
+          } catch (e) { }
+        });
+        if (d.nextPageToken && giri < 20) return pagina(d.nextPageToken, giri + 1);
+        return out;
       });
-      return out;
-    }).catch(function () { return {}; });
+    }
+    return pagina('', 0).catch(function () { return out; });
   }
 
   function scriviPezzo(idToken, nome, oggetto, chi) {
